@@ -1,7 +1,7 @@
 # C Compiler
 CC		:=	c++
 # Compiler flags
-CFLAGS	:=	-Wall -Wextra -Werror -g -std=c++98
+CFLAGS	:= -g -std=c++98
 # Removal tool
 RM		:=	rm -rf
 
@@ -10,11 +10,11 @@ RM		:=	rm -rf
 NAME		:= webserv
 
 # Headers
-HEADER		:=	
+HEADER		:=	master.hpp ListeningSocket.hpp ConnectingSocket.hpp BindingSocket.hpp SimpleSocket.hpp SimpleServer.hpp TestServer.hpp
 H_INCLUDE	:=	$(addprefix , $(HEADER))
 
 # Source
-SRC			:=	
+SRC			:=	main.cpp ListeningSocket.cpp ConnectingSocket.cpp BindingSocket.cpp SimpleSocket.cpp SimpleServer.cpp TestServer.cpp
 # Object
 OBJ_DIR		:=	obj
 OBJ			:=	$(SRC:%.cpp=$(OBJ_DIR)/%.o)

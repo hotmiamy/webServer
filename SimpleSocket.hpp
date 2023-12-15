@@ -13,11 +13,14 @@ namespace ft
 		private:
 			struct sockaddr_in	_address;
 			int sock;
-			int connection;
 		public:
 			SimpleSocket(int domain, int service, int protocol, int port, u_long interface);
-			virtual int	ConnectToNetwork(int sock, struct sockaddr_in address);
-			void 		CheckConnection(int);
+			virtual void	ConnectToNetwork(int sock, struct sockaddr_in address) = 0;
+			void 			CheckConnection(int);
+			struct sockaddr_in get_address();
+		
+		int get_sock();
+
 	};
 }
 
