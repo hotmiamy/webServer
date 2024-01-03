@@ -1,4 +1,4 @@
-include "SimpleSocket.hpp"
+#include "SimpleSocket.hpp"
 
 ft::SimpleSocket::SimpleSocket(int domain, int service, int protocol, int port, u_long interface)
 {
@@ -17,4 +17,14 @@ void ft::SimpleSocket::CheckConnection(int connection)
 		perror("failed to connect");
 		exit(EXIT_FAILURE);
 	}
+}
+
+struct sockaddr_in ft::SimpleSocket::get_address()
+{
+	return _address;
+}
+
+int ft::SimpleSocket::get_sock()
+{
+	return sock;
 }
