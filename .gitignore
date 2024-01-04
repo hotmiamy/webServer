@@ -36,3 +36,4 @@ objdir
 *.pdf
 *.json
 .cache/
+webserv
