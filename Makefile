@@ -10,7 +10,7 @@ LINK.cpp := $(filter-out $(CXXFLAGS), $(LINK.cpp))
 
 vpath %.cpp $(shell find srcs -type d)
 
-SRCS     := main.cpp WebServer.cpp ServerConfig.cpp
+SRCS     := main.cpp WebServer.cpp ServerConfig.cpp Parser.cpp
 OBJS     := $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))
 DEPS     := $(OBJS:.o=.d)
 NAME     := webserv
