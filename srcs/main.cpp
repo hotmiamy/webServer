@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "ServerConfig.hpp"
+#include "WebServer.hpp"
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -9,5 +10,7 @@ int main(int argc, char *argv[]) {
     }
 
     ServerConfig config = ServerConfig::fromFile(argv[1]);
+    WebServer webServer(config);
+    // return webServer.run();
     return 0;
 }

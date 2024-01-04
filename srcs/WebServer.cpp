@@ -4,6 +4,8 @@
 
 WebServer::WebServer() {}
 
+WebServer::WebServer(const ServerConfig &) {}
+
 WebServer::WebServer(const WebServer &other) { *this = other; }
 
 WebServer &WebServer::operator=(const WebServer &other) {
@@ -14,7 +16,9 @@ WebServer &WebServer::operator=(const WebServer &other) {
 
 WebServer::~WebServer() {}
 
-void WebServer::run(const ServerConfig &config) {
+int WebServer::run() {
     for (;;) {
+        // server logic here
     }
+    return 0;
 }
