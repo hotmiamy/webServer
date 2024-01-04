@@ -2,7 +2,7 @@ SHELL := /bin/sh
 
 OBJDIR   := objdir
 
-CXXFLAGS += -Wall -Wextra -std=c++98
+CXXFLAGS += -I./include -Wall -Wextra -std=c++98
 LDFLAGS  +=
 LDLIBS   +=
 CXX      := c++
@@ -10,7 +10,7 @@ LINK.cpp := $(filter-out $(CXXFLAGS), $(LINK.cpp))
 
 vpath %.cpp $(shell find srcs -type d)
 
-SRCS     := main.cpp
+SRCS     := main.cpp WebServer.cpp ServerConfig.cpp
 OBJS     := $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))
 DEPS     := $(OBJS:.o=.d)
 NAME     := webserv
