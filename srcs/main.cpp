@@ -1,16 +1,7 @@
 #include <iostream>
-#include <vector>
 
 #include "ServerConfig.hpp"
 #include "WebServer.hpp"
-
-int run(const std::vector<ServerConfig> &configs) {
-    std::vector<WebServer> servers(configs.size());
-
-    for (;;) {
-    }
-    return 0;
-}
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -18,5 +9,11 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    return run(ServerConfig::fromFile(argv[1]));
+    try {
+        WebServer webServer;
+        std::vector<ServerConfig> configs = ServerConfig::fromFile(argv[1]);
+        webServer.run(configs);
+    } catch (const std::exception &e) {
+        std::cerr << e.what() << '\n';
+    }
 }

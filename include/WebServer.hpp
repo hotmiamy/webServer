@@ -10,5 +10,7 @@ class WebServer {
     WebServer &operator=(const WebServer &);
     ~WebServer();
 
+    void run(const std::vector<ServerConfig> &configs);
+
    private:
 };

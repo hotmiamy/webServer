@@ -15,3 +15,8 @@ WebServer &WebServer::operator=(const WebServer &other) {
 }
 
 WebServer::~WebServer() {}
+
+void WebServer::run(const std::vector<ServerConfig> &configs) {
+    // for (;;) {
+    // }
+}
