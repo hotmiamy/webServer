@@ -1,4 +1,3 @@
-
 #include "parsing.hpp"
 
 std::vector<ServerConfig> parse(std::ifstream &ifs) {

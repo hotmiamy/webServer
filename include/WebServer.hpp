@@ -10,7 +10,5 @@ class WebServer {
     WebServer &operator=(const WebServer &);
     ~WebServer();
 
-    int run();
-
    private:
 };

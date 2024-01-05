@@ -1,8 +1,9 @@
 #include "ServerConfig.hpp"
 
-#include <iostream>
+#include "parsing.hpp"
 
-ServerConfig::ServerConfig() {}
+ServerConfig::ServerConfig()
+    : _port(), _serverNames(), _errorPages(), _locations() {}
 
 ServerConfig::ServerConfig(const ServerConfig &other) { *this = other; }
 
@@ -14,21 +15,12 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
 
 ServerConfig::~ServerConfig() {}
 
-ServerConfig ServerConfig::fromFile(const std::string &file) {
+std::vector<ServerConfig> ServerConfig::fromFile(const std::string &file) {
     std::ifstream ifs(file.c_str());
 
     if (!ifs.is_open()) {
         throw std::invalid_argument("invalid file: " + file);
     }
 
-    ServerConfig serverConfig;
-    serverConfig.parse(ifs);
-    return serverConfig;
-}
-
-void ServerConfig::parse(std::ifstream &ifs) {
-    std::string line;
-    while (std::getline(ifs, line)) {
-        std::cout << line << '\n';
-    }
+    return parse(ifs);
 }

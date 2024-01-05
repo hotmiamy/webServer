@@ -15,10 +15,3 @@ WebServer &WebServer::operator=(const WebServer &other) {
 }
 
 WebServer::~WebServer() {}
-
-int WebServer::run() {
-    for (;;) {
-        // server logic here
-    }
-    return 0;
-}

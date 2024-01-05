@@ -1,7 +1,11 @@
 #pragma once
 
 #include <fstream>
+#include <map>
 #include <string>
+#include <vector>
+
+#include "Location.hpp"
 
 class ServerConfig {
    public:
@@ -9,10 +13,13 @@ class ServerConfig {
     ServerConfig &operator=(const ServerConfig &);
     ~ServerConfig();
 
-    static ServerConfig fromFile(const std::string &);
+    static std::vector<ServerConfig> fromFile(const std::string &);
 
    private:
     ServerConfig();
 
-    void parse(std::ifstream &);
+    int _port;
+    std::vector<std::string> _serverNames;
+    std::map<int, std::string> _errorPages;
+    std::vector<Location> _locations;
 };
