@@ -1,6 +1,6 @@
 #include "parsing.hpp"
 
-#include <iostream>
+static ServerConfig serverBlockToServerConfig(const std::string &block);
 
 static bool hasCorrectAmountOfBrackets(const std::string &str) {
     int left = 0, right = 0;
@@ -54,8 +54,43 @@ std::vector<ServerConfig> parse(std::ifstream &ifs) {
     }
 
     std::vector<ServerConfig> configs;
+    for (std::string::size_type i = 0; i < serverConfigBlocks.size(); ++i) {
+        ServerConfig config = serverBlockToServerConfig(serverConfigBlocks[i]);
+        configs.push_back(config);
+    }
     return configs;
 }
 
-// static std::vector<ServerConfig> serverBlockToServerConfig(
-//     const std::vector<std::string> &blocks) {}
+static std::string removeConsecutiveWhitespaces(const std::string &str) {
+    if (str.empty()) {
+        return "";
+    }
+    std::string res = str;
+    res.erase(std::unique(res.begin(), res.end(), IsConsecutiveSpace()),
+              res.end());
+    return res;
+}
+
+static void trimWhitespaces(std::string &line) {
+    // respectively: remove leading whitespaces from start, end, and between the
+    // string
+    line.erase(line.begin(),
+               std::find_if(line.begin(), line.end(), IsNotSpace()));
+    line.erase(std::find_if(line.rbegin(), line.rend(), IsNotSpace()).base(),
+               line.end());
+    line = removeConsecutiveWhitespaces(line);
+}
+
+static ServerConfig serverBlockToServerConfig(const std::string &block) {
+    std::istringstream iss(block);
+    std::string line;
+
+    while (std::getline(iss, line)) {
+        trimWhitespaces(line);
+        if (line.empty()) {
+            continue;
+        }
+    }
+    ServerConfig config;
+    return config;
+}
