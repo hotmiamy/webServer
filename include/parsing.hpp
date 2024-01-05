@@ -4,9 +4,11 @@
 #include <cctype>
 #include <cstring>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <string>
 
+#include "DirectiveHandler.hpp"
 #include "ServerConfig.hpp"
 
 struct IsNotSpace {

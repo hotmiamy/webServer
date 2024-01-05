@@ -86,6 +86,8 @@ static ServerConfig serverBlockToServerConfig(const std::string &block) {
     std::string line;
 
     ServerConfig config;
+    DirectiveHandler handler;
+
     while (std::getline(iss, line)) {
         trimWhitespaces(line);
         if (line.empty()) {
@@ -96,30 +98,7 @@ static ServerConfig serverBlockToServerConfig(const std::string &block) {
         std::string directive;
         lineIss >> directive;
 
-        if (directive == "listen") {
-            int port;
-            lineIss >> port;
-            // std::cout << "porta lida: " << port << '\n';
-            config.setPort(port);
-            continue;
-        }
-        if (directive == "error_page") {
-            int errorCode;
-            std::string path;
-            lineIss >> errorCode >> path;
-            // std::cout << "codigo de erro e path: " << errorCode << ": " <<
-            // path << '\n';
-            config.addErrorPage(errorCode, path);
-            continue;
-        }
-        if (directive == "server_name") {
-            std::string server;
-            while (lineIss >> server) {
-                // std::cout << "adicionando server: " << server << '\n';
-                config.addServer(server);
-            }
-            continue;
-        }
+        handler.process(directive, lineIss, config);
     }
     return config;
 }
