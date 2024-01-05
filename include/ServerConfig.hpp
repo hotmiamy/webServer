@@ -9,15 +9,18 @@
 
 class ServerConfig {
    public:
+    ServerConfig();
     ServerConfig(const ServerConfig &);
     ServerConfig &operator=(const ServerConfig &);
     ~ServerConfig();
 
     static std::vector<ServerConfig> fromFile(const std::string &);
 
-   private:
-    ServerConfig();
+    void setPort(int);
+    void addErrorPage(int, const std::string &);
+    void addServer(const std::string &);
 
+   private:
     int _port;
     std::vector<std::string> _serverNames;
     std::map<int, std::string> _errorPages;

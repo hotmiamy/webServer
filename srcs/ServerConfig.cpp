@@ -24,3 +24,13 @@ std::vector<ServerConfig> ServerConfig::fromFile(const std::string &file) {
 
     return parse(ifs);
 }
+
+void ServerConfig::setPort(int port) { _port = port; }
+
+void ServerConfig::addErrorPage(int errorCode, const std::string &path) {
+    _errorPages[errorCode] = path;
+}
+
+void ServerConfig::addServer(const std::string &server) {
+    _serverNames.push_back(server);
+}
