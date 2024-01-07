@@ -12,7 +12,7 @@ namespace ft
 			int backlog;
 			int listening;
 		public:
-			ListeningSocket(int domain, int service, int protocol, int port, u_long interface, int bklg);
+			ListeningSocket(std::string ip, std::string port, int bklg);
 			void start_listening();
 	};
 }

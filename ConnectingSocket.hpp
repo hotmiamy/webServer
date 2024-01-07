@@ -2,7 +2,6 @@
 # define CONNECTING_SOCKET_HPP
 
 #include <stdio.h>
-
 #include "SimpleSocket.hpp"
 
 namespace ft
@@ -12,8 +11,8 @@ namespace ft
 		private:
 			int connection;
 		public:
-			ConnectingSocket(int domain, int service, int protocol, int port, u_long interface);
-			void ConnectToNetwork(int sock, struct sockaddr_in address);
+			ConnectingSocket(std::string ip, std::string port);
+			void ConnectToNetwork(int SockFd, struct addrinfo *addrRes);
 	};
 }
 
