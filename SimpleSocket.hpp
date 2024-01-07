@@ -1,25 +1,29 @@
 #ifndef SIMPLESOCKET_HPP
 # define SIMPLESOCKET_HPP
 
-#include <cstdio>
-#include <cstdlib>
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include <cstdio> //perror
+#include <string> //string
+#include <cstdlib> //exit
+#include <sys/socket.h> //socket
+#include <sys/types.h>
+#include <netdb.h>
 
 namespace ft
 {
 	class SimpleSocket
 	{
 		private:
-			struct sockaddr_in	_address;
-			int sock;
+			struct addrinfo *res;
+			std::string ip;
+			std::string port;
+			int _SockFd;
 		public:
-			SimpleSocket(int domain, int service, int protocol, int port, u_long interface);
-			virtual void	ConnectToNetwork(int sock, struct sockaddr_in address) = 0;
+			SimpleSocket(std::string ip, std::string port);
+			virtual void	ConnectToNetwork(int sock, struct addrinfo *address) = 0;
 			void 			CheckConnection(int);
-			struct sockaddr_in get_address();
+			struct addrinfo *get_AddrRes();
 		
-		int get_sock();
+		int get_SockFd();
 
 	};
 }

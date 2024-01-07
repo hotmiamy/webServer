@@ -13,7 +13,7 @@ namespace ft {
             void Handler();
             void Responder();
             int New_Socket;
-            char Buffer[3000];
+			char Buffer[3000];
         
         public:
             TestServer();

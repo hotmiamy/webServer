@@ -1,13 +1,15 @@
 #include "SimpleSocket.hpp"
 
-ft::SimpleSocket::SimpleSocket(int domain, int service, int protocol, int port, u_long interface)
+ft::SimpleSocket::SimpleSocket(std::string ip, std::string port)
 {
 	// Define address structure
-	_address.sin_family = domain;
-	_address.sin_port = htons(port);
-	_address.sin_addr.s_addr = htonl(interface);
+	struct addrinfo info = {};
+
+	info.ai_family = AF_UNSPEC;
+	info.ai_socktype = SOCK_STREAM;
 	// Establish socket
-	sock = socket(domain, service, protocol);
+	CheckConnection(getaddrinfo(ip.c_str(), port.c_str(), &info, &res));
+	_SockFd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 }
 
 void ft::SimpleSocket::CheckConnection(int connection)
@@ -19,12 +21,12 @@ void ft::SimpleSocket::CheckConnection(int connection)
 	}
 }
 
-struct sockaddr_in ft::SimpleSocket::get_address()
+struct addrinfo *ft::SimpleSocket::get_AddrRes()
 {
-	return _address;
+	return res;
 }
 
-int ft::SimpleSocket::get_sock()
+int ft::SimpleSocket::get_SockFd()
 {
-	return sock;
+	return _SockFd;
 }

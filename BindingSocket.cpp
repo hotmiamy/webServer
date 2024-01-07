@@ -1,12 +1,12 @@
 #include "BindingSocket.hpp"
 
-ft::BindingSocket::BindingSocket(int domain, int service, int protocol, int port, u_long interface) : SimpleSocket(domain, service, protocol, port, interface)
+ft::BindingSocket::BindingSocket(std::string ip, std::string port) : SimpleSocket(ip, port)
 {
-	ConnectToNetwork(get_sock(), get_address());
+	ConnectToNetwork(get_SockFd(), get_AddrRes());
 	CheckConnection(binding);
 }
 
-void ft::BindingSocket::ConnectToNetwork(int sock, struct sockaddr_in address)
+void ft::BindingSocket::ConnectToNetwork(int sock, struct addrinfo *AddrRes)
 {
-	binding = bind(sock, (struct sockaddr *)&address, sizeof(address));
+	binding = bind(sock, AddrRes->ai_addr, AddrRes->ai_addrlen);
 }

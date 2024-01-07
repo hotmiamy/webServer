@@ -11,8 +11,8 @@ namespace ft
 		private:
 			int binding;
 		public:
-			BindingSocket(int domain, int service, int protocol, int port, u_long interface);
-			void ConnectToNetwork(int sock, struct sockaddr_in address);
+			BindingSocket(std::string ip, std::string port);
+			void ConnectToNetwork(int SockFd, struct addrinfo *AddrRes);
 	};
 }
 
