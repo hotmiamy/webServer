@@ -1,12 +1,12 @@
 #include "ConnectingSocket.hpp"
 
-ft::ConnectingSocket::ConnectingSocket(int domain, int service, int protocol, int port, u_long interface) : SimpleSocket(domain, service, protocol, port, interface)
+ft::ConnectingSocket::ConnectingSocket(std::string ip, std::string port) : SimpleSocket(ip, port)
 {
-	ConnectToNetwork(get_sock(), get_address());
+	ConnectToNetwork(get_SockFd(), get_AddrRes());
 	CheckConnection(connection);
 }
 
-void ft::ConnectingSocket::ConnectToNetwork(int sock, struct sockaddr_in address)
+void ft::ConnectingSocket::ConnectToNetwork(int sock, struct addrinfo *AddrRes)
 {
-	connection = connect(sock, (struct sockaddr *)&address, sizeof(address));
+	connection = connect(sock, AddrRes->ai_addr, AddrRes->ai_addrlen);
 }

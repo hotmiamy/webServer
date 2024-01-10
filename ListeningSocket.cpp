@@ -1,6 +1,6 @@
 #include "ListeningSocket.hpp"
 
-ft::ListeningSocket::ListeningSocket(int domain, int service, int protocol, int port, u_long interface, int bklg) : BindingSocket(domain, service, protocol, port, interface)
+ft::ListeningSocket::ListeningSocket(std::string ip, std::string port, int bklg) : BindingSocket(ip, port)
 {
 	backlog = bklg;
 	start_listening();
@@ -9,5 +9,5 @@ ft::ListeningSocket::ListeningSocket(int domain, int service, int protocol, int 
 
 void ft::ListeningSocket::start_listening()
 {
-	listening = listen(get_sock(), backlog); 
+	listening = listen(get_SockFd(), backlog); 
 }

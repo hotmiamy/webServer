@@ -14,7 +14,7 @@ namespace ft
             virtual void Responder() = 0;
 
 		public:
-            SimpleServer(int domain, int service, int protocol, int port, u_long interface, int bklg);
+            SimpleServer(std::string ip, std::string port, int bklg);
             ListeningSocket *GetSocket();
             virtual void Launch() = 0;
     };
