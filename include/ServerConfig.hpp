@@ -16,13 +16,15 @@ class ServerConfig {
 
     static std::vector<ServerConfig> fromFile(const std::string &);
 
-    void setPort(int);
+    void setPort(const std::string &);
     void addErrorPage(int, const std::string &);
     void addServer(const std::string &);
 
    private:
-    int _port;
+    std::string _port;
     std::vector<std::string> _serverNames;
     std::map<int, std::string> _errorPages;
     std::vector<Location> _locations;
 };
+
+typedef std::vector<ServerConfig> ConfigVec;

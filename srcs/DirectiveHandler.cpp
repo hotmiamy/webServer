@@ -12,9 +12,8 @@ DirectiveHandler::~DirectiveHandler() {}
 
 void DirectiveHandler::handleListenDirective(std::istringstream &iss,
                                              ServerConfig &cfg) {
-    int port;
+    std::string port;
     iss >> port;
-    // std::cout << "porta lida: " << port << '\n';
     cfg.setPort(port);
 }
 
@@ -22,7 +21,6 @@ void DirectiveHandler::handleServerNameDirective(std::istringstream &iss,
                                                  ServerConfig &cfg) {
     std::string server;
     while (iss >> server) {
-        // std::cout << "adicionando server: " << server << '\n';
         cfg.addServer(server);
     }
 }
@@ -32,8 +30,6 @@ void DirectiveHandler::handleErrorPageDirective(std::istringstream &iss,
     int errorCode;
     std::string path;
     iss >> errorCode >> path;
-    // std::cout << "codigo de erro e path: " << errorCode << ": " << path <<
-    // '\n';
     cfg.addErrorPage(errorCode, path);
 }
 

@@ -9,6 +9,10 @@ ServerConfig::ServerConfig(const ServerConfig &other) { *this = other; }
 
 ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
     if (this != &other) {
+        _port = other._port;
+        _serverNames = other._serverNames;
+        _errorPages = other._errorPages;
+        _locations = other._locations;
     }
     return *this;
 }
@@ -25,7 +29,7 @@ std::vector<ServerConfig> ServerConfig::fromFile(const std::string &file) {
     return parse(ifs);
 }
 
-void ServerConfig::setPort(int port) { _port = port; }
+void ServerConfig::setPort(const std::string &port) { _port = port; }
 
 void ServerConfig::addErrorPage(int errorCode, const std::string &path) {
     _errorPages[errorCode] = path;
