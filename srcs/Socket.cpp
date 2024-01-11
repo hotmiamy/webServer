@@ -16,13 +16,24 @@ Socket &Socket::operator=(const Socket &other) {
         _socketFd = other._socketFd;
         _clientFd = other._clientFd;
         _res = other._res;
+        _serverNames = other._serverNames;
+        _port = other._port;
     }
     return *this;
 }
 
 Socket::~Socket() {}
 
-void Socket::connect() { this->_setup(); }
+void Socket::connect() {
+    this->_setup();
+
+    _checkConnectionOrElseThrow(
+        bind(_socketFd, _res->ai_addr, _res->ai_addrlen),
+        std::runtime_error("..."));
+
+    _checkConnectionOrElseThrow(listen(_socketFd, Socket::ConnectionRequests),
+                                std::runtime_error("..."));
+}
 
 void Socket::_setup() {
     struct addrinfo info;
@@ -34,14 +45,22 @@ void Socket::_setup() {
 
     // TODO: handle multiple IPs/hosts (probably not the best way to do it...)
     std::string ip = _serverNames.at(0);
-    if (::getaddrinfo(ip.c_str(), _port.c_str(), &info, &_res) < 0) {
-        throw std::runtime_error("");
-    }
+
+    _checkConnectionOrElseThrow(
+        ::getaddrinfo(ip.c_str(), _port.c_str(), &info, &_res),
+        std::runtime_error("..."));
 
     _socketFd = ::socket(_res->ai_family, _res->ai_socktype, _res->ai_protocol);
 
-    if (setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR, &optVal,
-                   sizeof(optVal)) < 1) {
-        throw std::runtime_error("");
+    _checkConnectionOrElseThrow(setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR,
+                                           &optVal, sizeof(optVal)),
+                                std::runtime_error("..."));
+}
+
+template <typename ExceptionType>
+void Socket::_checkConnectionOrElseThrow(int ret,
+                                         const ExceptionType &exception) {
+    if (ret < 0) {
+        throw exception;
     }
 }

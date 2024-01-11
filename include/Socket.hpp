@@ -18,6 +18,8 @@ class Socket {
     Socket &operator=(const Socket &);
     ~Socket();
 
+    const static int ConnectionRequests = 10;
+
     void connect();
 
    private:
@@ -30,4 +32,6 @@ class Socket {
     std::string _port;
 
     void _setup();
+    template <typename ExceptionType>
+    void _checkConnectionOrElseThrow(int ret, const ExceptionType &);
 };
