@@ -29,12 +29,17 @@ std::vector<ServerConfig> ServerConfig::fromFile(const std::string &file) {
     return parse(ifs);
 }
 
-void ServerConfig::setPort(const std::string &port) { _port = port; }
+const std::string &ServerConfig::getPort() const { return _port; }
 
-void ServerConfig::addErrorPage(int errorCode, const std::string &path) {
-    _errorPages[errorCode] = path;
+const std::vector<std::string> ServerConfig::getServerNames() const {
+    return _serverNames;
 }
+
+void ServerConfig::setPort(const std::string &port) { _port = port; }
 
 void ServerConfig::addServer(const std::string &server) {
     _serverNames.push_back(server);
+}
+void ServerConfig::addErrorPage(int errorCode, const std::string &path) {
+    _errorPages[errorCode] = path;
 }

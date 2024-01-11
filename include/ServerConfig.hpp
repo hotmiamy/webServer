@@ -16,9 +16,12 @@ class ServerConfig {
 
     static std::vector<ServerConfig> fromFile(const std::string &);
 
+    const std::string &getPort() const;
+    const std::vector<std::string> getServerNames() const;
+
     void setPort(const std::string &);
-    void addErrorPage(int, const std::string &);
     void addServer(const std::string &);
+    void addErrorPage(int, const std::string &);
 
    private:
     std::string _port;
