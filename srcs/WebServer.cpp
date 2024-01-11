@@ -1,7 +1,5 @@
 #include "WebServer.hpp"
 
-#include "ServerConfig.hpp"
-
 WebServer::WebServer() {}
 
 WebServer::WebServer(const ServerConfig &) {}
@@ -16,7 +14,9 @@ WebServer &WebServer::operator=(const WebServer &other) {
 
 WebServer::~WebServer() {}
 
-void WebServer::run(const std::vector<ServerConfig> &configs) {
-    // for (;;) {
-    // }
+void WebServer::run(const ConfigVec &configs) {
+    for (ConfigVec::size_type i = 0; i < configs.size(); ++i) {
+        Socket socket(configs.at(i));
+        socket.connect();
+    }
 }
