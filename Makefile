@@ -10,11 +10,11 @@ RM		:=	rm -rf
 NAME		:= webserv
 
 # Headers
-HEADER		:=	master.hpp ListeningSocket.hpp ConnectingSocket.hpp BindingSocket.hpp SimpleSocket.hpp SimpleServer.hpp TestServer.hpp
+HEADER		:=	master.hpp Socket.hpp WebServer.hpp
 H_INCLUDE	:=	$(addprefix , $(HEADER))
 
 # Source
-SRC			:=	main.cpp ListeningSocket.cpp ConnectingSocket.cpp BindingSocket.cpp SimpleSocket.cpp SimpleServer.cpp TestServer.cpp
+SRC			:=	main.cpp Socket.cpp WebServer.cpp
 # Object
 OBJ_DIR		:=	obj
 OBJ			:=	$(SRC:%.cpp=$(OBJ_DIR)/%.o)

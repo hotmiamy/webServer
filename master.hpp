@@ -3,9 +3,6 @@
 
 #include <stdio.h>
 
-#include "SimpleSocket.hpp"
-#include "ConnectingSocket.hpp"
-#include "BindingSocket.hpp"
-#include "ListeningSocket.hpp"
+#include "Socket.hpp"
 
 #endif

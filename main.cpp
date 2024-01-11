@@ -1,7 +1,7 @@
-#include "TestServer.hpp"
+#include "WebServer.hpp"
 #include <iostream>
 
 int main()
 {
-	ft::TestServer testServer;
+	ft::WebServer testServer;
 }
