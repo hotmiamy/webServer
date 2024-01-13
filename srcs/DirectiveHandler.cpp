@@ -42,6 +42,10 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss,
         if (directive == "allowed_methods") {
             _handleAllowedMethodsDirective(iss, location);
         }
+        if (directive == "index") {
+            _handleIndexFiles(iss, location);
+            //
+        }
     }
     cfg.setLocation(location);
 }
@@ -53,6 +57,15 @@ void DirectiveHandler::_handleAllowedMethodsDirective(std::istringstream &iss,
         location._allowedMethods.push_back(httpMethod);
     }
 }
+
+void DirectiveHandler::_handleIndexFiles(std::istringstream &iss,
+                                         Location &location) {
+    std::string file;
+    while (iss >> file) {
+        location._indexFiles.push_back(file);
+    }
+}
+
 void DirectiveHandler::process(const std::string &directive,
                                std::istringstream &iss, ServerConfig &cfg) {
     if (_directiveMap.find(directive) != _directiveMap.end()) {

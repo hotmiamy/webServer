@@ -23,4 +23,5 @@ class DirectiveHandler {
     void _handleErrorPageDirective(std::istringstream &, ServerConfig &);
     void _handleLocationDirective(std::istringstream &, ServerConfig &);
     void _handleAllowedMethodsDirective(std::istringstream &, Location &);
+    void _handleIndexFiles(std::istringstream &, Location &);
 };
