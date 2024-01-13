@@ -3,6 +3,9 @@ SHELL := /bin/sh
 OBJDIR   := objdir
 
 CXXFLAGS += -I./include -Wall -Wextra -std=c++98
+ifeq ($(DEBUG),true)
+	CXXFLAGS += -g
+endif
 LDFLAGS  +=
 LDLIBS   +=
 CXX      := c++
