@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <strings.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #include <vector>
 
@@ -11,8 +12,6 @@
 
 class Socket {
    public:
-    typedef std::vector<Socket> SocketVec;
-
     Socket(const Socket &);
     Socket(const ServerConfig &);
     Socket &operator=(const Socket &);
@@ -21,6 +20,7 @@ class Socket {
     const static int ConnectionRequests = 10;
 
     void connect();
+    int accept();
 
    private:
     Socket();
@@ -35,3 +35,5 @@ class Socket {
     template <typename ExceptionType>
     void _checkConnectionOrElseThrow(int ret, const ExceptionType &);
 };
+
+typedef std::vector<Socket> SocketVec;

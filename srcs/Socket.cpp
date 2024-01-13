@@ -1,13 +1,14 @@
 #include "Socket.hpp"
 
-Socket::Socket() : _socketFd(-1), _clientFd(-1), _res() {}
+Socket::Socket()
+    : _socketFd(-1), _clientFd(-1), _res(NULL), _serverNames(), _port() {}
 
 Socket::Socket(const Socket &other) { *this = other; }
 
 Socket::Socket(const ServerConfig &cfg)
     : _socketFd(-1),
       _clientFd(-1),
-      _res(),
+      _res(NULL),
       _serverNames(cfg.getServerNames()),
       _port(cfg.getPort()) {}
 
@@ -22,7 +23,14 @@ Socket &Socket::operator=(const Socket &other) {
     return *this;
 }
 
-Socket::~Socket() {}
+Socket::~Socket() {
+    // if (_res) {
+    //     freeaddrinfo(_res);
+    // }
+    // if (_socketFd != -1) {
+    //     close(_socketFd);
+    // }
+}
 
 void Socket::connect() {
     this->_setup();
@@ -33,6 +41,18 @@ void Socket::connect() {
 
     _checkConnectionOrElseThrow(listen(_socketFd, Socket::ConnectionRequests),
                                 std::runtime_error("..."));
+}
+
+int Socket::accept() {
+    sockaddr_storage clientAddr;
+    socklen_t clientAddrSize = sizeof(clientAddr);
+    bzero(&clientAddr, clientAddrSize);
+
+    _clientFd =
+        ::accept(_socketFd, (struct sockaddr *)&clientAddr, &clientAddrSize);
+
+    _checkConnectionOrElseThrow(_clientFd, std::runtime_error("..."));
+    return _clientFd;
 }
 
 void Socket::_setup() {
