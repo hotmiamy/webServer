@@ -21,4 +21,6 @@ class DirectiveHandler {
     void _handleListenDirective(std::istringstream &, ServerConfig &);
     void _handleServerNameDirective(std::istringstream &, ServerConfig &);
     void _handleErrorPageDirective(std::istringstream &, ServerConfig &);
+    void _handleLocationDirective(std::istringstream &, ServerConfig &);
+    void _handleAllowedMethodsDirective(std::istringstream &, Location &);
 };
