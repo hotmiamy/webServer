@@ -44,10 +44,9 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss,
         }
         if (directive == "index") {
             _handleIndexFiles(iss, location);
-            //
         }
     }
-    cfg.setLocation(location);
+    cfg.addLocation(location);
 }
 
 void DirectiveHandler::_handleAllowedMethodsDirective(std::istringstream &iss,

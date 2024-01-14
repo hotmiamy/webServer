@@ -22,6 +22,7 @@ class ServerConfig {
     void setPort(const std::string &);
     void addServer(const std::string &);
     void addErrorPage(int, const std::string &);
+    void addLocation(const Location &);
 
    private:
     std::string _port;

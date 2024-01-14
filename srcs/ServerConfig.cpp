@@ -43,3 +43,7 @@ void ServerConfig::addServer(const std::string &server) {
 void ServerConfig::addErrorPage(int errorCode, const std::string &path) {
     _errorPages[errorCode] = path;
 }
+
+void ServerConfig::addLocation(const Location &location) {
+    _locations.push_back(location);
+}
