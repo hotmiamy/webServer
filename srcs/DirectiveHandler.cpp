@@ -1,5 +1,14 @@
 #include "DirectiveHandler.hpp"
 
+const std::string DirectiveHandler::ERR_LISTEN =
+    "error at 'listen' directive: ";
+const std::string DirectiveHandler::ERR_SERVER_NAME =
+    "error in 'server_name' directive: ";
+const std::string DirectiveHandler::ERR_ERROR_PAGE =
+    "error in 'error_page' directive: ";
+const std::string DirectiveHandler::ERR_LOCATION =
+    "error in 'location' directive: ";
+
 DirectiveHandler::DirectiveHandler() {
     _directiveMap["listen"] = &DirectiveHandler::_handleListenDirective;
     _directiveMap["server_name"] =
