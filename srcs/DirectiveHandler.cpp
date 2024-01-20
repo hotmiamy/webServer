@@ -22,7 +22,15 @@ DirectiveHandler::~DirectiveHandler() {}
 void DirectiveHandler::_handleListenDirective(std::istringstream &iss,
                                               ServerConfig &cfg) {
     std::string port;
-    iss >> port;
+
+    if (!(iss >> port) || !_isNumeric(port)) {
+        throw std::runtime_error(ERR_LISTEN +
+                                 "the port should be a numeric value");
+    }
+    if (iss.rdbuf()->in_avail() != 0) {
+        throw std::runtime_error(
+            ERR_LISTEN + "there should be one and only one port per server");
+    }
     cfg.setPort(port);
 }
 
