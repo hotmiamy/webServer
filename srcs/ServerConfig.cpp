@@ -40,7 +40,9 @@ void ServerConfig::setPort(const std::string &port) { _port = port; }
 void ServerConfig::addServer(const std::string &server) {
     _serverNames.push_back(server);
 }
-void ServerConfig::addErrorPage(int errorCode, const std::string &path) {
+
+void ServerConfig::addErrorPage(const std::string &errorCode,
+                                const std::string &path) {
     _errorPages[errorCode] = path;
 }
 
