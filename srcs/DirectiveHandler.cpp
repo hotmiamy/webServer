@@ -37,6 +37,12 @@ void DirectiveHandler::_handleListenDirective(std::istringstream &iss,
 void DirectiveHandler::_handleServerNameDirective(std::istringstream &iss,
                                                   ServerConfig &cfg) {
     std::string server;
+
+    if (!(iss >> server)) {
+        throw std::runtime_error(ERR_SERVER_NAME +
+                                 "at least one server name should be provided");
+    }
+    cfg.addServer(server);
     while (iss >> server) {
         cfg.addServer(server);
     }
