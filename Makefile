@@ -1,56 +1,50 @@
-# C Compiler
-CC		:=	c++
-# Compiler flags
-CFLAGS	:= -g -std=c++98
-# Removal tool
-RM		:=	rm -rf
+SHELL := /bin/sh
 
-# PROGRAM
-# Program name
-NAME		:= webserv
+OBJDIR   := objdir
 
-# Headers
-HEADER		:=	master.hpp Socket.hpp WebServer.hpp
-H_INCLUDE	:=	$(addprefix , $(HEADER))
+CXXFLAGS += -I./include -Wall -Wextra -std=c++98
+ifeq ($(DEBUG),true)
+	CXXFLAGS += -g
+endif
+LDFLAGS  +=
+LDLIBS   +=
+CXX      := c++
+LINK.cpp := $(filter-out $(CXXFLAGS), $(LINK.cpp))
 
-# Source
-SRC			:=	main.cpp Socket.cpp WebServer.cpp
-# Object
-OBJ_DIR		:=	obj
-OBJ			:=	$(SRC:%.cpp=$(OBJ_DIR)/%.o)
+vpath %.cpp $(shell find srcs -type d)
 
-# Inclusions:
-INCLUDE		:= $(H_INCLUDE)
+SRCS     := main.cpp WebServer.cpp ServerConfig.cpp parsing.cpp DirectiveHandler.cpp \
+			Socket.cpp
+OBJS     := $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))
+DEPS     := $(OBJS:.o=.d)
+NAME     := webserv
 
-# -----------------------RULES------------------------------------------------ #
-.PHONY: all vg norm clean fclean re
+.PHONY: all clean fclean re options
 
-# Creates NAME
 all: $(NAME)
 
-# Compiles OBJ and LIBFT into the program NAME
-$(NAME): $(OBJ) $(INCLUDE)
-	$(CC) $(CFLAGS) -o $@ $(OBJ) 
+$(NAME): $(OBJS)
+	$(LINK.cpp) $(LDLIBS) $(OUTPUT_OPTION) $^
 
-# Compiles SRC into OBJ
-$(OBJ): $(OBJ_DIR)/%.o: %.cpp $(HEADER) | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -o $@ -c $<
+$(OBJDIR)/%.o: %.cpp Makefile | $(OBJDIR)
+	$(COMPILE.cpp) $(OUTPUT_OPTION) -MMD -MP $<
 
-# Directory making
-$(OBJ_DIR):
-	@mkdir -p $@
+-include $(DEPS)
 
-# Run program using valgrind
-vg:
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(NAME) test
+$(OBJDIR):
+	mkdir $@
 
-# Clean: removes objects' directory
 clean:
-	@$(RM) $(OBJ_DIR)
+	$(RM) $(OBJS) $(DEPS)
 
-# Full clean: removes objects' directory and generated libs/programs
 fclean: clean
 	$(RM) $(NAME)
 
-# Remake: full cleans and runs 'all' rule
 re: fclean all
+
+options:
+	@echo "$(NAME) build options:"
+	@echo "CXXFLAGS      = $(CXXFLAGS)"
+	@echo "LDFLAGS       = $(LDFLAGS)"
+	@echo "LDLIBS        = $(LDLIBS)"
+	@echo "CXX           = $(CXX)"
