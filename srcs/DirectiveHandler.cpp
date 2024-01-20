@@ -44,9 +44,23 @@ void DirectiveHandler::_handleServerNameDirective(std::istringstream &iss,
 
 void DirectiveHandler::_handleErrorPageDirective(std::istringstream &iss,
                                                  ServerConfig &cfg) {
-    int errorCode;
-    std::string path;
-    iss >> errorCode >> path;
+    std::string errorCode, path;
+
+    if (!(iss >> errorCode) || !_isNumeric(errorCode)) {
+        throw std::runtime_error(ERR_ERROR_PAGE +
+                                 "the error code should be a numeric value");
+    }
+    if (!(iss >> path) || !_isFileReadable(path)) {
+        throw std::runtime_error(ERR_ERROR_PAGE +
+                                 "page should point to a valid path");
+    }
+    if (iss.rdbuf()->in_avail() != 0) {
+        throw std::runtime_error(
+            ERR_ERROR_PAGE +
+            "there shouldn't exist any more args for this directive, just "
+            "<error_code> <error_page>");
+    }
+
     cfg.addErrorPage(errorCode, path);
 }
 
@@ -57,7 +71,7 @@ bool DirectiveHandler::_isNumeric(const std::string &str) const {
 bool DirectiveHandler::_isFileReadable(const std::string &path) const {
     struct stat fileInfo;
 
-    return stat(path.c_str(), &fileInfo) &&
+    return stat(path.c_str(), &fileInfo) == 0 &&
            (S_ISREG(fileInfo.st_mode) && fileInfo.st_mode & S_IRUSR);
 }
 
