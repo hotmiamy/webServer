@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sys/stat.h>
+
 #include <map>
 #include <sstream>
 
@@ -29,4 +31,7 @@ class DirectiveHandler {
     void _handleLocationDirective(std::istringstream &, ServerConfig &);
     void _handleAllowedMethodsDirective(std::istringstream &, Location &);
     void _handleIndexFiles(std::istringstream &, Location &);
+
+    bool _isFileReadable(const std::string &) const;
+    bool _isNumeric(const std::string &) const;
 };

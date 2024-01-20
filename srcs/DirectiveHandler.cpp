@@ -42,6 +42,17 @@ void DirectiveHandler::_handleErrorPageDirective(std::istringstream &iss,
     cfg.addErrorPage(errorCode, path);
 }
 
+bool DirectiveHandler::_isNumeric(const std::string &str) const {
+    return str.find_last_not_of("0123456789") == std::string::npos;
+}
+
+bool DirectiveHandler::_isFileReadable(const std::string &path) const {
+    struct stat fileInfo;
+
+    return stat(path.c_str(), &fileInfo) &&
+           (S_ISREG(fileInfo.st_mode) && fileInfo.st_mode & S_IRUSR);
+}
+
 void DirectiveHandler::_handleLocationDirective(std::istringstream &iss,
                                                 ServerConfig &cfg) {
     Location location;
