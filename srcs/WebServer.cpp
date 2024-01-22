@@ -55,6 +55,6 @@ void WebServer::_read() {
 
 void WebServer::_respond() {
 	fcntl(_newSock, F_SETFL, O_NONBLOCK);
-    send(_newSock, "teste", 6, 0);
+    send(_newSock, "OLA MUNDO", 6, 0);
     close(_newSock);
 }
