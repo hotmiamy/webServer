@@ -1,6 +1,6 @@
 #include "parsing.hpp"
 
-static ServerConfig serverBlockToServerConfig(const std::string &block);
+static ServerConfig serverBlockToServerConfig(std::string &block);
 
 static bool hasCorrectAmountOfBrackets(const std::string &str) {
     int left = 0, right = 0;
@@ -27,7 +27,8 @@ static std::vector<std::string> splitServerConfigBlocks(const std::string &s) {
     while ((pos = str.find("server ", 0)) != str.npos) {
         std::string::size_type openingBracketPos = str.find("{", pos);
         if (str.substr(pos, strlen(directive)) != directive) {
-            throw std::runtime_error("");
+            throw std::runtime_error(
+                "'server' block must be closed, check the config file");
         }
         std::string::size_type serverBlockEnd =
             str.rfind("}", str.find(directive, openingBracketPos));
@@ -81,7 +82,17 @@ static void trimWhitespaces(std::string &line) {
     line = removeConsecutiveWhitespaces(line);
 }
 
-static ServerConfig serverBlockToServerConfig(const std::string &block) {
+static std::string getLocationBlock(std::istringstream &iss,
+                                    std::istringstream &lineIss) {
+    std::string locationBlock, line;
+    while (std::getline(iss, line) && line.find("}") == std::string::npos) {
+        locationBlock += line + '\n';
+    }
+    locationBlock = lineIss.str() + '\n' + locationBlock + '}';
+    locationBlock.erase(0, locationBlock.find_first_not_of("location "));
+    return locationBlock;
+}
+
 static ServerConfig serverBlockToServerConfig(std::string &block) {
     trimWhitespaces(block);
     std::istringstream iss(block);
@@ -98,6 +109,12 @@ static ServerConfig serverBlockToServerConfig(std::string &block) {
         std::istringstream lineIss(line);
         std::string directive;
         lineIss >> directive;
+
+        if (directive == "location") {
+            std::istringstream locationIss(getLocationBlock(iss, lineIss));
+            handler.process(directive, locationIss, config);
+            continue;
+        }
 
         handler.process(directive, lineIss, config);
     }
