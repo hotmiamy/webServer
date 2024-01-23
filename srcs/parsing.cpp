@@ -82,6 +82,8 @@ static void trimWhitespaces(std::string &line) {
 }
 
 static ServerConfig serverBlockToServerConfig(const std::string &block) {
+static ServerConfig serverBlockToServerConfig(std::string &block) {
+    trimWhitespaces(block);
     std::istringstream iss(block);
     std::string line;
 
@@ -89,7 +91,6 @@ static ServerConfig serverBlockToServerConfig(const std::string &block) {
     DirectiveHandler handler;
 
     while (std::getline(iss, line)) {
-        trimWhitespaces(line);
         if (line.empty()) {
             continue;
         }
