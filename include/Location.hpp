@@ -4,7 +4,13 @@
 #include <vector>
 
 struct Location {
-    std::string _path;
-    std::vector<std::string> _allowedMethods;
-    std::vector<std::string> _indexFiles;
+    std::string path;
+    std::vector<std::string> allowedMethods;
+    std::vector<std::string> indexFiles;
+
+    Location() : path(), allowedMethods(), indexFiles() {}
+
+    bool pathSet() const { return !path.empty(); }
+    bool allowedMethodsSet() const { return !allowedMethods.empty(); }
+    bool indexFilesSet() const { return !indexFiles.empty(); }
 };

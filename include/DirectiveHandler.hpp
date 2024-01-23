@@ -2,6 +2,7 @@
 
 #include <sys/stat.h>
 
+#include <limits>
 #include <map>
 #include <sstream>
 

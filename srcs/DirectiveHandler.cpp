@@ -137,7 +137,7 @@ void DirectiveHandler::_handleIndexFiles(std::istringstream &iss,
                                          Location &location) {
     std::string file;
     while (iss >> file) {
-        location._indexFiles.push_back(file);
+        location.indexFiles.push_back(file);
     }
 }
 
