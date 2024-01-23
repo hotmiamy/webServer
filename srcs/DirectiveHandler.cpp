@@ -3,11 +3,13 @@
 const std::string DirectiveHandler::ERR_LISTEN =
     "error at 'listen' directive: ";
 const std::string DirectiveHandler::ERR_SERVER_NAME =
-    "error in 'server_name' directive: ";
+    "error at 'server_name' directive: ";
 const std::string DirectiveHandler::ERR_ERROR_PAGE =
-    "error in 'error_page' directive: ";
+    "error at 'error_page' directive: ";
 const std::string DirectiveHandler::ERR_LOCATION =
-    "error in 'location' directive: ";
+    "error at 'location' directive: ";
+const std::string DirectiveHandler::ERR_ALLOWED_METHODS =
+    "error at 'allowed_methods' directive: ";
 
 DirectiveHandler::DirectiveHandler() {
     _directiveMap["listen"] = &DirectiveHandler::_handleListenDirective;
@@ -84,25 +86,51 @@ bool DirectiveHandler::_isFileReadable(const std::string &path) const {
 void DirectiveHandler::_handleLocationDirective(std::istringstream &iss,
                                                 ServerConfig &cfg) {
     Location location;
-    iss >> location._path;
-    std::string directive;
-    while (iss >> directive) {
-        if (directive == "allowed_methods") {
-            _handleAllowedMethodsDirective(iss, location);
+    std::string line;
+    while (std::getline(iss, line)) {
+        std::istringstream lineIss(line);
+        if (!location.pathSet()) {
+            if (!(lineIss >> location.path) || location.path == "{") {
+            }
+            std::string tmp;
+            if (!(lineIss >> tmp) || tmp != "{") {
+            }
         }
-        if (directive == "index") {
-            _handleIndexFiles(iss, location);
+        if (line.find("index") != std::string::npos &&
+            !location.indexFilesSet()) {
+            lineIss.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
+            _handleIndexFiles(lineIss, location);
+        }
+        if (line.find("allowed_methods") != std::string::npos &&
+            !location.allowedMethodsSet()) {
+            lineIss.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
+            _handleAllowedMethodsDirective(lineIss, location);
         }
     }
-    cfg.addLocation(location);
 }
 
 void DirectiveHandler::_handleAllowedMethodsDirective(std::istringstream &iss,
                                                       Location &location) {
     std::string httpMethod;
-    while (iss >> httpMethod) {
-        location._allowedMethods.push_back(httpMethod);
+
+    if (!(iss >> httpMethod) || !_isAllowedHttpMethod(httpMethod)) {
+        throw std::runtime_error(
+            ERR_ALLOWED_METHODS +
+            "at least one allowed method should be specified");
     }
+    location.allowedMethods.push_back(httpMethod);
+
+    while (iss >> httpMethod) {
+        if (!_isAllowedHttpMethod(httpMethod)) {
+            throw std::runtime_error(ERR_ALLOWED_METHODS + httpMethod +
+                                     " is not allowed");
+        }
+        location.allowedMethods.push_back(httpMethod);
+    }
+}
+
+bool DirectiveHandler::_isAllowedHttpMethod(const std::string &str) const {
+    return str == "GET" || str == "POST";
 }
 
 void DirectiveHandler::_handleIndexFiles(std::istringstream &iss,

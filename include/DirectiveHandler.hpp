@@ -22,6 +22,7 @@ class DirectiveHandler {
     static const std::string ERR_SERVER_NAME;
     static const std::string ERR_ERROR_PAGE;
     static const std::string ERR_LOCATION;
+    static const std::string ERR_ALLOWED_METHODS;
 
     std::map<std::string, DirectiveFunction> _directiveMap;
 
@@ -34,4 +35,5 @@ class DirectiveHandler {
 
     bool _isFileReadable(const std::string &) const;
     bool _isNumeric(const std::string &) const;
+    bool _isAllowedHttpMethod(const std::string &) const;
 };
