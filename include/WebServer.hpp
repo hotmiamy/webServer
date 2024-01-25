@@ -2,12 +2,14 @@
 
 #include <sys/socket.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include <cstring>
 #include <iostream>
 #include <vector>
 
 #include "Socket.hpp"
+#include "Poll.hpp"
 
 class WebServer {
    public:
@@ -19,8 +21,9 @@ class WebServer {
     void run(const ConfigVec &configs);
 
    private:
-    char _buff[3000];
-    int _newSock;
+	Poll _poll;
+	char _buff[3000];
+	int _newSock;
 
     void _launch(SocketVec &);
     void _read();

@@ -21,6 +21,7 @@ class Socket {
 
     void connect();
     int accept();
+	int getSocketFd() const;
 
    private:
     Socket();
@@ -33,7 +34,8 @@ class Socket {
 
     void _setup();
     template <typename ExceptionType>
-    void _checkConnectionOrElseThrow(int ret, const ExceptionType &);
+    void _checkConnectionThrow(int ret, const ExceptionType &);
+
 };
 
 typedef std::vector<Socket> SocketVec;
