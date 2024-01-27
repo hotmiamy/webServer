@@ -125,6 +125,12 @@ void DirectiveHandler::_handleAllowedMethodsDirective(std::istringstream &iss,
             throw std::runtime_error(ERR_ALLOWED_METHODS + httpMethod +
                                      " is not allowed");
         }
+        if (std::find(location.allowedMethods.begin(),
+                      location.allowedMethods.end(),
+                      httpMethod) != location.allowedMethods.end()) {
+            throw std::runtime_error(ERR_ALLOWED_METHODS + httpMethod +
+                                     " is already included");
+        }
         location.allowedMethods.push_back(httpMethod);
     }
 }
