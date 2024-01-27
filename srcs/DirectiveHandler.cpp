@@ -92,10 +92,8 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss,
         if (!location.pathSet()) {
             _resolvePath(lineIss, location);
         }
-        if (line.find("index") != std::string::npos &&
-            !location.indexFilesSet()) {
-            lineIss.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
-            _handleIndexFiles(lineIss, location);
+        if (line.find("index") != std::string::npos) {
+            _resolveIndexFiles(lineIss, location);
         }
         if (line.find("allowed_methods") != std::string::npos &&
             !location.allowedMethodsSet()) {
@@ -106,7 +104,7 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss,
 }
 
 void DirectiveHandler::_resolvePath(std::istringstream &lineIss,
-                                    Location &location) const {
+                                    Location &location) {
     if (!(lineIss >> location.path) || location.path == "{") {
         throw std::runtime_error(ERR_LOCATION + "a path must be specified");
     }
@@ -114,6 +112,16 @@ void DirectiveHandler::_resolvePath(std::istringstream &lineIss,
     if (!(lineIss >> tmp) || tmp != "{") {
         throw std::runtime_error(ERR_LOCATION + "no '{' found");
     }
+}
+
+void DirectiveHandler::_resolveIndexFiles(std::istringstream &lineIss,
+                                          Location &location) {
+    if (!location.indexFilesSet()) {
+        lineIss.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
+        _handleIndexFiles(lineIss, location);
+        return;
+    }
+    throw std::runtime_error(ERR_LOCATION + "index files are already defined");
 }
 
 void DirectiveHandler::_handleAllowedMethodsDirective(std::istringstream &iss,
