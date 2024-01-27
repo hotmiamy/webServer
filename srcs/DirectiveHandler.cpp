@@ -90,11 +90,7 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss,
     while (std::getline(iss, line)) {
         std::istringstream lineIss(line);
         if (!location.pathSet()) {
-            if (!(lineIss >> location.path) || location.path == "{") {
-            }
-            std::string tmp;
-            if (!(lineIss >> tmp) || tmp != "{") {
-            }
+            _resolvePath(lineIss, location);
         }
         if (line.find("index") != std::string::npos &&
             !location.indexFilesSet()) {
@@ -106,6 +102,17 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss,
             lineIss.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
             _handleAllowedMethodsDirective(lineIss, location);
         }
+    }
+}
+
+void DirectiveHandler::_resolvePath(std::istringstream &lineIss,
+                                    Location &location) const {
+    if (!(lineIss >> location.path) || location.path == "{") {
+        throw std::runtime_error(ERR_LOCATION + "a path must be specified");
+    }
+    std::string tmp;
+    if (!(lineIss >> tmp) || tmp != "{") {
+        throw std::runtime_error(ERR_LOCATION + "no '{' found");
     }
 }
 

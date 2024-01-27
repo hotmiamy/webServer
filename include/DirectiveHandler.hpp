@@ -35,6 +35,8 @@ class DirectiveHandler {
     void _handleAllowedMethodsDirective(std::istringstream &, Location &);
     void _handleIndexFiles(std::istringstream &, Location &);
 
+    void _resolvePath(std::istringstream &, Location &) const;
+
     bool _isFileReadable(const std::string &) const;
     bool _isNumeric(const std::string &) const;
     bool _isAllowedHttpMethod(const std::string &) const;
