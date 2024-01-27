@@ -95,12 +95,11 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss,
         if (line.find("index") != std::string::npos) {
             _resolveIndexFiles(lineIss, location);
         }
-        if (line.find("allowed_methods") != std::string::npos &&
-            !location.allowedMethodsSet()) {
-            lineIss.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
-            _handleAllowedMethodsDirective(lineIss, location);
+        if (line.find("allowed_methods") != std::string::npos) {
+            _resolveAllowedMethods(lineIss, location);
         }
     }
+    cfg.addLocation(location);
 }
 
 void DirectiveHandler::_resolvePath(std::istringstream &lineIss,
@@ -122,6 +121,17 @@ void DirectiveHandler::_resolveIndexFiles(std::istringstream &lineIss,
         return;
     }
     throw std::runtime_error(ERR_LOCATION + "index files are already defined");
+}
+
+void DirectiveHandler::_resolveAllowedMethods(std::istringstream &lineIss,
+                                              Location &location) {
+    if (!location.allowedMethodsSet()) {
+        lineIss.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
+        _handleAllowedMethodsDirective(lineIss, location);
+        return;
+    }
+    throw std::runtime_error(ERR_LOCATION +
+                             "allowed methods are already defined");
 }
 
 void DirectiveHandler::_handleAllowedMethodsDirective(std::istringstream &iss,
