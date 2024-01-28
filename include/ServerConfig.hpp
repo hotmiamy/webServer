@@ -20,12 +20,14 @@ class ServerConfig {
     const std::vector<std::string> getServerNames() const;
 
     void setPort(const std::string &);
+    void setRoot(const std::string &);
     void addServer(const std::string &);
     void addErrorPage(const std::string &, const std::string &);
     void addLocation(const Location &);
 
    private:
     std::string _port;
+    std::string _root;
     std::vector<std::string> _serverNames;
     std::map<std::string, std::string> _errorPages;
     std::vector<Location> _locations;

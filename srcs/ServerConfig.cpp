@@ -3,13 +3,14 @@
 #include "parsing.hpp"
 
 ServerConfig::ServerConfig()
-    : _port(), _serverNames(), _errorPages(), _locations() {}
+    : _port(), _root(), _serverNames(), _errorPages(), _locations() {}
 
 ServerConfig::ServerConfig(const ServerConfig &other) { *this = other; }
 
 ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
     if (this != &other) {
         _port = other._port;
+        _root = other._root;
         _serverNames = other._serverNames;
         _errorPages = other._errorPages;
         _locations = other._locations;
@@ -36,6 +37,8 @@ const std::vector<std::string> ServerConfig::getServerNames() const {
 }
 
 void ServerConfig::setPort(const std::string &port) { _port = port; }
+
+void ServerConfig::setRoot(const std::string &root) { _root = root; }
 
 void ServerConfig::addServer(const std::string &server) {
     _serverNames.push_back(server);
