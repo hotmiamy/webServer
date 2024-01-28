@@ -10,6 +10,7 @@ const std::string DirectiveHandler::ERR_LOCATION =
     "error at 'location' directive: ";
 const std::string DirectiveHandler::ERR_ALLOWED_METHODS =
     "error at 'allowed_methods' directive: ";
+const std::string DirectiveHandler::ERR_ROOT = "error at 'root' directive: ";
 
 DirectiveHandler::DirectiveHandler() {
     _directiveMap["listen"] = &DirectiveHandler::_handleListenDirective;
@@ -17,6 +18,7 @@ DirectiveHandler::DirectiveHandler() {
         &DirectiveHandler::_handleServerNameDirective;
     _directiveMap["error_page"] = &DirectiveHandler::_handleErrorPageDirective;
     _directiveMap["location"] = &DirectiveHandler::_handleLocationDirective;
+    _directiveMap["root"] = &DirectiveHandler::_handleRoot;
 }
 
 DirectiveHandler::~DirectiveHandler() {}
@@ -78,7 +80,6 @@ bool DirectiveHandler::_isNumeric(const std::string &str) const {
 
 bool DirectiveHandler::_isFileReadable(const std::string &path) const {
     struct stat fileInfo;
-
     return stat(path.c_str(), &fileInfo) == 0 &&
            (S_ISREG(fileInfo.st_mode) && fileInfo.st_mode & S_IRUSR);
 }
@@ -170,6 +171,25 @@ void DirectiveHandler::_handleIndexFiles(std::istringstream &iss,
     while (iss >> file) {
         location.indexFiles.push_back(file);
     }
+}
+
+void DirectiveHandler::_handleRoot(std::istringstream &iss, ServerConfig &cfg) {
+    std::string path;
+    if (!(iss >> path) || !_isDirectory(path)) {
+        throw std::runtime_error(ERR_ROOT +
+                                 "a valid directory must be specified");
+    }
+    if (iss.rdbuf()->in_avail() != 0) {
+        throw std::runtime_error(
+            ERR_ROOT + "there should be one and only one directory specified");
+    }
+    cfg.setRoot(path);
+}
+
+bool DirectiveHandler::_isDirectory(const std::string &path) const {
+    struct stat info;
+    return stat(path.c_str(), &info) == 0 &&
+           (S_ISDIR(info.st_mode) && access(path.c_str(), R_OK | X_OK) == 0);
 }
 
 void DirectiveHandler::process(const std::string &directive,

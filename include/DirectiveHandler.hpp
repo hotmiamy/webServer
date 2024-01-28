@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include <algorithm>
 #include <limits>
@@ -25,12 +26,14 @@ class DirectiveHandler {
     static const std::string ERR_ERROR_PAGE;
     static const std::string ERR_LOCATION;
     static const std::string ERR_ALLOWED_METHODS;
+    static const std::string ERR_ROOT;
 
     std::map<std::string, DirectiveFunction> _directiveMap;
 
     void _handleListenDirective(std::istringstream &, ServerConfig &);
     void _handleServerNameDirective(std::istringstream &, ServerConfig &);
     void _handleErrorPageDirective(std::istringstream &, ServerConfig &);
+    void _handleRoot(std::istringstream &, ServerConfig &);
     void _handleLocationDirective(std::istringstream &, ServerConfig &);
     void _handleAllowedMethodsDirective(std::istringstream &, Location &);
     void _handleIndexFiles(std::istringstream &, Location &);
@@ -42,4 +45,5 @@ class DirectiveHandler {
     bool _isFileReadable(const std::string &) const;
     bool _isNumeric(const std::string &) const;
     bool _isAllowedHttpMethod(const std::string &) const;
+    bool _isDirectory(const std::string &) const;
 };
