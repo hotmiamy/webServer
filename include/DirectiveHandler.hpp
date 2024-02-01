@@ -12,13 +12,13 @@
 
 class DirectiveHandler {
    public:
-    typedef void (DirectiveHandler::*DirectiveFunction)(std::istringstream &,
-                                                        ServerConfig &);
+    typedef void (DirectiveHandler::*DirectiveFunction)(std::istringstream &);
 
     DirectiveHandler();
     ~DirectiveHandler();
 
-    void process(const std::string &, std::istringstream &, ServerConfig &);
+    void process(const std::string &, std::istringstream &);
+    ServerConfig getCfg() const;
 
    private:
     static const std::string ERR_LISTEN;
@@ -31,13 +31,11 @@ class DirectiveHandler {
     ServerConfig _cfg;
     std::map<std::string, DirectiveFunction> _directiveMap;
 
-    ServerConfig getCfg() const;
-
-    void _handleListenDirective(std::istringstream &, ServerConfig &);
-    void _handleServerNameDirective(std::istringstream &, ServerConfig &);
-    void _handleErrorPageDirective(std::istringstream &, ServerConfig &);
-    void _handleRoot(std::istringstream &, ServerConfig &);
-    void _handleLocationDirective(std::istringstream &, ServerConfig &);
+    void _handleListenDirective(std::istringstream &);
+    void _handleServerNameDirective(std::istringstream &);
+    void _handleErrorPageDirective(std::istringstream &);
+    void _handleRoot(std::istringstream &);
+    void _handleLocationDirective(std::istringstream &);
     void _handleAllowedMethodsDirective(std::istringstream &, Location &);
     void _handleIndexFiles(std::istringstream &, Location &);
 

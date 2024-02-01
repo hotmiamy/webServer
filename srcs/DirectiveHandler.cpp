@@ -25,8 +25,7 @@ DirectiveHandler::~DirectiveHandler() {}
 
 ServerConfig DirectiveHandler::getCfg() const { return _cfg; }
 
-void DirectiveHandler::_handleListenDirective(std::istringstream &iss,
-                                              ServerConfig &cfg) {
+void DirectiveHandler::_handleListenDirective(std::istringstream &iss) {
     std::string port;
 
     if (!(iss >> port) || !_isNumeric(port)) {
@@ -37,25 +36,23 @@ void DirectiveHandler::_handleListenDirective(std::istringstream &iss,
         throw std::runtime_error(
             ERR_LISTEN + "there should be one and only one port per server");
     }
-    cfg.setPort(port);
+    _cfg.setPort(port);
 }
 
-void DirectiveHandler::_handleServerNameDirective(std::istringstream &iss,
-                                                  ServerConfig &cfg) {
+void DirectiveHandler::_handleServerNameDirective(std::istringstream &iss) {
     std::string server;
 
     if (!(iss >> server)) {
         throw std::runtime_error(ERR_SERVER_NAME +
                                  "at least one server name should be provided");
     }
-    cfg.addServer(server);
+    _cfg.addServer(server);
     while (iss >> server) {
-        cfg.addServer(server);
+        _cfg.addServer(server);
     }
 }
 
-void DirectiveHandler::_handleErrorPageDirective(std::istringstream &iss,
-                                                 ServerConfig &cfg) {
+void DirectiveHandler::_handleErrorPageDirective(std::istringstream &iss) {
     std::string errorCode, path;
 
     if (!(iss >> errorCode) || !_isNumeric(errorCode)) {
@@ -73,7 +70,7 @@ void DirectiveHandler::_handleErrorPageDirective(std::istringstream &iss,
             "<error_code> <error_page>");
     }
 
-    cfg.addErrorPage(errorCode, path);
+    _cfg.addErrorPage(errorCode, path);
 }
 
 bool DirectiveHandler::_isNumeric(const std::string &str) const {
@@ -86,8 +83,7 @@ bool DirectiveHandler::_isFileReadable(const std::string &path) const {
            (S_ISREG(fileInfo.st_mode) && fileInfo.st_mode & S_IRUSR);
 }
 
-void DirectiveHandler::_handleLocationDirective(std::istringstream &iss,
-                                                ServerConfig &cfg) {
+void DirectiveHandler::_handleLocationDirective(std::istringstream &iss) {
     Location location;
     std::string line;
     while (std::getline(iss, line)) {
@@ -102,7 +98,7 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss,
             _resolveAllowedMethods(lineIss, location);
         }
     }
-    cfg.addLocation(location);
+    _cfg.addLocation(location);
 }
 
 void DirectiveHandler::_resolvePath(std::istringstream &lineIss,
@@ -175,7 +171,7 @@ void DirectiveHandler::_handleIndexFiles(std::istringstream &iss,
     }
 }
 
-void DirectiveHandler::_handleRoot(std::istringstream &iss, ServerConfig &cfg) {
+void DirectiveHandler::_handleRoot(std::istringstream &iss) {
     std::string path;
     if (!(iss >> path) || !_isDirectory(path)) {
         throw std::runtime_error(ERR_ROOT +
@@ -185,7 +181,7 @@ void DirectiveHandler::_handleRoot(std::istringstream &iss, ServerConfig &cfg) {
         throw std::runtime_error(
             ERR_ROOT + "there should be one and only one directory specified");
     }
-    cfg.setRoot(path);
+    _cfg.setRoot(path);
 }
 
 bool DirectiveHandler::_isDirectory(const std::string &path) const {
@@ -195,8 +191,8 @@ bool DirectiveHandler::_isDirectory(const std::string &path) const {
 }
 
 void DirectiveHandler::process(const std::string &directive,
-                               std::istringstream &iss, ServerConfig &cfg) {
+                               std::istringstream &iss) {
     if (_directiveMap.find(directive) != _directiveMap.end()) {
-        (this->*_directiveMap[directive])(iss, cfg);
+        (this->*_directiveMap[directive])(iss);
     }
 }

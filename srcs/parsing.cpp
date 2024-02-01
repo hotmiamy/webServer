@@ -45,13 +45,14 @@ std::vector<ServerConfig> parse(std::ifstream &ifs) {
     std::string fileContent = ss.str();
 
     if (!hasCorrectAmountOfBrackets(fileContent)) {
-        throw std::runtime_error("");
+        throw std::runtime_error("there are some missing brackets");
     }
 
     std::vector<std::string> serverConfigBlocks =
         splitServerConfigBlocks(fileContent);
     if (serverConfigBlocks.empty()) {
-        throw std::runtime_error("");
+        throw std::runtime_error(
+            "a config file must contain at least one server block");
     }
 
     std::vector<ServerConfig> configs;
@@ -66,7 +67,7 @@ static std::string removeConsecutiveWhitespaces(const std::string &str) {
     if (str.empty()) {
         return "";
     }
-    std::string res = str;
+    std::string res(str);
     res.erase(std::unique(res.begin(), res.end(), IsConsecutiveSpace()),
               res.end());
     return res;
@@ -98,9 +99,7 @@ static ServerConfig serverBlockToServerConfig(std::string &block) {
     std::istringstream iss(block);
     std::string line;
 
-    ServerConfig config;
     DirectiveHandler handler;
-
     while (std::getline(iss, line)) {
         if (line.empty()) {
             continue;
@@ -112,11 +111,11 @@ static ServerConfig serverBlockToServerConfig(std::string &block) {
 
         if (directive == "location") {
             std::istringstream locationIss(getLocationBlock(iss, lineIss));
-            handler.process(directive, locationIss, config);
+            handler.process(directive, locationIss);
             continue;
         }
 
-        handler.process(directive, lineIss, config);
+        handler.process(directive, lineIss);
     }
-    return config;
+    return handler.getCfg();
 }
