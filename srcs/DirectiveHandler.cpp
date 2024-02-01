@@ -12,7 +12,7 @@ const std::string DirectiveHandler::ERR_ALLOWED_METHODS =
     "error at 'allowed_methods' directive: ";
 const std::string DirectiveHandler::ERR_ROOT = "error at 'root' directive: ";
 
-DirectiveHandler::DirectiveHandler() {
+DirectiveHandler::DirectiveHandler() : _cfg() {
     _directiveMap["listen"] = &DirectiveHandler::_handleListenDirective;
     _directiveMap["server_name"] =
         &DirectiveHandler::_handleServerNameDirective;
@@ -22,6 +22,8 @@ DirectiveHandler::DirectiveHandler() {
 }
 
 DirectiveHandler::~DirectiveHandler() {}
+
+ServerConfig DirectiveHandler::getCfg() const { return _cfg; }
 
 void DirectiveHandler::_handleListenDirective(std::istringstream &iss,
                                               ServerConfig &cfg) {

@@ -28,7 +28,10 @@ class DirectiveHandler {
     static const std::string ERR_ALLOWED_METHODS;
     static const std::string ERR_ROOT;
 
+    ServerConfig _cfg;
     std::map<std::string, DirectiveFunction> _directiveMap;
+
+    ServerConfig getCfg() const;
 
     void _handleListenDirective(std::istringstream &, ServerConfig &);
     void _handleServerNameDirective(std::istringstream &, ServerConfig &);
