@@ -38,6 +38,10 @@ const std::vector<std::string> ServerConfig::getServerNames() const {
     return _serverNames;
 }
 
+const std::map<std::string, std::string> ServerConfig::getErrorPages() const {
+    return _errorPages;
+}
+
 void ServerConfig::setPort(const std::string &port) { _port = port; }
 
 void ServerConfig::setRoot(const std::string &root) { _root = root; }

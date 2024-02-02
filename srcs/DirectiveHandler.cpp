@@ -26,6 +26,10 @@ DirectiveHandler::~DirectiveHandler() {}
 ServerConfig DirectiveHandler::getCfg() const { return _cfg; }
 
 void DirectiveHandler::_handleListenDirective(std::istringstream &iss) {
+    if (!_cfg.getPort().empty()) {
+        throw std::runtime_error(ERR_LISTEN + "'listen' was already specified");
+    }
+
     std::string port;
 
     if (!(iss >> port) || !_isNumeric(port)) {
@@ -40,6 +44,11 @@ void DirectiveHandler::_handleListenDirective(std::istringstream &iss) {
 }
 
 void DirectiveHandler::_handleServerNameDirective(std::istringstream &iss) {
+    if (!_cfg.getServerNames().empty()) {
+        throw std::runtime_error(ERR_SERVER_NAME +
+                                 "'server_name' was already specified");
+    }
+
     std::string server;
 
     if (!(iss >> server)) {
@@ -53,6 +62,11 @@ void DirectiveHandler::_handleServerNameDirective(std::istringstream &iss) {
 }
 
 void DirectiveHandler::_handleErrorPageDirective(std::istringstream &iss) {
+    if (!_cfg.getErrorPages().empty()) {
+        throw std::runtime_error(ERR_ERROR_PAGE +
+                                 "'error_page' was already specified");
+    }
+
     std::string errorCode, path;
 
     if (!(iss >> errorCode) || !_isNumeric(errorCode)) {
@@ -84,6 +98,12 @@ bool DirectiveHandler::_isFileReadable(const std::string &path) const {
 }
 
 void DirectiveHandler::_handleLocationDirective(std::istringstream &iss) {
+    if (_cfg.getRoot().empty()) {
+        throw std::runtime_error(
+            ERR_LOCATION +
+            "make sure 'root' is set before the 'location' blocks");
+    }
+
     Location location;
     std::string line;
     while (std::getline(iss, line)) {
@@ -110,33 +130,30 @@ void DirectiveHandler::_resolvePath(std::istringstream &lineIss,
     if (!(lineIss >> tmp) || tmp != "{") {
         throw std::runtime_error(ERR_LOCATION + "no '{' found");
     }
+    if (!_isDirectory(_cfg.getRoot() + location.path)) {
+        throw std::runtime_error(ERR_LOCATION + "'" + location.path + "'" +
+                                 " is not a valid directory");
+    }
 }
 
 void DirectiveHandler::_resolveIndexFiles(std::istringstream &lineIss,
                                           Location &location) {
-    if (_cfg.getRoot().empty()) {
-        throw std::runtime_error(
-            ERR_LOCATION +
-            "make sure 'root' is set before the 'location' blocks");
+    if (location.indexFilesSet()) {
+        throw std::runtime_error(ERR_LOCATION +
+                                 "index files are already defined");
     }
-
-    if (!location.indexFilesSet()) {
-        lineIss.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
-        _handleIndexFiles(lineIss, location);
-        return;
-    }
-    throw std::runtime_error(ERR_LOCATION + "index files are already defined");
+    lineIss.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
+    _handleIndexFiles(lineIss, location);
 }
 
 void DirectiveHandler::_resolveAllowedMethods(std::istringstream &lineIss,
                                               Location &location) {
-    if (!location.allowedMethodsSet()) {
-        lineIss.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
-        _handleAllowedMethodsDirective(lineIss, location);
-        return;
+    if (location.allowedMethodsSet()) {
+        throw std::runtime_error(ERR_LOCATION +
+                                 "allowed methods are already defined");
     }
-    throw std::runtime_error(ERR_LOCATION +
-                             "allowed methods are already defined");
+    lineIss.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
+    _handleAllowedMethodsDirective(lineIss, location);
 }
 
 void DirectiveHandler::_handleAllowedMethodsDirective(std::istringstream &iss,
@@ -178,6 +195,10 @@ void DirectiveHandler::_handleIndexFiles(std::istringstream &iss,
 }
 
 void DirectiveHandler::_handleRoot(std::istringstream &iss) {
+    if (!_cfg.getRoot().empty()) {
+        throw std::runtime_error(ERR_ROOT + "root was already specified");
+    }
+
     std::string path;
     if (!(iss >> path) || !_isDirectory(path)) {
         throw std::runtime_error(ERR_ROOT +

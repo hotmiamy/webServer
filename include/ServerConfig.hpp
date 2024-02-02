@@ -19,6 +19,7 @@ class ServerConfig {
     const std::string &getPort() const;
     const std::string &getRoot() const;
     const std::vector<std::string> getServerNames() const;
+    const std::map<std::string, std::string> getErrorPages() const;
 
     void setPort(const std::string &);
     void setRoot(const std::string &);
