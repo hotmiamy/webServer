@@ -17,6 +17,7 @@ class ServerConfig {
     static std::vector<ServerConfig> fromFile(const std::string &);
 
     const std::string &getPort() const;
+    const std::string &getRoot() const;
     const std::vector<std::string> getServerNames() const;
 
     void setPort(const std::string &);

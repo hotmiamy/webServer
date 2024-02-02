@@ -32,6 +32,8 @@ std::vector<ServerConfig> ServerConfig::fromFile(const std::string &file) {
 
 const std::string &ServerConfig::getPort() const { return _port; }
 
+const std::string &ServerConfig::getRoot() const { return _root; }
+
 const std::vector<std::string> ServerConfig::getServerNames() const {
     return _serverNames;
 }

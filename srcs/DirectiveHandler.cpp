@@ -114,6 +114,12 @@ void DirectiveHandler::_resolvePath(std::istringstream &lineIss,
 
 void DirectiveHandler::_resolveIndexFiles(std::istringstream &lineIss,
                                           Location &location) {
+    if (_cfg.getRoot().empty()) {
+        throw std::runtime_error(
+            ERR_LOCATION +
+            "make sure 'root' is set before the 'location' blocks");
+    }
+
     if (!location.indexFilesSet()) {
         lineIss.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
         _handleIndexFiles(lineIss, location);
