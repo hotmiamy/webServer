@@ -117,5 +117,10 @@ static ServerConfig serverBlockToServerConfig(std::string &block) {
 
         handler.process(directive, lineIss);
     }
-    return handler.getCfg();
+
+    ServerConfig cfg = handler.getCfg();
+    if (cfg.good()) {
+        return cfg;
+    }
+    throw std::runtime_error("bad 'server' block: " + block);
 }

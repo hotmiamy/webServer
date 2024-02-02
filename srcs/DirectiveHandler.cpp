@@ -220,6 +220,10 @@ bool DirectiveHandler::_isDirectory(const std::string &path) const {
 void DirectiveHandler::process(const std::string &directive,
                                std::istringstream &iss) {
     if (_directiveMap.find(directive) != _directiveMap.end()) {
-        (this->*_directiveMap[directive])(iss);
+        return (this->*_directiveMap[directive])(iss);
+    }
+
+    if (directive != "}" && directive != "server") {
+        throw std::runtime_error("invalid directive: " + directive);
     }
 }

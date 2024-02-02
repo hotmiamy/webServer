@@ -58,3 +58,8 @@ void ServerConfig::addErrorPage(const std::string &errorCode,
 void ServerConfig::addLocation(const Location &location) {
     _locations.push_back(location);
 }
+
+bool ServerConfig::good() const {
+    return !_port.empty() && !_root.empty() && !_serverNames.empty() &&
+           !_errorPages.empty() && !_locations.empty();
+}
