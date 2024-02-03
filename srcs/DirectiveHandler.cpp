@@ -108,7 +108,7 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss) {
     std::string line;
     while (std::getline(iss, line)) {
         std::istringstream lineIss(line);
-        if (!location.pathSet()) {
+        if (!location.hasPath()) {
             _resolvePath(lineIss, location);
         }
         if (line.find("index") != std::string::npos) {
@@ -138,7 +138,7 @@ void DirectiveHandler::_resolvePath(std::istringstream &lineIss,
 
 void DirectiveHandler::_resolveIndexFiles(std::istringstream &lineIss,
                                           Location &location) {
-    if (location.indexFilesSet()) {
+    if (location.hasIndexFiles()) {
         throw std::runtime_error(ERR_LOCATION +
                                  "index files are already defined");
     }
@@ -148,7 +148,7 @@ void DirectiveHandler::_resolveIndexFiles(std::istringstream &lineIss,
 
 void DirectiveHandler::_resolveAllowedMethods(std::istringstream &lineIss,
                                               Location &location) {
-    if (location.allowedMethodsSet()) {
+    if (location.hasAllowedMethods()) {
         throw std::runtime_error(ERR_LOCATION +
                                  "allowed methods are already defined");
     }

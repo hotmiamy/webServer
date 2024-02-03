@@ -10,7 +10,7 @@ struct Location {
 
     Location() : path(), allowedMethods(), indexFiles() {}
 
-    bool pathSet() const { return !path.empty(); }
-    bool allowedMethodsSet() const { return !allowedMethods.empty(); }
-    bool indexFilesSet() const { return !indexFiles.empty(); }
+    bool hasPath() const { return !path.empty(); }
+    bool hasAllowedMethods() const { return !allowedMethods.empty(); }
+    bool hasIndexFiles() const { return !indexFiles.empty(); }
 };
