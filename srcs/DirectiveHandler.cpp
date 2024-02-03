@@ -188,19 +188,28 @@ bool DirectiveHandler::_isAllowedHttpMethod(const std::string &str) const {
 
 void DirectiveHandler::_handleIndexFiles(std::istringstream &iss,
                                          Location &location) {
-    std::string path = _cfg.getRoot() + location.path;
-    std::string file;
+    const std::string path = _cfg.getRoot() + location.path;
+    std::string fileName;
 
-    if (!(iss >> file) || !_isFileReadable(path + file)) {
-        throw std::runtime_error(ERR_LOCATION + "no such file '" + file +
+    if (!(iss >> fileName) || !_isFileReadable(path + fileName)) {
+        throw std::runtime_error(ERR_LOCATION + "no such file '" + fileName +
                                  "' at " + path);
     }
-    while (iss >> file) {
-        if (!_isFileReadable(path + file)) {
-            throw std::runtime_error(ERR_LOCATION + "no such file '" + file +
-                                     "' at " + path);
+    std::string filePath = path + fileName;
+    location.indexFiles.push_back(filePath);
+
+    while (iss >> fileName) {
+        filePath = path + fileName;
+        if (!_isFileReadable(filePath)) {
+            throw std::runtime_error(ERR_LOCATION + "no such file '" +
+                                     fileName + "' at " + path);
         }
-        location.indexFiles.push_back(file);
+        if (std::find(location.indexFiles.begin(), location.indexFiles.end(),
+                      fileName) != location.indexFiles.end()) {
+            throw std::runtime_error(ERR_LOCATION + fileName +
+                                     " is already included");
+        }
+        location.indexFiles.push_back(filePath);
     }
 }
 
