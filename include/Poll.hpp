@@ -1,5 +1,4 @@
-#ifndef POLL_HPP
-# define POLL_HPP
+#pragma once
 
 #include <sys/poll.h>
 #include <unistd.h>
@@ -25,5 +24,3 @@ class Poll
 		void checkerror(int ret, const ExceptionType &exception);
 
 };
-
-#endif

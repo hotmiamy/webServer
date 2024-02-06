@@ -1,12 +1,13 @@
 #include "WebServer.hpp"
 
-WebServer::WebServer() : _buff(), _newSock(0) {}
+WebServer::WebServer() :  _newSock(0) {}
 
 WebServer::WebServer(const WebServer &other) { *this = other; }
 
 WebServer &WebServer::operator=(const WebServer &other) {
-    if (this != &other) {
-        std::strcpy(_buff, other._buff);
+    if (this != &other) 
+	{
+		_poll = other._poll;
         _newSock = other._newSock;
     }
     return *this;
@@ -41,20 +42,24 @@ void WebServer::_launch(SocketVec &socketVec)
 			}
 		}
         _read();
-        _respond();
     }
 }
 
-void WebServer::_read() {
-    bzero(_buff, sizeof(_buff));
-    if (recv(_newSock, _buff, sizeof(_buff), 0) < 0)
+void WebServer::_read() 
+{
+	char buff[1024] = {0};
+    if (recv(_newSock, buff, sizeof(buff), 0) < 0)
 		std::cerr << "buff Empty" << std::endl;
 	else
-    	std::cout << _buff << '\n';
+	{
+    	std::cout << buff << '\n';
+		Client request(buff);
+		_respond(request.GenerateResponse());
+	}
 }
 
-void WebServer::_respond() {
-	fcntl(_newSock, F_SETFL, O_NONBLOCK);
-    send(_newSock, "OLA MUNDO", 6, 0);
+void WebServer::_respond(std::string response)
+{
+    send(_newSock, response.data(), response.size(), 0);
     close(_newSock);
 }

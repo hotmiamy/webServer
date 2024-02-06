@@ -10,6 +10,7 @@
 
 #include "Socket.hpp"
 #include "Poll.hpp"
+#include "Client.hpp"
 
 class WebServer {
    public:
@@ -18,14 +19,13 @@ class WebServer {
     WebServer &operator=(const WebServer &);
     ~WebServer();
 
-    void run(const ConfigVec &configs);
+    void	run(const ConfigVec &configs);
 
    private:
-	Poll _poll;
-	char _buff[3000];
-	int _newSock;
+	Poll	_poll;
+	int		_newSock;
 
-    void _launch(SocketVec &);
-    void _read();
-    void _respond();
+    void	_launch(SocketVec &);
+    void	_read();
+    void	_respond(std::string response);
 };
