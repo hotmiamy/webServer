@@ -30,24 +30,29 @@ std::string Client::GenerateResponse()
 		if (std::ifstream(fullPath.data( )).good())
 		{
 			_statusCode = "200 OK\n";
-			responseBody.append(_statusCode);
+			if (_path.compare("/") == 0)
+			{
+				file.open("server_root/index.html");
+				if (file.fail())
+				{
+					std::cerr << "error open" << std::endl;
+					return (0);
+				}
+			}
+			else
+				file.open(fullPath.c_str());
 		}
-		responseBody.append("Content-type: text/html\n");
-		responseBody.append("Content-Length: 1024\n\n ");
-		if (_path.compare("/") == 0)
+		else
 		{
-			file.open("server_root/index.html");
-			if (file.fail())
-			{
-				std::cerr << "error open" << std::endl;
-				return (0);
-			}
-			while (std::getline(file, buff))
-			{
-				responseBody.append(buff + "\n");
-			}
+			file.open("server_root/error_pages/error404.html");
+			_statusCode  = "404 Not Found\n";
 		}
 	}
+	responseBody.append(_statusCode);
+	responseBody.append("Content-type: text/html\n");
+	responseBody.append("Content-Length: 4096\n\n ");
+	while (std::getline(file, buff))
+		responseBody.append(buff + "\n");
 	return (responseBody);
 }
 

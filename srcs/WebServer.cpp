@@ -42,24 +42,42 @@ void WebServer::_launch(SocketVec &socketVec)
 			}
 		}
         _read();
+
     }
 }
 
 void WebServer::_read() 
 {
-	char buff[1024] = {0};
-    if (recv(_newSock, buff, sizeof(buff), 0) < 0)
-		std::cerr << "buff Empty" << std::endl;
-	else
+	char buff[4096] = {0};
+	int bytesread;
+	std::string Crequest;
+
+	while ((bytesread = recv(_newSock, buff, sizeof(buff), 0)) > 0)
 	{
-    	std::cout << buff << '\n';
-		Client request(buff);
-		_respond(request.GenerateResponse());
+		std::cout << buff << '\n';
+		Crequest.append(buff, bytesread);
+		if (Crequest.find("\r\n\r\n") != std::string::npos)
+            break;
 	}
+	Client request(Crequest);
+	_respond(request.GenerateResponse());
 }
 
 void WebServer::_respond(std::string response)
 {
-    send(_newSock, response.data(), response.size(), 0);
+	int bytesreturned, totalbytes = 0;
+	while ((size_t)totalbytes < response.size())
+	{
+		bytesreturned = send(_newSock, response.c_str(), response.size(), 0);
+		std::cout << response << std::endl;
+		if (bytesreturned < 0)
+		{
+			std::cerr << "fail send" << std::endl;
+			return ;
+		}
+		if (bytesreturned == 0)
+			break;
+		totalbytes += bytesreturned;
+	}
     close(_newSock);
 }
