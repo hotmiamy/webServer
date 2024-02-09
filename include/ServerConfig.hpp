@@ -17,16 +17,23 @@ class ServerConfig {
     static std::vector<ServerConfig> fromFile(const std::string &);
 
     const std::string &getPort() const;
+    const std::string &getRoot() const;
     const std::vector<std::string> getServerNames() const;
+    const std::map<std::string, std::string> getErrorPages() const;
 
     void setPort(const std::string &);
+    void setRoot(const std::string &);
     void addServer(const std::string &);
-    void addErrorPage(int, const std::string &);
+    void addErrorPage(const std::string &, const std::string &);
+    void addLocation(const Location &);
+
+    bool good() const;
 
    private:
     std::string _port;
+    std::string _root;
     std::vector<std::string> _serverNames;
-    std::map<int, std::string> _errorPages;
+    std::map<std::string, std::string> _errorPages;
     std::vector<Location> _locations;
 };
 

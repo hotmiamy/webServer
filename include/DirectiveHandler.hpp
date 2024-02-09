@@ -1,5 +1,10 @@
 #pragma once
 
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include <algorithm>
+#include <limits>
 #include <map>
 #include <sstream>
 
@@ -7,18 +12,39 @@
 
 class DirectiveHandler {
    public:
-    typedef void (DirectiveHandler::*DirectiveFunction)(std::istringstream &,
-                                                        ServerConfig &);
+    typedef void (DirectiveHandler::*DirectiveFunction)(std::istringstream &);
 
     DirectiveHandler();
     ~DirectiveHandler();
 
-    void process(const std::string &, std::istringstream &, ServerConfig &);
+    void process(const std::string &, std::istringstream &);
+    ServerConfig getCfg() const;
 
    private:
+    static const std::string ERR_LISTEN;
+    static const std::string ERR_SERVER_NAME;
+    static const std::string ERR_ERROR_PAGE;
+    static const std::string ERR_LOCATION;
+    static const std::string ERR_ALLOWED_METHODS;
+    static const std::string ERR_ROOT;
+
+    ServerConfig _cfg;
     std::map<std::string, DirectiveFunction> _directiveMap;
 
-    void _handleListenDirective(std::istringstream &, ServerConfig &);
-    void _handleServerNameDirective(std::istringstream &, ServerConfig &);
-    void _handleErrorPageDirective(std::istringstream &, ServerConfig &);
+    void _handleListenDirective(std::istringstream &);
+    void _handleServerNameDirective(std::istringstream &);
+    void _handleErrorPageDirective(std::istringstream &);
+    void _handleRoot(std::istringstream &);
+    void _handleLocationDirective(std::istringstream &);
+    void _handleAllowedMethodsDirective(std::istringstream &, Location &);
+    void _handleIndexFiles(std::istringstream &, Location &);
+
+    void _resolvePath(std::istringstream &, Location &);
+    void _resolveIndexFiles(std::istringstream &, Location &);
+    void _resolveAllowedMethods(std::istringstream &, Location &);
+
+    bool _isFileReadable(const std::string &) const;
+    bool _isNumeric(const std::string &) const;
+    bool _isAllowedHttpMethod(const std::string &) const;
+    bool _isDirectory(const std::string &) const;
 };

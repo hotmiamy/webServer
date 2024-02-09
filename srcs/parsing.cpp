@@ -1,6 +1,6 @@
 #include "parsing.hpp"
 
-static ServerConfig serverBlockToServerConfig(const std::string &block);
+static ServerConfig serverBlockToServerConfig(std::string &block);
 
 static bool hasCorrectAmountOfBrackets(const std::string &str) {
     int left = 0, right = 0;
@@ -27,7 +27,8 @@ static std::vector<std::string> splitServerConfigBlocks(const std::string &s) {
     while ((pos = str.find("server ", 0)) != str.npos) {
         std::string::size_type openingBracketPos = str.find("{", pos);
         if (str.substr(pos, strlen(directive)) != directive) {
-            throw std::runtime_error("");
+            throw std::runtime_error(
+                "'server' block must be closed, check the config file");
         }
         std::string::size_type serverBlockEnd =
             str.rfind("}", str.find(directive, openingBracketPos));
@@ -44,13 +45,14 @@ std::vector<ServerConfig> parse(std::ifstream &ifs) {
     std::string fileContent = ss.str();
 
     if (!hasCorrectAmountOfBrackets(fileContent)) {
-        throw std::runtime_error("");
+        throw std::runtime_error("there are some missing brackets");
     }
 
     std::vector<std::string> serverConfigBlocks =
         splitServerConfigBlocks(fileContent);
     if (serverConfigBlocks.empty()) {
-        throw std::runtime_error("");
+        throw std::runtime_error(
+            "a config file must contain at least one server block");
     }
 
     std::vector<ServerConfig> configs;
@@ -65,7 +67,7 @@ static std::string removeConsecutiveWhitespaces(const std::string &str) {
     if (str.empty()) {
         return "";
     }
-    std::string res = str;
+    std::string res(str);
     res.erase(std::unique(res.begin(), res.end(), IsConsecutiveSpace()),
               res.end());
     return res;
@@ -81,15 +83,24 @@ static void trimWhitespaces(std::string &line) {
     line = removeConsecutiveWhitespaces(line);
 }
 
-static ServerConfig serverBlockToServerConfig(const std::string &block) {
+static std::string getLocationBlock(std::istringstream &iss,
+                                    std::istringstream &lineIss) {
+    std::string locationBlock, line;
+    while (std::getline(iss, line) && line.find("}") == std::string::npos) {
+        locationBlock += line + '\n';
+    }
+    locationBlock = lineIss.str() + '\n' + locationBlock + '}';
+    locationBlock.erase(0, locationBlock.find_first_not_of("location "));
+    return locationBlock;
+}
+
+static ServerConfig serverBlockToServerConfig(std::string &block) {
+    trimWhitespaces(block);
     std::istringstream iss(block);
     std::string line;
 
-    ServerConfig config;
     DirectiveHandler handler;
-
     while (std::getline(iss, line)) {
-        trimWhitespaces(line);
         if (line.empty()) {
             continue;
         }
@@ -98,7 +109,18 @@ static ServerConfig serverBlockToServerConfig(const std::string &block) {
         std::string directive;
         lineIss >> directive;
 
-        handler.process(directive, lineIss, config);
+        if (directive == "location") {
+            std::istringstream locationIss(getLocationBlock(iss, lineIss));
+            handler.process(directive, locationIss);
+            continue;
+        }
+
+        handler.process(directive, lineIss);
     }
-    return config;
+
+    ServerConfig cfg = handler.getCfg();
+    if (cfg.good()) {
+        return cfg;
+    }
+    throw std::runtime_error("bad 'server' block: " + block);
 }
