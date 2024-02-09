@@ -25,10 +25,10 @@ void WebServer::run(const ConfigVec &configs) {
 		fcntl(socketVec[i].getSocketFd(), F_SETFL, O_NONBLOCK);
 		this->_poll.addSocketFd(socket);
     }
-    _launch(socketVec);
+    _launch(socketVec, configs);
 }
 
-void WebServer::_launch(SocketVec &socketVec) 
+void WebServer::_launch(SocketVec &socketVec, const ConfigVec &conf) 
 {
 	while (true) 
 	{
@@ -40,13 +40,13 @@ void WebServer::_launch(SocketVec &socketVec)
 				if (i < socketVec.size())
 					_newSock = socketVec[i].accept();
 			}
+        	_read(conf[i]);
 		}
-        _read();
 
     }
 }
 
-void WebServer::_read() 
+void WebServer::_read(const ServerConfig &conf) 
 {
 	char buff[4096] = {0};
 	int bytesread;
@@ -60,7 +60,7 @@ void WebServer::_read()
             break;
 	}
 	Client request(Crequest);
-	_respond(request.GenerateResponse());
+	_respond(request.GenerateResponse(conf));
 }
 
 void WebServer::_respond(std::string response)

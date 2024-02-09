@@ -17,10 +17,10 @@ Client::~Client()
 {
 }
 
-std::string Client::GenerateResponse()
+std::string Client::GenerateResponse(const ServerConfig &conf)
 {
 	std::string responseBody;
-	std::string fullPath(ROOT_PATH + _path);
+	std::string fullPath(conf.getRoot() + _path);
 	std::string buff;
 	std::fstream file;
 
@@ -30,9 +30,10 @@ std::string Client::GenerateResponse()
 		if (std::ifstream(fullPath.data( )).good())
 		{
 			_statusCode = "200 OK\n";
-			if (_path.compare("/") == 0)
+			std::map<std::string, Location>::const_iterator it = conf.getLocations().find(_path);
+			if (it != conf.getLocations().end())
 			{
-				file.open("server_root/index.html");
+				file.open(it->second.indexFiles.front().c_str());
 				if (file.fail())
 				{
 					std::cerr << "error open" << std::endl;
@@ -44,7 +45,7 @@ std::string Client::GenerateResponse()
 		}
 		else
 		{
-			file.open("server_root/error_pages/error404.html");
+			file.open(conf.getErrorPages().at("404").data());
 			_statusCode  = "404 Not Found\n";
 		}
 	}

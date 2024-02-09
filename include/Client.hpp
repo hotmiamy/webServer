@@ -3,8 +3,10 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-
-#define ROOT_PATH "server_root"
+#include "ServerConfig.hpp"
+#include <map>
+#include <algorithm>
+#include <iterator>
 
 class Client
 {
@@ -13,11 +15,12 @@ class Client
 		std::string _path;
 		std::string _method;
 		std::string _statusCode;
+
 	public:
 		Client(std::string rawRequest);
 		~Client();
 
-		std::string GenerateResponse();
+		std::string GenerateResponse(const ServerConfig &conf);
 
 		const std::string &getPath() const;
 		const std::string &getMethod() const;

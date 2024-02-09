@@ -25,7 +25,7 @@ class WebServer {
 	Poll	_poll;
 	int		_newSock;
 
-    void	_launch(SocketVec &);
-    void	_read();
+    void	_launch(SocketVec &socketVec, const ConfigVec &conf);
+    void	_read(const ServerConfig &conf);
     void	_respond(std::string response);
 };
