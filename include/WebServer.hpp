@@ -6,6 +6,7 @@
 
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 #include "Socket.hpp"

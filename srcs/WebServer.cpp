@@ -59,8 +59,8 @@ void WebServer::_read(const ServerConfig &conf)
 		if (Crequest.find("\r\n\r\n") != std::string::npos)
             break;
 	}
-	Client request(Crequest);
-	_respond(request.GenerateResponse(conf));
+	Client request(Crequest, conf);
+	_respond(request.GenerateResponse());
 }
 
 void WebServer::_respond(std::string response)
