@@ -16,7 +16,8 @@ class Client
 	private:
 		std::string	_path;
 		std::string	_method;
-		std::string	_ContentType;
+		std::string	_contentType;
+		std::string _statusCode;
 		bool		_isDir;
 
 	public:
