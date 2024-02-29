@@ -1,5 +1,27 @@
 #include "Client.hpp"
 
+static std::string ExtractHeader(std::string const &request, std::string key)
+{
+	std::map<std::string, std::string> header;
+	std::string inBuff;
+	std::size_t startPos	= request.find('\n') + 1;
+	std::size_t endPos		= request.find('\n', startPos + 1) + 1;
+
+	while (request.compare(startPos - 2, 4, "\r\n\r\n") != 0)
+	{
+		inBuff = request.substr(startPos, endPos - startPos - 2);
+		header.insert(std::make_pair(inBuff.substr(0, inBuff.find(':')), inBuff.substr(inBuff.find(':') + 2)));
+		startPos	= request.find('\n', startPos + 1) + 1;
+		endPos		= request.find('\n', startPos + 1) + 1;
+	}
+
+	std::map<std::string, std::string>::iterator it = header.find(key);
+	
+	if(it == header.end())
+		return ("");
+	return (header[key]);
+}
+
 Client::Client(std::string rawRequest, const ServerConfig &conf)
 {
 	std::istringstream iss(rawRequest);
@@ -12,31 +34,57 @@ Client::Client(std::string rawRequest, const ServerConfig &conf)
 	std::getline(iss,  buff, ' ');
 	_path = conf.getRoot() + buff;
 
-	if (std::ifstream(_path.data()).good())
+	if (_method.compare("GET") == 0)
 	{
-		_statusCode = "200";
-		if (isDirectory(_path))
+		if (std::ifstream(_path.data()).good())
 		{
-			_isDir = true;
-			std::map<std::string, Location>::const_iterator it = conf.getLocations().find(buff);
-			if (it != conf.getLocations().end())
+			_statusCode = "200";
+			if (isDirectory(_path))
 			{
-				_path = it->second.indexFiles.front();
-				_contentType = it->second.indexFiles.front().substr(it->second.indexFiles.front().find_last_of(".") + 1);	
+				_isDir = true;
+				std::map<std::string, Location>::const_iterator it = conf.getLocations().find(buff);
+				if (it != conf.getLocations().end())
+				{
+					_path = it->second.indexFiles.front();
+					_contentType = it->second.indexFiles.front().substr(it->second.indexFiles.front().find_last_of(".") + 1);	
+				}
+			}
+			else if (ContentFormat(buff.substr(buff.find_last_of('.') + 1)).empty() == false)
+			{
+				_isDir = false;
+				_contentType = buff.substr(buff.find_last_of('.') + 1);
 			}
 		}
-		else if (ContentFormat(buff.substr(buff.find_last_of('.') + 1)).empty() == false)
+		else
 		{
-			_isDir = false;
-			_contentType = buff.substr(buff.find_last_of('.') + 1);
+			_statusCode = "404";
+			_path = conf.getErrorPages().at(_statusCode);
+			_contentType = conf.getErrorPages().at(_statusCode).substr(conf.getErrorPages().at(_statusCode).find_last_of('.') + 1);
 		}
 	}
-	else
+	if (_method.compare("POST") == 0)
 	{
-		_statusCode = "404";
-		_path = conf.getErrorPages().at(_statusCode);
-		_contentType = conf.getErrorPages().at(_statusCode).substr(conf.getErrorPages().at(_statusCode).find_last_of('.') + 1);
+		std::string content = rawRequest.substr(rawRequest.rfind("\r\n\r\n") + 4);
+		int ContentSize;
+		std::ofstream file;
+		if (!ExtractHeader(rawRequest, "Content-Length").empty())
+		{
+			std::istringstream  issBuff(ExtractHeader(rawRequest, "Content-Length"));
+			issBuff >> ContentSize;
+		}
+		if (!ExtractHeader(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4), "Content-Disposition").empty())
+		{
+			std::string strHead = ExtractHeader(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4), "Content-Disposition");
+			_path.append(strHead.substr(strHead.find("filename=\"") + 10));
+			_path.erase(_path.find("\""));
+		}
+		file.open(_path.c_str(), std::ios::out | std::ios::binary);
+		if (!file)
+			std::__throw_runtime_error("error create archive");
+		file.write(content.c_str(), ContentSize);
+		file.close();
 	}
+	
 }
 
 Client::~Client()
@@ -67,8 +115,13 @@ std::string Client::GenerateResponse()
 		else
 		{
 			httpResponse.append("404 Not Found\n");
-			httpResponse.append(TextHandler(_path));	
+			httpResponse.append(TextHandler(_path));
 		}
+	}
+	else if (_method.compare("POST") == 0)
+	{
+		httpResponse.append("200 OK\r\n");
+		httpResponse.append("\r\n\r\n");
 	}
 	return (httpResponse);
 }
@@ -113,7 +166,7 @@ std::string Client::ImageHandler(std::string fullPath)
 	}
 	responseBody << file.rdbuf();
 	responseHead << "Content-Length: " << responseBody.str().size();
-	responseHead << "\n\n";
+	responseHead << "\r\n\r\n";
 	fullResponse <<  responseHead.str() << responseBody.str();
 	return (fullResponse.str());
 }

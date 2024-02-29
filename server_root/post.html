@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Arquivo</title>
+</head>
+<body>
+    <h2>Enviar Arquivo</h2>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="fileInput" name="fileInput">
+        <button type="submit">Enviar</button>
+    </form>
+
+	<div id="imagePreview"></div>
+
+    <script>
+		document.getElementById("fileInput").addEventListener("change", function(event) {
+            var file = event.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var imagePreview = document.getElementById("imagePreview");
+                    imagePreview.innerHTML = '';
+                    var img = document.createElement("img");
+                    img.src = e.target.result;
+                    img.style.maxWidth = "200px"; // Defina o tamanho máximo da imagem
+                    imagePreview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById("uploadForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Evita que o formulário seja enviado da maneira tradicional
+
+            var formData = new FormData();
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0]; // Pega o primeiro arquivo selecionado
+
+            if (file) {
+                formData.append('file', file); // Adiciona o arquivo ao FormData com a chave 'file'
+                // Você pode adicionar mais dados ao FormData, se necessário
+
+                // Aqui você pode fazer a requisição POST usando XMLHttpRequest, Fetch API ou outra biblioteca de sua escolha
+                // Por exemplo, com Fetch API:
+                fetch('http://localhost:8080/post_files/', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    // Aqui você pode tratar a resposta da requisição
+                    console.log('Resposta recebida:', response);
+                })
+                .catch(error => {
+                    // Aqui você pode tratar erros de requisição
+                    console.error('Erro na requisição:', error);
+                });
+            } else {
+                alert('Por favor, selecione um arquivo.');
+            }
+        });
+    </script>
+</body>
+</html>

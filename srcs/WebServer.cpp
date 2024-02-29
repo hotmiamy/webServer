@@ -19,7 +19,7 @@ void WebServer::run(const ConfigVec &configs) {
     SocketVec socketVec;
 
     for (ConfigVec::size_type i = 0; i < configs.size(); ++i) {
-        Socket socket(configs.at(i));
+	        Socket socket(configs.at(i));
         socket.connect();
         socketVec.push_back(socket);
 		fcntl(socketVec[i].getSocketFd(), F_SETFL, O_NONBLOCK);
@@ -38,7 +38,9 @@ void WebServer::_launch(SocketVec &socketVec, const ConfigVec &conf)
 			if (this->_poll.checkEvent(i))
 			{
 				if (i < socketVec.size())
+				{
 					_newSock = socketVec[i].accept();
+				}
 			}
         	_read(conf[i]);
 		}
@@ -54,9 +56,31 @@ void WebServer::_read(const ServerConfig &conf)
 
 	while ((bytesread = recv(_newSock, buff, sizeof(buff), 0)) > 0)
 	{
-		std::cout << buff << '\n';
 		Crequest.append(buff, bytesread);
-		if (Crequest.find("\r\n\r\n") != std::string::npos)
+		if (Crequest.find("Expect: 100-continue") != std::string::npos) {
+            sleep(2);
+            continue;
+        }
+		if (Crequest.find("multipart/form-data") != std::string::npos) 
+		{
+            std::string boundary;
+            size_t      contentTypePos = Crequest.find("Content-Type: ");
+
+            if (contentTypePos != std::string::npos) {
+                size_t lineEndPos = Crequest.find("\r\n", contentTypePos);
+                if (lineEndPos != std::string::npos) {
+                    std::string contentTypeLine = Crequest.substr(contentTypePos, lineEndPos - contentTypePos);
+                    size_t boundaryPos = contentTypeLine.find("boundary=");
+                    if (boundaryPos != std::string::npos) {
+                        boundary = contentTypeLine.substr(boundaryPos + 9);
+                    }
+                }
+            }
+            std::string terminatingBoundary = "\r\n--" + boundary + "--";
+            if (Crequest.find(terminatingBoundary) != std::string::npos)
+                break;
+		}
+		else if (Crequest.find("\r\n\r\n") != std::string::npos)
             break;
 	}
 	Client request(Crequest, conf);
