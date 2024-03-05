@@ -42,6 +42,10 @@ const std::map<std::string, std::string> ServerConfig::getErrorPages() const {
     return _errorPages;
 }
 
+const std::map<std::string, Location> &ServerConfig::getLocations() const{
+	return _locations;
+}
+
 void ServerConfig::setPort(const std::string &port) { _port = port; }
 
 void ServerConfig::setRoot(const std::string &root) { _root = root; }
@@ -55,8 +59,8 @@ void ServerConfig::addErrorPage(const std::string &errorCode,
     _errorPages[errorCode] = path;
 }
 
-void ServerConfig::addLocation(const Location &location) {
-    _locations.push_back(location);
+void ServerConfig::addLocation(std::string path, const Location &location) {
+    _locations.insert(make_pair(path, location));
 }
 
 bool ServerConfig::good() const {

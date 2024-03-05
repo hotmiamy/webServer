@@ -8,7 +8,6 @@ int main(int argc, char *argv[]) {
         std::cerr << "usage: \'./webserv [configuration file]\'\n";
         return 1;
     }
-
     try {
         WebServer webServer;
         std::vector<ServerConfig> configs = ServerConfig::fromFile(argv[1]);

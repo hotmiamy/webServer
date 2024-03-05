@@ -118,7 +118,7 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss) {
             _resolveAllowedMethods(lineIss, location);
         }
     }
-    _cfg.addLocation(location);
+    _cfg.addLocation(location.path, location);
 }
 
 void DirectiveHandler::_resolvePath(std::istringstream &lineIss,
