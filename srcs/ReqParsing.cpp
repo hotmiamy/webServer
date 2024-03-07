@@ -2,31 +2,26 @@
 
 ReqParsing::ReqParsing() {}
 
-static bool IsMethodAllowed(const Location &locat, std::string  method);
-
 static std::string ContentFormat(std::string key);
-
+static bool IsMethodAllowed(const Location &locat, std::string  method);
 static std::string ExtractHeader(std::string const &request, std::string key);
 
 ReqParsing::ReqParsing(const std::string &reqRaw, const ServerConfig &conf)
 {
-	std::istringstream iss(reqRaw);
+	std::istringstream iss(reqRaw.substr(0, reqRaw.find("\r\n")));
 	std::string buff;
-
-	std::getline(iss, buff, '\n');
-	std::istringstream iss2(buff);
-	std::string buff2;
-	while (iss2 >> buff2)
+	
+	while (std::getline(iss, buff, ' '))
 	{
-		if (buff2 == "GET" || buff2 == "POST" || buff2 == "DELETE")
-			_method = buff2;
-		else if (buff2[0] == '/')
-			parsePath(buff2, conf);
-		else if (buff2 == HTTP_VERSION)
-			_httpVersion += buff2 + "\r\n";
-		else
-			std::__throw_runtime_error("BAD REQUEST");
+		if (buff == "GET" || buff == "POST" || buff == "DELETE")
+			_method = buff;
+		else if (buff[0] == '/')
+			parsePath(buff, conf);
+		else if (buff == HTTP_VERSION)
+			_httpVersion = buff;
 	}
+	if (_method.empty() || _url.empty() || _httpVersion.empty())
+		std::__throw_runtime_error("BAD REQUEST");
 	if (_method == "GET")
 		HandleGET();
 	else if (_method == "POST")
@@ -38,6 +33,7 @@ ReqParsing::~ReqParsing(void) {}
 void ReqParsing::parsePath(std::string path, const ServerConfig &conf)
 {
 	std::string rootServer = conf.getRoot() + path;
+
 	if (std::ifstream(rootServer.data()).good())
 	{
 		_statusCode = "200";
@@ -62,44 +58,6 @@ void ReqParsing::parsePath(std::string path, const ServerConfig &conf)
 	}
 }
 
-static bool IsMethodAllowed(const Location &locat, std::string  method)
-{
-	for (std::vector<std::string>::const_iterator it =  locat.allowedMethods.begin(); it  != locat.allowedMethods.end(); it++)
-	{
-		if (it->compare(method) == 0)
-			return (true);
-	}
-	return (false);
-}
-
-static std::string ContentFormat(std::string key)
-{
-	std::map<std::string, std::string> contentTypes;
-
-	contentTypes["txt"]  = "text/plain";
-    contentTypes["html"] = "text/html";
-    contentTypes["css"]  = "text/css";
-    contentTypes["js"]   = "text/javascript";
-    contentTypes["json"] = "application/json";
-    contentTypes["xml"]  = "application/xml";
-    contentTypes["pdf"]  = "application/pdf";
-    contentTypes["zip"]  = "application/zip";
-    contentTypes["gzip"] = "application/gzip";
-    contentTypes["tar"]  = "application/x-tar";
-    contentTypes["png"]  = "image/png";
-    contentTypes["jpg"]  = "image/jpeg";
-    contentTypes["jpeg"] = "image/jpeg";
-    contentTypes["gif"]  = "image/gif";
-    contentTypes["svg"]  = "image/svg+xml";
-    contentTypes["ico"]  = "image/x-icon";
-
-	std::map<std::string, std::string>::iterator it = contentTypes.find(key);
-
-	if(it == contentTypes.end())
-		return ("");
-	return (contentTypes[key]);
-}
-
 void ReqParsing::HandleGET()
 {
 	std::ifstream file;
@@ -111,7 +69,7 @@ void ReqParsing::HandleGET()
 	if (_statusCode.find("200") != std::string::npos)
 		responseHead << " " + _statusCode + " OK\r\n";
 	else
-		_httpResponse.append(" 404 Not Found\n");
+		responseHead << " " + _statusCode + " Not Found\r\n";
 	responseHead << "Content-Format: " << ContentFormat(_contentType) + "\r\n";
 	file.open(_url.c_str(), std::ios::binary);
 	if (file.fail())
@@ -129,28 +87,57 @@ void ReqParsing::HandleGET()
 void ReqParsing::HandlePOST(const std::string &rawRequest)
 {
 	std::string content = rawRequest.substr(rawRequest.rfind("\r\n\r\n") + 4);
-	int ContentSize;
 	std::ofstream file;
 
 	_httpResponse += (HTTP_VERSION);
-	if (!ExtractHeader(rawRequest, "Content-Length").empty())
-	{
-		std::istringstream  issBuff(ExtractHeader(rawRequest, "Content-Length"));
-		issBuff >> ContentSize;
-	}
 	if (!ExtractHeader(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4), "Content-Disposition").empty())
 	{
-		std::string strHead = ExtractHeader(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4), "Content-Disposition");
-		_url.append(strHead.substr(strHead.find("filename=\"") + 10));
+		std::string form = ExtractHeader(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4), "Content-Disposition");
+		_url.append(form.substr(form.find("filename=\"") + 10));
 		_url.erase(_url.find("\""));
 	}
 	file.open(_url.c_str(), std::ios::out | std::ios::binary);
 	if (!file)
 		std::__throw_runtime_error("error create archive");
-	file.write(content.c_str(), ContentSize);
+	file.write(content.c_str(), content.size());
 	file.close();
 	_httpResponse += " " + _statusCode + " OK\r\n";
 	_httpResponse += "\r\n";
+}
+
+static std::string ContentFormat(std::string key)
+{
+	std::map<std::string, std::string> contentTypes;
+	contentTypes["txt"]  = "text/plain";
+    contentTypes["html"] = "text/html";
+    contentTypes["css"]  = "text/css";
+    contentTypes["js"]   = "text/javascript";
+    contentTypes["json"] = "application/json";
+    contentTypes["xml"]  = "application/xml";
+    contentTypes["pdf"]  = "application/pdf";
+    contentTypes["zip"]  = "application/zip";
+    contentTypes["gzip"] = "application/gzip";
+    contentTypes["tar"]  = "application/x-tar";
+    contentTypes["png"]  = "image/png";
+    contentTypes["jpg"]  = "image/jpeg";
+    contentTypes["jpeg"] = "image/jpeg";
+    contentTypes["gif"]  = "image/gif";
+    contentTypes["svg"]  = "image/svg+xml";
+    contentTypes["ico"]  = "image/x-icon";
+	std::map<std::string, std::string>::iterator it = contentTypes.find(key);
+	if(it == contentTypes.end())
+		return ("");
+	return (contentTypes[key]);
+}
+
+static bool IsMethodAllowed(const Location &locat, std::string  method)
+{
+	for (std::vector<std::string>::const_iterator it =  locat.allowedMethods.begin(); it  != locat.allowedMethods.end(); it++)
+	{
+		if (it->compare(method) == 0)
+			return (true);
+	}
+	return (false);
 }
 
 static std::string ExtractHeader(std::string const &request, std::string key)
@@ -159,7 +146,6 @@ static std::string ExtractHeader(std::string const &request, std::string key)
 	std::string inBuff;
 	std::size_t startPos	= request.find('\n') + 1;
 	std::size_t endPos		= request.find('\n', startPos + 1) + 1;
-
 	while (request.compare(startPos - 2, 4, "\r\n\r\n") != 0)
 	{
 		inBuff = request.substr(startPos, endPos - startPos - 2);
@@ -167,9 +153,7 @@ static std::string ExtractHeader(std::string const &request, std::string key)
 		startPos	= request.find('\n', startPos + 1) + 1;
 		endPos		= request.find('\n', startPos + 1) + 1;
 	}
-
 	std::map<std::string, std::string>::iterator it = header.find(key);
-	
 	if(it == header.end())
 		return ("");
 	return (header[key]);
