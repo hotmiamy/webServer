@@ -8,8 +8,9 @@
 #include <iterator>
 #include "ServerConfig.hpp"
 #include "ServerUtils.hpp"
+#include "ReqParsing.hpp"
 
-#define HTTP_VERSION "HTTP/1.1 "
+#define HTTP_VERSION "HTTP/1.1"
 
 class Client
 {
