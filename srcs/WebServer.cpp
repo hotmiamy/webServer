@@ -22,7 +22,8 @@ void WebServer::run(const ConfigVec &configs) {
 	        Socket socket(configs.at(i));
         socket.connect();
         socketVec.push_back(socket);
-		fcntl(socketVec[i].getSocketFd(), F_SETFL, O_NONBLOCK);
+		if (fcntl(socketVec[i].getSocketFd(), F_SETFL, O_NONBLOCK) < 0)
+			std::__throw_runtime_error("Error set nonblocking I/O");
 		this->_poll.addSocketFd(socket);
     }
     _launch(socketVec, configs);
@@ -32,7 +33,7 @@ void WebServer::_launch(SocketVec &socketVec, const ConfigVec &conf)
 {
 	while (true) 
 	{
-		this->_poll.execute();
+			this->_poll.execute();
 		for (size_t i = 0; i < this->_poll.getSize(); ++i)
 		{
 			if (this->_poll.checkEvent(i))
@@ -83,8 +84,8 @@ void WebServer::_read(const ServerConfig &conf)
 		else if (Crequest.find("\r\n\r\n") != std::string::npos)
             break;
 	}
-	Client request(Crequest, conf);
-	_respond(request.GenerateResponse());
+	ReqParsing parsing(Crequest, conf);
+	_respond(parsing.getHttpResponse());
 }
 
 void WebServer::_respond(std::string response)

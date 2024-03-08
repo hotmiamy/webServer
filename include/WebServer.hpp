@@ -11,7 +11,7 @@
 
 #include "Socket.hpp"
 #include "Poll.hpp"
-#include "Client.hpp"
+#include "ReqParsing.hpp"
 
 class WebServer {
    public:

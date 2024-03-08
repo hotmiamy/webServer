@@ -1,6 +1,6 @@
 #include "ServerConfig.hpp"
 
-#include "parsing.hpp"
+#include "ConfParsing.hpp"
 
 ServerConfig::ServerConfig()
     : _port(), _root(), _serverNames(), _errorPages(), _locations() {}
