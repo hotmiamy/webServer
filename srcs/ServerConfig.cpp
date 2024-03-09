@@ -1,6 +1,6 @@
 #include "ServerConfig.hpp"
 
-#include "ConfParsing.hpp"
+#include "ConfigParser.hpp"
 
 ServerConfig::ServerConfig()
     : _port(), _root(), _serverNames(), _errorPages(), _locations() {}
@@ -42,8 +42,8 @@ const std::map<std::string, std::string> ServerConfig::getErrorPages() const {
     return _errorPages;
 }
 
-const std::map<std::string, Location> &ServerConfig::getLocations() const{
-	return _locations;
+const std::map<std::string, Location> &ServerConfig::getLocations() const {
+    return _locations;
 }
 
 void ServerConfig::setPort(const std::string &port) { _port = port; }

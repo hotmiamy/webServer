@@ -1,4 +1,4 @@
-#include "ConfParsing.hpp"
+#include "ConfigParser.hpp"
 
 static ServerConfig serverBlockToServerConfig(std::string &block);
 
