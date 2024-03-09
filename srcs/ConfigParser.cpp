@@ -1,42 +1,11 @@
 #include "ConfigParser.hpp"
 
-static ServerConfig serverBlockToServerConfig(std::string &block);
+namespace ConfigParser {
 
-static bool hasCorrectAmountOfBrackets(const std::string &str) {
-    int left = 0, right = 0;
+bool IsNotSpace::operator()(int ch) const { return !std::isspace(ch); }
 
-    for (size_t i = 0; i < str.size(); ++i) {
-        char c = str[i];
-        if (c == '{') {
-            left++;
-            continue;
-        }
-        if (c == '}') {
-            right++;
-        }
-    }
-    return left == right;
-}
-
-static std::vector<std::string> splitServerConfigBlocks(const std::string &s) {
-    const char *directive = "server {";
-    std::string str(s);
-    std::vector<std::string> blocks;
-
-    std::string::size_type pos;
-    while ((pos = str.find("server ", 0)) != str.npos) {
-        std::string::size_type openingBracketPos = str.find("{", pos);
-        if (str.substr(pos, strlen(directive)) != directive) {
-            throw std::runtime_error(
-                "'server' block must be closed, check the config file");
-        }
-        std::string::size_type serverBlockEnd =
-            str.rfind("}", str.find(directive, openingBracketPos));
-        std::string::size_type blockSize = (serverBlockEnd + 1) - pos;
-        blocks.push_back(str.substr(pos, blockSize));
-        str.erase(pos, blockSize);
-    }
-    return blocks;
+bool IsConsecutiveSpace::operator()(char a, char b) const {
+    return std::isspace(a) && std::isspace(b);
 }
 
 std::vector<ServerConfig> parse(std::ifstream &ifs) {
@@ -63,7 +32,44 @@ std::vector<ServerConfig> parse(std::ifstream &ifs) {
     return configs;
 }
 
-static std::string removeConsecutiveWhitespaces(const std::string &str) {
+bool hasCorrectAmountOfBrackets(const std::string &str) {
+    int left = 0, right = 0;
+
+    for (size_t i = 0; i < str.size(); ++i) {
+        char c = str[i];
+        if (c == '{') {
+            left++;
+            continue;
+        }
+        if (c == '}') {
+            right++;
+        }
+    }
+    return left == right;
+}
+
+std::vector<std::string> splitServerConfigBlocks(const std::string &s) {
+    const char *directive = "server {";
+    std::string str(s);
+    std::vector<std::string> blocks;
+
+    std::string::size_type pos;
+    while ((pos = str.find("server ", 0)) != str.npos) {
+        std::string::size_type openingBracketPos = str.find("{", pos);
+        if (str.substr(pos, strlen(directive)) != directive) {
+            throw std::runtime_error(
+                "'server' block must be closed, check the config file");
+        }
+        std::string::size_type serverBlockEnd =
+            str.rfind("}", str.find(directive, openingBracketPos));
+        std::string::size_type blockSize = (serverBlockEnd + 1) - pos;
+        blocks.push_back(str.substr(pos, blockSize));
+        str.erase(pos, blockSize);
+    }
+    return blocks;
+}
+
+std::string removeConsecutiveWhitespaces(const std::string &str) {
     if (str.empty()) {
         return "";
     }
@@ -73,7 +79,7 @@ static std::string removeConsecutiveWhitespaces(const std::string &str) {
     return res;
 }
 
-static void trimWhitespaces(std::string &line) {
+void trimWhitespaces(std::string &line) {
     // respectively: remove leading whitespaces from start, end, and between the
     // string
     line.erase(line.begin(),
@@ -83,8 +89,8 @@ static void trimWhitespaces(std::string &line) {
     line = removeConsecutiveWhitespaces(line);
 }
 
-static std::string getLocationBlock(std::istringstream &iss,
-                                    std::istringstream &lineIss) {
+std::string getLocationBlock(std::istringstream &iss,
+                             std::istringstream &lineIss) {
     std::string locationBlock, line;
     while (std::getline(iss, line) && line.find("}") == std::string::npos) {
         locationBlock += line + '\n';
@@ -94,7 +100,7 @@ static std::string getLocationBlock(std::istringstream &iss,
     return locationBlock;
 }
 
-static ServerConfig serverBlockToServerConfig(std::string &block) {
+ServerConfig serverBlockToServerConfig(std::string &block) {
     trimWhitespaces(block);
     std::istringstream iss(block);
     std::string line;
@@ -124,3 +130,5 @@ static ServerConfig serverBlockToServerConfig(std::string &block) {
     }
     throw std::runtime_error("bad 'server' block: " + block);
 }
+
+}  // namespace ConfigParser

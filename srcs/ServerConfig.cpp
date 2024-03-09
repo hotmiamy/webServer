@@ -27,7 +27,7 @@ std::vector<ServerConfig> ServerConfig::fromFile(const std::string &file) {
         throw std::invalid_argument("invalid file: " + file);
     }
 
-    return parse(ifs);
+    return ConfigParser::parse(ifs);
 }
 
 const std::string &ServerConfig::getPort() const { return _port; }
