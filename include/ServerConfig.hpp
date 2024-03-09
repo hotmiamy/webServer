@@ -18,9 +18,9 @@ class ServerConfig {
 
     const std::string &getPort() const;
     const std::string &getRoot() const;
-    const std::vector<std::string> getServerNames() const;
-    const std::map<std::string, std::string> getErrorPages() const;
-	const std::map<std::string, Location> &getLocations() const;
+    const std::vector<std::string> &getServerNames() const;
+    const std::map<std::string, std::string> &getErrorPages() const;
+    const std::map<std::string, Location> &getLocations() const;
 
     void setPort(const std::string &);
     void setRoot(const std::string &);
@@ -31,15 +31,10 @@ class ServerConfig {
     bool good() const;
 
    private:
-	// Port to listen on
     std::string _port;
-	//  root directory of the server
     std::string _root;
-	//	List of servers names (ex: localhost)
     std::vector<std::string> _serverNames;
-	//  Error pages for HTTP errors
     std::map<std::string, std::string> _errorPages;
-	// class of locations
     std::map<std::string, Location> _locations;
 };
 

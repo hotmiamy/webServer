@@ -34,11 +34,11 @@ const std::string &ServerConfig::getPort() const { return _port; }
 
 const std::string &ServerConfig::getRoot() const { return _root; }
 
-const std::vector<std::string> ServerConfig::getServerNames() const {
+const std::vector<std::string> &ServerConfig::getServerNames() const {
     return _serverNames;
 }
 
-const std::map<std::string, std::string> ServerConfig::getErrorPages() const {
+const std::map<std::string, std::string> &ServerConfig::getErrorPages() const {
     return _errorPages;
 }
 
