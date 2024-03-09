@@ -13,4 +13,6 @@ bool isFileReadable(const std::string &path);
 
 bool isNumeric(const std::string &str);
 
+const std::string getExtension(const std::string &path);
+
 }  // namespace ServerUtils
