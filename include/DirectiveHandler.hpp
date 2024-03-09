@@ -9,6 +9,7 @@
 #include <sstream>
 
 #include "ServerConfig.hpp"
+#include "ServerUtils.hpp"
 
 class DirectiveHandler {
    public:
@@ -43,8 +44,5 @@ class DirectiveHandler {
     void _resolveIndexFiles(std::istringstream &, Location &);
     void _resolveAllowedMethods(std::istringstream &, Location &);
 
-    bool _isFileReadable(const std::string &) const;
-    bool _isNumeric(const std::string &) const;
     bool _isAllowedHttpMethod(const std::string &) const;
-    bool _isDirectory(const std::string &) const;
 };
