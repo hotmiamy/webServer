@@ -11,6 +11,7 @@ const std::string DirectiveHandler::ERR_LOCATION =
 const std::string DirectiveHandler::ERR_ALLOWED_METHODS =
     "error at 'allowed_methods' directive: ";
 const std::string DirectiveHandler::ERR_ROOT = "error at 'root' directive: ";
+const std::string DirectiveHandler::ERR_CGI = "error at 'cgi' directive: ";
 
 DirectiveHandler::DirectiveHandler() : _cfg() {
     _directiveMap["listen"] = &DirectiveHandler::_handleListenDirective;
@@ -19,6 +20,7 @@ DirectiveHandler::DirectiveHandler() : _cfg() {
     _directiveMap["error_page"] = &DirectiveHandler::_handleErrorPageDirective;
     _directiveMap["location"] = &DirectiveHandler::_handleLocationDirective;
     _directiveMap["root"] = &DirectiveHandler::_handleRoot;
+    _directiveMap["cgi"] = &DirectiveHandler::_handleCgi;
 }
 
 DirectiveHandler::~DirectiveHandler() {}
@@ -218,6 +220,23 @@ void DirectiveHandler::_handleRoot(std::istringstream &iss) {
             ERR_ROOT + "there should be one and only one directory specified");
     }
     _cfg.setRoot(path);
+}
+
+void DirectiveHandler::_handleCgi(std::istringstream &iss) {
+    std::string extension, executable;
+
+    if (!(iss >> extension) || extension != ".py") {
+        throw std::runtime_error(
+            ERR_CGI + "a valid file extension (.py) must be specified");
+    }
+    if (!(iss >> executable) || !ServerUtils::isValidExecutable(executable)) {
+        throw std::runtime_error(ERR_CGI + '\'' + executable + '\'' +
+                                 " is not a valid binary");
+    }
+    if (iss.rdbuf()->in_avail() != 0) {
+        throw std::runtime_error(
+            ERR_CGI + "there should be one and only one binary specified");
+    }
 }
 
 void DirectiveHandler::process(const std::string &directive,
