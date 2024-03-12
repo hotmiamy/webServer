@@ -32,7 +32,7 @@ void DirectiveHandler::_handleListenDirective(std::istringstream &iss) {
 
     std::string port;
 
-    if (!(iss >> port) || !_isNumeric(port)) {
+    if (!(iss >> port) || !ServerUtils::isNumeric(port)) {
         throw std::runtime_error(ERR_LISTEN +
                                  "the port should be a numeric value");
     }
@@ -69,11 +69,11 @@ void DirectiveHandler::_handleErrorPageDirective(std::istringstream &iss) {
 
     std::string errorCode, path;
 
-    if (!(iss >> errorCode) || !_isNumeric(errorCode)) {
+    if (!(iss >> errorCode) || !ServerUtils::isNumeric(errorCode)) {
         throw std::runtime_error(ERR_ERROR_PAGE +
                                  "the error code should be a numeric value");
     }
-    if (!(iss >> path) || !_isFileReadable(path)) {
+    if (!(iss >> path) || !ServerUtils::isFileReadable(path)) {
         throw std::runtime_error(ERR_ERROR_PAGE +
                                  "page should point to a valid path");
     }
@@ -85,16 +85,6 @@ void DirectiveHandler::_handleErrorPageDirective(std::istringstream &iss) {
     }
 
     _cfg.addErrorPage(errorCode, path);
-}
-
-bool DirectiveHandler::_isNumeric(const std::string &str) const {
-    return str.find_last_not_of("0123456789") == std::string::npos;
-}
-
-bool DirectiveHandler::_isFileReadable(const std::string &path) const {
-    struct stat fileInfo;
-    return stat(path.c_str(), &fileInfo) == 0 &&
-           (S_ISREG(fileInfo.st_mode) && fileInfo.st_mode & S_IRUSR);
 }
 
 void DirectiveHandler::_handleLocationDirective(std::istringstream &iss) {
@@ -130,7 +120,7 @@ void DirectiveHandler::_resolvePath(std::istringstream &lineIss,
     if (!(lineIss >> tmp) || tmp != "{") {
         throw std::runtime_error(ERR_LOCATION + "no '{' found");
     }
-    if (!_isDirectory(_cfg.getRoot() + location.path)) {
+    if (!ServerUtils::isDirectory(_cfg.getRoot() + location.path)) {
         throw std::runtime_error(ERR_LOCATION + "'" + location.path + "'" +
                                  " is not a valid directory");
     }
@@ -191,7 +181,7 @@ void DirectiveHandler::_handleIndexFiles(std::istringstream &iss,
     const std::string path = _cfg.getRoot() + location.path;
     std::string fileName;
 
-    if (!(iss >> fileName) || !_isFileReadable(path + fileName)) {
+    if (!(iss >> fileName) || !ServerUtils::isFileReadable(path + fileName)) {
         throw std::runtime_error(ERR_LOCATION + "no such file '" + fileName +
                                  "' at " + path);
     }
@@ -200,7 +190,7 @@ void DirectiveHandler::_handleIndexFiles(std::istringstream &iss,
 
     while (iss >> fileName) {
         filePath = path + fileName;
-        if (!_isFileReadable(filePath)) {
+        if (!ServerUtils::isFileReadable(filePath)) {
             throw std::runtime_error(ERR_LOCATION + "no such file '" +
                                      fileName + "' at " + path);
         }
@@ -219,7 +209,7 @@ void DirectiveHandler::_handleRoot(std::istringstream &iss) {
     }
 
     std::string path;
-    if (!(iss >> path) || !_isDirectory(path)) {
+    if (!(iss >> path) || !ServerUtils::isDirectory(path)) {
         throw std::runtime_error(ERR_ROOT +
                                  "a valid directory must be specified");
     }
@@ -228,12 +218,6 @@ void DirectiveHandler::_handleRoot(std::istringstream &iss) {
             ERR_ROOT + "there should be one and only one directory specified");
     }
     _cfg.setRoot(path);
-}
-
-bool DirectiveHandler::_isDirectory(const std::string &path) const {
-    struct stat info;
-    return stat(path.c_str(), &info) == 0 &&
-           (S_ISDIR(info.st_mode) && access(path.c_str(), R_OK | X_OK) == 0);
 }
 
 void DirectiveHandler::process(const std::string &directive,
