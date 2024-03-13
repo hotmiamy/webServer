@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enviar Requisição DELETE de um Arquivo</title>
+</head>
+<body>
+
+<h2>Enviar Requisição DELETE de um Arquivo</h2>
+
+<p>Informe o nome do arquivo que deseja excluir:</p>
+<input type="text" id="fileName">
+<button onclick="deleteFile()">Excluir Arquivo</button>
+
+<script>
+function deleteFile() {
+    var fileName = document.getElementById("fileName").value;
+    var url = 'localhost:8080/' + fileName; // Substitua 'URL_DO_SERVIDOR_AQUI' pela URL do seu servidor
+    
+    fetch(url, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json' // Define o tipo de conteúdo da requisição
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erro ao enviar a requisição DELETE');
+        }
+        console.log('Requisição DELETE enviada com sucesso');
+        // Adicione qualquer lógica adicional aqui após o sucesso da requisição
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+    });
+}
+</script>
+
+</body>
+</html>
