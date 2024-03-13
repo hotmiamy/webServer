@@ -3,39 +3,59 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Enviar Requisição DELETE de um Arquivo</title>
+<title>Listar e Deletar Arquivos</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 <body>
+    <h1>Listar e Deletar Arquivos</h1>
+    <select id="fileList"></select>
+    <button onclick="deletarArquivo()">Deletar Arquivo</button>
 
-<h2>Enviar Requisição DELETE de um Arquivo</h2>
+    <script>
+        $(document).ready(function() {
+            // Carrega a lista de arquivos quando a página é carregada
+            carregarListaArquivos();
+        });
 
-<p>Informe o nome do arquivo que deseja excluir:</p>
-<input type="text" id="fileName">
-<button onclick="deleteFile()">Excluir Arquivo</button>
-
-<script>
-function deleteFile() {
-    var fileName = document.getElementById("fileName").value;
-    var url = 'localhost:8080/' + fileName; // Substitua 'URL_DO_SERVIDOR_AQUI' pela URL do seu servidor
-    
-    fetch(url, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json' // Define o tipo de conteúdo da requisição
+        function carregarListaArquivos() {
+            $.ajax({
+                url: 'listar_arquivos.php', // Caminho do script PHP para listar os arquivos
+                type: 'GET',
+                success: function(data) {
+                    var fileList = $('#fileList');
+                    fileList.empty();
+                    $.each(data, function(index, value) {
+                        fileList.append('<option value="' + value + '">' + value + '</option>');
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erro ao carregar a lista de arquivos:', error);
+                }
+            });
         }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Erro ao enviar a requisição DELETE');
-        }
-        console.log('Requisição DELETE enviada com sucesso');
-        // Adicione qualquer lógica adicional aqui após o sucesso da requisição
-    })
-    .catch(error => {
-        console.error('Erro:', error);
-    });
-}
-</script>
 
+        function deletarArquivo() {
+            var selectedFile = $('#fileList').val();
+            if (!selectedFile) {
+                alert('Por favor, selecione um arquivo.');
+                return;
+            }
+
+            var url = 'URL_DO_SEU_ENDPOINT_PARA_DELETAR_ARQUIVO'; // Substitua pela URL do seu endpoint
+
+            $.ajax({
+                url: url,
+                type: 'DELETE',
+                data: { file: selectedFile },
+                success: function(data) {
+                    console.log('Arquivo deletado com sucesso.');
+                    carregarListaArquivos(); // Recarrega a lista de arquivos após a exclusão
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erro ao deletar o arquivo:', error);
+                }
+            });
+        }
+    </script>
 </body>
 </html>

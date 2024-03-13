@@ -14,6 +14,14 @@ bool isFileReadable(const std::string &path) {
            (S_ISREG(fileInfo.st_mode) && fileInfo.st_mode & S_IRUSR);
 }
 
+bool checkFileExist(const std::string &file)
+{
+	struct stat fileInfo;
+	if (stat(file.c_str(), &fileInfo) < 0)
+		return false;
+	return true;
+}
+
 bool isNumeric(const std::string &str) {
     return str.find_last_not_of("0123456789") == std::string::npos;
 }

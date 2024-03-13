@@ -16,7 +16,7 @@ ReqParsing::ReqParsing(const std::string &reqRaw, const ServerConfig &conf) {
     }
     if (_method.empty() || _url.empty() || _httpVersion.empty())
         std::__throw_runtime_error("BAD REQUEST");
-    if (_method == "GET")
+    else if (_method == "GET")
         HandleGET();
     else if (_method == "POST")
         HandlePOST(reqRaw);
@@ -29,18 +29,20 @@ ReqParsing::~ReqParsing(void) {}
 void ReqParsing::parsePath(std::string path, const ServerConfig &conf) {
     std::string rootServer = conf.getRoot() + path;
 
-    if (std::ifstream(rootServer.data()).good()) {
-        _statusCode = 200;
+    if (ServerUtils::checkFileExist(rootServer)) {
+        _statusCode = "200";
         std::map<std::string, Location>::const_iterator it =
             conf.getLocations().find(path);
         _url = conf.getRoot() + path;
         if (it != conf.getLocations().end()) {
-            if (ReqParsUtils::IsMethodAllowed(it->second, _method) == false) {
+            if (ReqParsUtils::IsMethodAllowed(it->second, _method) == false) 
                 std::__throw_runtime_error("NOT ALLOWED METHOD");
-            }
-            _url = it->second.indexFiles.front();
-            _contentType =
-                ServerUtils::getExtension(it->second.indexFiles.front());
+			else
+			{
+            	_url = it->second.indexFiles.front();
+            	_contentType =
+            	    ServerUtils::getExtension(it->second.indexFiles.front());
+			}
         } else if (!ReqParsUtils::ContentFormat(ServerUtils::getExtension(path)).empty()) {
             _contentType = ServerUtils::getExtension(path);
         }
@@ -106,8 +108,15 @@ void ReqParsing::HandleDELETE()
 {
 	_httpResponse  = HTTP_VERSION;
 	if (ServerUtils::isDirectory(_url))
-		_httpResponse += ReqParsUtils::StatusCodes("405").c_str();
-	
+		_httpResponse += ReqParsUtils::StatusCodes("405");
+	else if (ServerUtils::isFileReadable(_url) == false)
+		_httpResponse += ReqParsUtils::StatusCodes("403");
+	else
+	{
+        std::remove(_url.c_str());
+		_httpResponse += ReqParsUtils::StatusCodes(_statusCode);
+		_httpResponse += "\r\n\r\n";
+	}
 }
 
 std::string ReqParsing::getHttpResponse() { return (this->_httpResponse); }
