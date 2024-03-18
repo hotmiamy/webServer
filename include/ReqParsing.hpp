@@ -6,6 +6,7 @@
 
 #include "ServerConfig.hpp"
 #include "ServerUtils.hpp"
+#include "ReqParsUtils.hpp"
 
 #define HTTP_VERSION "HTTP/1.1"
 
@@ -28,7 +29,7 @@ class ReqParsing {
 
    private:
     void parsePath(std::string path, const ServerConfig &conf);
-    std::string geneHandler();
     void HandleGET();
     void HandlePOST(const std::string &rawRequest);
+	void HandleDELETE();
 };
