@@ -34,4 +34,21 @@ const std::string getExtension(const std::string &path) {
     return "";
 }
 
+bool isValidExecutable(const std::string &ex) {
+    const char *pathEnv = getenv("PATH");
+    if (!pathEnv) {
+        return false;
+    }
+
+    std::istringstream iss(pathEnv);
+    std::string dir;
+    while (std::getline(iss, dir, ':')) {
+        std::string path = dir + '/' + ex;
+        if (access(path.c_str(), X_OK) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 }  // namespace ServerUtils

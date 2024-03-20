@@ -21,12 +21,16 @@ class ServerConfig {
     const std::vector<std::string> &getServerNames() const;
     const std::map<std::string, std::string> &getErrorPages() const;
     const std::map<std::string, Location> &getLocations() const;
+    const std::string &getClientMaxBodySize() const;
+    bool hasCgi() const;
 
+    void setCgi(bool);
     void setPort(const std::string &);
     void setRoot(const std::string &);
     void addServer(const std::string &);
     void addErrorPage(const std::string &, const std::string &);
     void addLocation(std::string path, const Location &);
+    void setClientMaxBodySize(const std::string &);
 
     bool good() const;
 
@@ -36,6 +40,8 @@ class ServerConfig {
     std::vector<std::string> _serverNames;
     std::map<std::string, std::string> _errorPages;
     std::map<std::string, Location> _locations;
+    bool _cgi;
+    std::string _clientMaxBodySize;
 };
 
 typedef std::vector<ServerConfig> ConfigVec;
