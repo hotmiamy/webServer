@@ -84,6 +84,7 @@ void WebServer::_read(const ServerConfig &conf)
 		else if (Crequest.find("\r\n\r\n") != std::string::npos)
             break;
 	}
+	std::cout << Crequest << std::endl;
 	ReqParsing parsing(Crequest, conf);
 	_respond(parsing.getHttpResponse());
 }

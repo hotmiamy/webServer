@@ -2,7 +2,7 @@
 
 ReqParsing::ReqParsing() {}
 
-ReqParsing::ReqParsing(const std::string &reqRaw, const ServerConfig &conf) {
+ReqParsing::ReqParsing(const std::string &reqRaw, const ServerConfig &conf) : _location(NULL) {
     std::istringstream iss(reqRaw.substr(0, reqRaw.find("\r\n")));
     std::string buff;
 
@@ -15,7 +15,12 @@ ReqParsing::ReqParsing(const std::string &reqRaw, const ServerConfig &conf) {
             _httpVersion = buff;
     }
     if (_method.empty() || _url.empty() || _httpVersion.empty())
-        std::__throw_runtime_error("BAD REQUEST");
+	{
+        _statusCode = "400";
+		_httpResponse = HTTP_VERSION;
+		_httpResponse += ReqParsUtils::StatusCodes(_statusCode);
+		_httpResponse += "\r\n"; 
+	}
     else if (_method == "GET")
         HandleGET();
     else if (_method == "POST")
@@ -24,7 +29,10 @@ ReqParsing::ReqParsing(const std::string &reqRaw, const ServerConfig &conf) {
 		HandleDELETE();
 }
 
-ReqParsing::~ReqParsing(void) {}
+ReqParsing::~ReqParsing(void) {
+	if (_location != NULL)
+		delete _location;
+}
 
 void ReqParsing::parsePath(std::string path, const ServerConfig &conf) {
     std::string rootServer = conf.getRoot() + path;
@@ -33,17 +41,12 @@ void ReqParsing::parsePath(std::string path, const ServerConfig &conf) {
         _statusCode = "200";
         std::map<std::string, Location>::const_iterator it =
             conf.getLocations().find(path);
-        _url = conf.getRoot() + path;
-        if (it != conf.getLocations().end()) {
-            if (ReqParsUtils::IsMethodAllowed(it->second, _method) == false) 
-                std::__throw_runtime_error("NOT ALLOWED METHOD");
-			else
-			{
-            	_url = it->second.indexFiles.front();
-            	_contentType =
-            	    ServerUtils::getExtension(it->second.indexFiles.front());
-			}
-        } else if (!ReqParsUtils::ContentFormat(ServerUtils::getExtension(path)).empty()) {
+        _url = rootServer;
+        if (it != conf.getLocations().end()){
+			_location = new Location();
+            *_location = it->second;
+		}
+        else if (!ReqParsUtils::ContentFormat(ServerUtils::getExtension(path)).empty()) {
             _contentType = ServerUtils::getExtension(path);
         }
     } else {
@@ -62,16 +65,27 @@ void ReqParsing::HandleGET() {
     std::stringstream responseBody;
     std::stringstream fullResponse;
 
+	if (_location != NULL) {
+		if (ReqParsUtils::IsMethodAllowed(*_location, _method) == false){
+        	_statusCode = "405";
+		}
+		else {
+        	_url = _location->indexFiles.front();
+        	_contentType =
+        	ServerUtils::getExtension(_location->indexFiles.front());
+		}
+	}
 	responseHead << HTTP_VERSION;
     file.open(_url.c_str(), std::ios::binary);
     if (file.fail()) {
-        responseHead << ReqParsUtils::StatusCodes("500");
+		 // Assim que a estrutura de throw estiver funcionando mandar erro e
+        // setar o necessario la como a pagina de error aonde está o arquivo 500;
+       _statusCode = "500";
     }
-	else
-	{
-		responseHead << ReqParsUtils::StatusCodes(_statusCode);
+	else{
     	responseBody << file.rdbuf();
 	}
+	responseHead << ReqParsUtils::StatusCodes(_statusCode);
     responseHead << "Content-Format: " << ReqParsUtils::ContentFormat(_contentType) + "\r\n";
     responseHead << "Content-Length: " << responseBody.str().size();
     responseHead << "\r\n\r\n";
@@ -80,28 +94,44 @@ void ReqParsing::HandleGET() {
 }
 
 void ReqParsing::HandlePOST(const std::string &rawRequest) {
-    std::string content = rawRequest.substr(rawRequest.rfind("\r\n\r\n") + 4);
+	std::stringstream httpResponse;
+	std::size_t bodyPos = rawRequest.rfind("\r\n\r\n") + 4;
+    std::string content = rawRequest.substr(bodyPos);
     std::ofstream file;
 
-    _httpResponse += HTTP_VERSION;
-    if (!ReqParsUtils::ExtractHeader(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4),
-                       "Content-Disposition")
-             .empty()) {
-        std::string form =
-            ReqParsUtils::ExtractHeader(rawRequest.substr(rawRequest.find("\r\n\r\n") + 4),
-                          "Content-Disposition");
-        _url.append(form.substr(form.find("filename=\"") + 10));
-        _url.erase(_url.find("\""));
-    }
-    file.open(_url.c_str(), std::ios::out | std::ios::binary);
-    if (!file) 
-		_httpResponse += ReqParsUtils::StatusCodes("500");
-	else
-	{
-    	_httpResponse += ReqParsUtils::StatusCodes(_statusCode);
-    	file.write(content.c_str(), content.size());
+    httpResponse << HTTP_VERSION;
+	if (_location != NULL) {
+		if (ReqParsUtils::IsMethodAllowed(*_location, _method) == false){
+        	_statusCode = "405";
+		}
+		else {
+        	_url = _location->indexFiles.front();
+        	_contentType =
+        	ServerUtils::getExtension(_location->indexFiles.front());
+		}
 	}
-    file.close();
+	if (!content.empty()){
+		if (!ReqParsUtils::ExtractHeader(rawRequest.substr(bodyPos), "Content-Disposition").empty()) {
+		    std::string form =
+		        ReqParsUtils::ExtractHeader(rawRequest.substr(bodyPos), "Content-Disposition");
+		    _url.append(form.substr(form.find("filename=\"") + 10));
+		    _url.erase(_url.find("\""));
+		}
+		file.open(_url.c_str(), std::ios::out | std::ios::binary);
+		if (!file) 
+			_statusCode = "500";
+		else
+		{
+			file.write(content.c_str(), content.size());
+			file.close();
+		}
+	}
+	httpResponse << ReqParsUtils::StatusCodes(_statusCode);
+	httpResponse << "Content-Type: " << ReqParsUtils::ExtractHeader(rawRequest, "Content-Type") << "\r\n";
+	httpResponse << "Content-Length: " << content.size() << "\r\n";
+	httpResponse << "Server: WebServer";
+	httpResponse << "\r\n\r\n";
+	_httpResponse = httpResponse.str();
 }
 
 void ReqParsing::HandleDELETE()

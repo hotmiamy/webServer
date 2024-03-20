@@ -130,4 +130,17 @@ std::string StatusCodes(std::string code)
     return (statusCodes[code]);
 }
 
+std::string getCurrDate(void)
+{
+    time_t   now;
+    std::tm *local_time;
+    char     buffer[64];
+
+    now        = std::time(NULL);
+    local_time = std::localtime(&now);
+    std::strftime(buffer, sizeof(buffer), "%a, %d %b %Y %T %Z", local_time);
+
+    return (buffer);
+}
+
 }

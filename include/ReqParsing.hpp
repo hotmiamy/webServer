@@ -19,6 +19,7 @@ class ReqParsing {
     std::string _contentType;
     std::string _httpResponse;
     std::vector<std::string> _allowMethods;
+	Location *_location;
 
    public:
     ReqParsing();
