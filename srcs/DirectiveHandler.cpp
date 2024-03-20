@@ -223,8 +223,11 @@ void DirectiveHandler::_handleRoot(std::istringstream &iss) {
 }
 
 void DirectiveHandler::_handleCgi(std::istringstream &iss) {
-    std::string extension, executable;
+    if (_cfg.hasCgi()) {
+        throw std::runtime_error(ERR_CGI + "cgi was already specified");
+    }
 
+    std::string extension, executable;
     if (!(iss >> extension) || extension != ".py") {
         throw std::runtime_error(
             ERR_CGI + "a valid file extension (.py) must be specified");
@@ -235,8 +238,9 @@ void DirectiveHandler::_handleCgi(std::istringstream &iss) {
     }
     if (iss.rdbuf()->in_avail() != 0) {
         throw std::runtime_error(
-            ERR_CGI + "there should be one and only one binary specified");
+            ERR_CGI + "there should be one and only one executable specified");
     }
+    _cfg.setCgi(true);
 }
 
 void DirectiveHandler::process(const std::string &directive,

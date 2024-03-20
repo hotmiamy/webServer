@@ -3,7 +3,12 @@
 #include "ConfigParser.hpp"
 
 ServerConfig::ServerConfig()
-    : _port(), _root(), _serverNames(), _errorPages(), _locations() {}
+    : _port(),
+      _root(),
+      _serverNames(),
+      _errorPages(),
+      _locations(),
+      _cgi(false) {}
 
 ServerConfig::ServerConfig(const ServerConfig &other) { *this = other; }
 
@@ -14,6 +19,7 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
         _serverNames = other._serverNames;
         _errorPages = other._errorPages;
         _locations = other._locations;
+        _cgi = other._cgi;
     }
     return *this;
 }
@@ -45,6 +51,10 @@ const std::map<std::string, std::string> &ServerConfig::getErrorPages() const {
 const std::map<std::string, Location> &ServerConfig::getLocations() const {
     return _locations;
 }
+
+bool ServerConfig::hasCgi() const { return _cgi; }
+
+void ServerConfig::setCgi(bool val) { _cgi = val; }
 
 void ServerConfig::setPort(const std::string &port) { _port = port; }
 
