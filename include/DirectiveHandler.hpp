@@ -29,6 +29,7 @@ class DirectiveHandler {
     static const std::string ERR_ALLOWED_METHODS;
     static const std::string ERR_ROOT;
     static const std::string ERR_CGI;
+    static const std::string ERR_MAX_BODY_SIZE;
 
     ServerConfig _cfg;
     std::map<std::string, DirectiveFunction> _directiveMap;
@@ -41,6 +42,7 @@ class DirectiveHandler {
     void _handleLocationDirective(std::istringstream &);
     void _handleAllowedMethodsDirective(std::istringstream &, Location &);
     void _handleIndexFiles(std::istringstream &, Location &);
+    void _handleClientMaxBodySize(std::istringstream &);
 
     void _resolvePath(std::istringstream &, Location &);
     void _resolveIndexFiles(std::istringstream &, Location &);

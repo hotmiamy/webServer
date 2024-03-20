@@ -10,13 +10,17 @@ const std::string DirectiveHandler::ERR_LOCATION =
     "error at 'location' directive: ";
 const std::string DirectiveHandler::ERR_ALLOWED_METHODS =
     "error at 'allowed_methods' directive: ";
+const std::string DirectiveHandler::ERR_MAX_BODY_SIZE =
+    "error at 'client_max_body_size' directive: ";
 const std::string DirectiveHandler::ERR_ROOT = "error at 'root' directive: ";
 const std::string DirectiveHandler::ERR_CGI = "error at 'cgi' directive: ";
 
 DirectiveHandler::DirectiveHandler() : _cfg() {
-    _directiveMap["listen"] = &DirectiveHandler::_handleListenDirective;
     _directiveMap["server_name"] =
         &DirectiveHandler::_handleServerNameDirective;
+    _directiveMap["client_max_body_size"] =
+        &DirectiveHandler::_handleClientMaxBodySize;
+    _directiveMap["listen"] = &DirectiveHandler::_handleListenDirective;
     _directiveMap["error_page"] = &DirectiveHandler::_handleErrorPageDirective;
     _directiveMap["location"] = &DirectiveHandler::_handleLocationDirective;
     _directiveMap["root"] = &DirectiveHandler::_handleRoot;
@@ -241,6 +245,26 @@ void DirectiveHandler::_handleCgi(std::istringstream &iss) {
             ERR_CGI + "there should be one and only one executable specified");
     }
     _cfg.setCgi(true);
+}
+
+void DirectiveHandler::_handleClientMaxBodySize(std::istringstream &iss) {
+    if (!_cfg.getClientMaxBodySize().empty()) {
+        throw std::runtime_error(ERR_MAX_BODY_SIZE +
+                                 "directive was already defined");
+    }
+
+    std::string maxBodySize;
+    if (!(iss >> maxBodySize) || !ServerUtils::isNumeric(maxBodySize)) {
+        throw std::runtime_error(
+            ERR_MAX_BODY_SIZE +
+            "the argument should be a numeric value\ngot instead: " +
+            maxBodySize);
+    }
+    if (iss.rdbuf()->in_avail() != 0) {
+        throw std::runtime_error(ERR_MAX_BODY_SIZE +
+                                 "this directive takes only one argument");
+    }
+    _cfg.setClientMaxBodySize(maxBodySize);
 }
 
 void DirectiveHandler::process(const std::string &directive,
