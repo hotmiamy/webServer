@@ -2,7 +2,7 @@ SHELL    := /bin/sh
 
 OBJDIR   := objdir
 
-CXXFLAGS += -I./include -Wall -Wextra -g -std=c++98
+CXXFLAGS += -I./include -Wall -Wextra -Werror -g -std=c++98
 ifeq ($(DEBUG),true)
 	CXXFLAGS += -g
 endif

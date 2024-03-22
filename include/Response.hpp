@@ -16,11 +16,15 @@ class Response
 		std::string _response;
 
 	public:
+		Response();
 		Response(ReqParsing request);
 		~Response();
 
-		void genarateResponse();
+		void generateResponse();
+		void checkError();
 		void HandleGET();
 		void HandlePOST();
 		void HandleDELETE();
+		void errorResponse(std::string error);
+
 };

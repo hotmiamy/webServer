@@ -32,19 +32,19 @@ class ReqParsing {
     ~ReqParsing();
 
 
-	const std::string getRoot();
-	std::string getMethod();
-	std::string getUrl();
-	std::string getHttpVersion();
-	std::string getContentType();
-	std::string getTransferEncoding();
-	std::string getBody();
-	std::string getFileName();
-	int			getContentLength();
-	int			getMaxBodySize();
-	bool 		getHasBody();
-	bool 		getChunkBody();
-	Location	*getLocation();
+	const std::string &getRoot();
+	const std::string &getMethod();
+	const std::string &getUrl();
+	const std::string &getHttpVersion();
+	const std::string &getContentType();
+	const std::string &getTransferEncoding();
+	const std::string &getBody();
+	const std::string &getFileName();
+	const int			&getContentLength();
+	const int			&getMaxBodySize();
+	const bool 		&getHasBody();
+	const bool 		&getChunkBody();
+	const Location	*getLocation();
 
    private:
    	void parsFirtsLine(const std::string &rawReq);

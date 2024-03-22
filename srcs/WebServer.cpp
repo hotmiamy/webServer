@@ -33,7 +33,7 @@ void WebServer::_launch(SocketVec &socketVec, const ConfigVec &conf)
 {
 	while (true) 
 	{
-			this->_poll.execute();
+				this->_poll.execute();
 		for (size_t i = 0; i < this->_poll.getSize(); ++i)
 		{
 			if (this->_poll.checkEvent(i))
@@ -84,19 +84,18 @@ void WebServer::_read(const ServerConfig &conf)
 		else if (Crequest.find("\r\n\r\n") != std::string::npos)
             break;
 	}
-	std::cout << Crequest << std::endl;
 	ReqParsing parsing(Crequest, conf);
 	Response response(parsing);
-	_respond(response._response);
+	_respond(response);
 }
 
-void WebServer::_respond(std::string response)
+void WebServer::_respond(Response response)
 {
 	int bytesreturned, totalbytes = 0;
-	while ((size_t)totalbytes < response.size())
+	while ((size_t)totalbytes < response._response.size())
 	{
-		bytesreturned = send(_newSock, response.c_str(), response.size(), 0);
-		std::cout << response << std::endl;
+		bytesreturned = send(_newSock, response._response.c_str(), response._response.size(), 0);
+		std::cout << response._response << std::endl;
 		if (bytesreturned < 0)
 		{
 			std::cerr << "fail send" << std::endl;

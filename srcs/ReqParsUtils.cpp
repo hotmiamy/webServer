@@ -48,22 +48,9 @@ std::string ExtractHeader(std::string const &request, std::string key) {
     return (header[key]);
 }
 
-std::string getCurrDate(void)
-{
-    time_t   now;
-    std::tm *local_time;
-    char     buffer[64];
-
-    now        = std::time(NULL);
-    local_time = std::localtime(&now);
-    std::strftime(buffer, sizeof(buffer), "%a, %d %b %Y %T %Z", local_time);
-
-    return (buffer);
-}
-
 bool hasBody(const std::string &request) {
-	std::size_t startBodyPos = request.rfind("\r\n\r\n");
-	std::size_t endBodyPos = request.find_last_of("\r\n\r\n");
+	std::size_t startBodyPos = request.rfind("\r\n\r\n") + 4;
+	std::size_t endBodyPos = request.rfind("\r\n\r\n") + 1;
 
 	if (startBodyPos == endBodyPos)
 		return (false);
