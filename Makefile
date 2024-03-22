@@ -14,7 +14,8 @@ LINK.cpp := $(filter-out $(CXXFLAGS), $(LINK.cpp))
 vpath %.cpp $(shell find srcs -type d)
 
 SRCS     := main.cpp WebServer.cpp ServerConfig.cpp ConfigParser.cpp DirectiveHandler.cpp \
-			Socket.cpp Poll.cpp ReqParsing.cpp ServerUtils.cpp ReqParsUtils.cpp
+			Socket.cpp Poll.cpp ReqParsing.cpp ServerUtils.cpp ReqParsUtils.cpp Response.cpp \
+			ResponseUtils.cpp
 OBJS     := $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))
 DEPS     := $(OBJS:.o=.d)
 NAME     := webserv

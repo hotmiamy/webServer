@@ -2,31 +2,84 @@
 
 ReqParsing::ReqParsing() {}
 
-ReqParsing::ReqParsing(const std::string &reqRaw, const ServerConfig &conf) : _location(NULL) {
-    std::istringstream iss(reqRaw.substr(0, reqRaw.find("\r\n")));
-    std::string buff;
+ReqParsing::ReqParsing(const std::string &reqRaw, const ServerConfig &conf) : 
+	_location(NULL),
+	_root(conf.getRoot()),
+	_chunkBody(false),
+	_hasBody(false), 
+	_contentLength(0),
+	_body(""),
+	_fileName(""){
 
-    while (std::getline(iss, buff, ' ')) {
-        if (buff == "GET" || buff == "POST" || buff == "DELETE")
-            _method = buff;
-        else if (buff[0] == '/')
-            parsePath(buff, conf);
-        else if (buff == HTTP_VERSION)
-            _httpVersion = buff;
-    }
-    if (_method.empty() || _url.empty() || _httpVersion.empty())
+	parsFirtsLine(reqRaw.substr(0, reqRaw.find("\r\n")));
+	extractHeaderInfo(reqRaw, conf);
+	setLocation(conf);
+}
+
+void ReqParsing::parsFirtsLine(const std::string &firstline) {
+	std::istringstream iss(firstline);
+	std::string buff;
+
+	enum {
+		METHOD,
+		URL,
+		HTTP,
+	}state;
+
+	state = METHOD;
+
+	while (iss >> buff)
 	{
-        _statusCode = "400";
-		_httpResponse = HTTP_VERSION;
-		_httpResponse += ReqParsUtils::StatusCodes(_statusCode);
-		_httpResponse += "\r\n"; 
+		switch (state)
+		{
+			case METHOD:
+				if (buff != "GET" || buff != "POST" || buff != "DELETE") {
+					//throw error
+				}
+				else {
+					_method = buff;
+					state = URL;
+				}
+				break;
+			case URL:
+				if (buff[0] == '/'){
+					_url = buff;
+					state = HTTP;
+				}
+				break;
+			case HTTP:
+				if (buff != HTTP_VERSION) {
+					//throw error
+				}
+				else
+					_httpVersion = buff;
+				break;
+		}
 	}
-    else if (_method == "GET")
-        HandleGET();
-    else if (_method == "POST")
-        HandlePOST(reqRaw);
-	else if (_method == "DELETE")
-		HandleDELETE();
+}
+
+void ReqParsing::extractHeaderInfo(const std::string &rawReq, const ServerConfig &conf)
+{
+	if (ReqParsUtils::ExtractHeader(rawReq, "Transfer-Encoding:") == "chunked")
+		_chunkBody = true;
+	if (ReqParsUtils::ExtractHeader(rawReq, "Content-Length:") != "") {
+		std::istringstream issCLength(ReqParsUtils::ExtractHeader(rawReq, "Content-Length:"));
+		std::istringstream issBSize(conf.getClientMaxBodySize());
+
+		issBSize >> _maxBodySize;
+		issCLength >> _contentLength;
+		if (_contentLength > 0 && ReqParsUtils::hasBody(rawReq) == true){
+			_body = rawReq.substr(rawReq.rfind("\r\n\r\n") + 4);
+			_hasBody = true;
+		}
+	}
+	if (ReqParsUtils::ExtractHeader(rawReq, "Content-Type:") != "")
+		_contentType = ReqParsUtils::ExtractHeader(rawReq, "Content-Type:");
+	if (_contentType == "multipart/form-data" && _hasBody == true) {
+		std::string form = ReqParsUtils::ExtractHeader(_body, "Content-Disposition:");
+		_fileName = ReqParsUtils::ExtractHeader(form, "filename=\"" + 10);
+		_fileName.erase(_fileName.find("\""));
+	}
 }
 
 ReqParsing::~ReqParsing(void) {
@@ -34,119 +87,41 @@ ReqParsing::~ReqParsing(void) {
 		delete _location;
 }
 
-void ReqParsing::parsePath(std::string path, const ServerConfig &conf) {
-    std::string rootServer = conf.getRoot() + path;
+void ReqParsing::setLocation(const ServerConfig &conf) {
+    std::string rootServer = _root + _url;
 
-    if (ServerUtils::checkFileExist(rootServer)) {
-        _statusCode = "200";
+    if (ServerUtils::isDirectory(rootServer)) {
         std::map<std::string, Location>::const_iterator it =
-            conf.getLocations().find(path);
-        _url = rootServer;
+            conf.getLocations().find(_url);
         if (it != conf.getLocations().end()){
 			_location = new Location();
             *_location = it->second;
 		}
-        else if (!ReqParsUtils::ContentFormat(ServerUtils::getExtension(path)).empty()) {
-            _contentType = ServerUtils::getExtension(path);
-        }
-    } else {
-        // Assim que a estrutura de throw estiver funcionando mandar erro e
-        // setar o necessario la pra q ele nao passe pelo HandleGET()
-        _statusCode = "404";
-        _url = conf.getErrorPages().at(_statusCode);
-        _contentType =
-            ServerUtils::getExtension(conf.getErrorPages().at(_statusCode));
     }
 }
 
-void ReqParsing::HandleGET() {
-    std::ifstream file;
-    std::stringstream responseHead;
-    std::stringstream responseBody;
-    std::stringstream fullResponse;
+const std::string ReqParsing::getRoot() { return (_root); }
 
-	if (_location != NULL) {
-		if (ReqParsUtils::IsMethodAllowed(*_location, _method) == false){
-        	_statusCode = "405";
-		}
-		else {
-        	_url = _location->indexFiles.front();
-        	_contentType =
-        	ServerUtils::getExtension(_location->indexFiles.front());
-		}
-	}
-	responseHead << HTTP_VERSION;
-    file.open(_url.c_str(), std::ios::binary);
-    if (file.fail()) {
-		 // Assim que a estrutura de throw estiver funcionando mandar erro e
-        // setar o necessario la como a pagina de error aonde está o arquivo 500;
-       _statusCode = "500";
-    }
-	else{
-    	responseBody << file.rdbuf();
-	}
-	responseHead << ReqParsUtils::StatusCodes(_statusCode);
-    responseHead << "Content-Format: " << ReqParsUtils::ContentFormat(_contentType) + "\r\n";
-    responseHead << "Content-Length: " << responseBody.str().size();
-    responseHead << "\r\n\r\n";
-    fullResponse << responseHead.str() << responseBody.str();
-    _httpResponse = fullResponse.str();
-}
+std::string ReqParsing::getMethod() { return (this->_method); }
 
-void ReqParsing::HandlePOST(const std::string &rawRequest) {
-	std::stringstream httpResponse;
-	std::size_t bodyPos = rawRequest.rfind("\r\n\r\n") + 4;
-    std::string content = rawRequest.substr(bodyPos);
-    std::ofstream file;
+std::string ReqParsing::getUrl() { return (this->_url); }
 
-    httpResponse << HTTP_VERSION;
-	if (_location != NULL) {
-		if (ReqParsUtils::IsMethodAllowed(*_location, _method) == false){
-        	_statusCode = "405";
-		}
-		else {
-        	_url = _location->indexFiles.front();
-        	_contentType =
-        	ServerUtils::getExtension(_location->indexFiles.front());
-		}
-	}
-	if (!content.empty()){
-		if (!ReqParsUtils::ExtractHeader(rawRequest.substr(bodyPos), "Content-Disposition").empty()) {
-		    std::string form =
-		        ReqParsUtils::ExtractHeader(rawRequest.substr(bodyPos), "Content-Disposition");
-		    _url.append(form.substr(form.find("filename=\"") + 10));
-		    _url.erase(_url.find("\""));
-		}
-		file.open(_url.c_str(), std::ios::out | std::ios::binary);
-		if (!file) 
-			_statusCode = "500";
-		else
-		{
-			file.write(content.c_str(), content.size());
-			file.close();
-		}
-	}
-	httpResponse << ReqParsUtils::StatusCodes(_statusCode);
-	httpResponse << "Content-Type: " << ReqParsUtils::ExtractHeader(rawRequest, "Content-Type") << "\r\n";
-	httpResponse << "Content-Length: " << content.size() << "\r\n";
-	httpResponse << "Server: WebServer";
-	httpResponse << "\r\n\r\n";
-	_httpResponse = httpResponse.str();
-}
+std::string ReqParsing::getHttpVersion() { return (this->_httpVersion); }
 
-void ReqParsing::HandleDELETE()
-{
-	_httpResponse  = HTTP_VERSION;
-	if (ServerUtils::isDirectory(_url))
-		_httpResponse += ReqParsUtils::StatusCodes("405");
-	else if (ServerUtils::isFileReadable(_url) == false)
-		_httpResponse += ReqParsUtils::StatusCodes("403");
-	else
-	{
-        std::remove(_url.c_str());
-		_httpResponse += ReqParsUtils::StatusCodes(_statusCode);
-		_httpResponse += "\r\n\r\n";
-	}
-}
+std::string ReqParsing::getContentType() { return (this->_contentType); }
 
-std::string ReqParsing::getHttpResponse() { return (this->_httpResponse); }
+std::string ReqParsing::getTransferEncoding() { return (this->_transferEncoding); }
+
+std::string ReqParsing::getBody() { return (this->_body); }
+
+std::string ReqParsing::getFileName() { return (this->_fileName); }
+
+int ReqParsing::getContentLength() { return (this->_contentLength); }
+
+int ReqParsing::getMaxBodySize() { return (this->_maxBodySize); }
+
+bool ReqParsing::getChunkBody() { return (this->_chunkBody); }
+
+bool ReqParsing::getHasBody() { return (this->_hasBody); }
+
+Location *ReqParsing::getLocation() { return (this->_location); }

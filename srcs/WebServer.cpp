@@ -62,7 +62,7 @@ void WebServer::_read(const ServerConfig &conf)
             sleep(2);
             continue;
         }
-		if (Crequest.find("multipart/form-data") != std::string::npos) 
+		if (Crequest.find("multipart/form-data") != std::string::npos)
 		{
             std::string boundary;
             size_t      contentTypePos = Crequest.find("Content-Type: ");
@@ -86,7 +86,8 @@ void WebServer::_read(const ServerConfig &conf)
 	}
 	std::cout << Crequest << std::endl;
 	ReqParsing parsing(Crequest, conf);
-	_respond(parsing.getHttpResponse());
+	Response response(parsing);
+	_respond(response._response);
 }
 
 void WebServer::_respond(std::string response)
