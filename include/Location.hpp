@@ -7,8 +7,9 @@ struct Location {
     std::string path;
     std::vector<std::string> allowedMethods;
     std::vector<std::string> indexFiles;
+    bool cgi;
 
-    Location() : path(), allowedMethods(), indexFiles() {}
+    Location() : path(), allowedMethods(), indexFiles(), cgi(false) {}
 
     bool hasPath() const { return !path.empty(); }
     bool hasAllowedMethods() const { return !allowedMethods.empty(); }

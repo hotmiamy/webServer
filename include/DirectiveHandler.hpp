@@ -38,7 +38,7 @@ class DirectiveHandler {
     void _handleServerNameDirective(std::istringstream &);
     void _handleErrorPageDirective(std::istringstream &);
     void _handleRoot(std::istringstream &);
-    void _handleCgi(std::istringstream &);
+    void _handleCgi(std::istringstream &, Location &);
     void _handleLocationDirective(std::istringstream &);
     void _handleAllowedMethodsDirective(std::istringstream &, Location &);
     void _handleIndexFiles(std::istringstream &, Location &);
