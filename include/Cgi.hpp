@@ -1,18 +1,33 @@
 #pragma once
 
-#include <sched.h>
 #include <unistd.h>
+#include <wait.h>
 
 #include <cstdio>
 #include <vector>
 
 #include "ReqParsing.hpp"
 
-namespace Cgi {
+class Cgi {
+   public:
+    Cgi(const Cgi &);
+    Cgi(ReqParsing &);
+    Cgi &operator=(const Cgi &);
+    ~Cgi();
 
-bool isDefined(ReqParsing &);
-void execute(ReqParsing &);
-void childRoutine(ReqParsing &);
-std::vector<std::string> setupEnv(ReqParsing &);
+    void execute();
 
-}  // namespace Cgi
+    const std::string &getOut() const;
+
+   private:
+    const ReqParsing _request;
+    std::string _script;
+    std::string _binaryAbsPath;
+    int _pipedes[2];
+    std::string _out;
+
+    void _setup();
+    void _childRoutine();
+    void _parentRoutine(ssize_t);
+    std::vector<std::string> _setupEnv();
+};
