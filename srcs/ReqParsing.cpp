@@ -8,12 +8,21 @@ ReqParsing::ReqParsing(const std::string &reqRaw, const ServerConfig &conf) :
 	_fileName(""),
 	_contentLength(0),
 	_chunkBody(false),
-	_hasBody(false), 
+	_hasBody(false),
+	_hasError(false), 
 	_location(NULL){
 
-	parsFirtsLine(reqRaw.substr(0, reqRaw.find("\r\n")));
-	extractHeaderInfo(reqRaw, conf);
-	setLocation(conf);
+	try
+	{
+		parsFirtsLine(reqRaw.substr(0, reqRaw.find("\r\n")));
+		extractHeaderInfo(reqRaw, conf);
+		setLocation(conf);
+	}
+	catch(const std::exception& e)
+	{
+		_errorCode = e.what();
+	}
+	
 }
 
 void ReqParsing::parsFirtsLine(const std::string &firstline) {
@@ -34,7 +43,7 @@ void ReqParsing::parsFirtsLine(const std::string &firstline) {
 		{
 			case METHOD:
 				if (buff != "GET" || buff != "POST" || buff != "DELETE") {
-					//throw error
+					throw std::runtime_error("501");
 				}
 				_method = buff;
 				state = URL;
@@ -47,7 +56,7 @@ void ReqParsing::parsFirtsLine(const std::string &firstline) {
 				break;
 			case HTTP:
 				if (buff != HTTP_VERSION) {
-					//throw error
+					throw std::runtime_error("505");
 				}
 				_httpVersion = buff;
 				break;
@@ -110,12 +119,16 @@ const std::string &ReqParsing::getBody() { return (this->_body); }
 
 const std::string &ReqParsing::getFileName() { return (this->_fileName); }
 
-const int &ReqParsing::getContentLength() { return (this->_contentLength); }
+const std::string &ReqParsing::getErrorCode() { return (this->_errorCode); }
 
-const int &ReqParsing::getMaxBodySize() { return (this->_maxBodySize); }
+const std::size_t &ReqParsing::getContentLength() { return (this->_contentLength); }
+
+const std::size_t &ReqParsing::getMaxBodySize() { return (this->_maxBodySize); }
 
 const bool &ReqParsing::getChunkBody() { return (this->_chunkBody); }
 
 const bool &ReqParsing::getHasBody() { return (this->_hasBody); }
+
+const bool &ReqParsing::getHasError() { return (this->_hasError); }
 
 const Location *ReqParsing::getLocation() { return (_location); }

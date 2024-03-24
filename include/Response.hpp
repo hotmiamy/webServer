@@ -20,8 +20,8 @@ class Response
 		Response(ReqParsing request);
 		~Response();
 
-		void generateResponse();
 		void checkError();
+		void generateResponse();
 		void HandleGET();
 		void HandlePOST();
 		void HandleDELETE();

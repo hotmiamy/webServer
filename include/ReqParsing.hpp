@@ -20,11 +20,13 @@ class ReqParsing {
 	std::string _transferEncoding;
 	std::string _body;
 	std::string _fileName;
-	int 		_contentLength;
-	int			_maxBodySize;
+	std::string	_errorCode;
+	std::size_t _contentLength;
+	std::size_t	_maxBodySize;
 	bool		_chunkBody;
 	bool		_hasBody;
-	Location *_location;
+	bool		_hasError;
+	Location	*_location;
 
    public:
     ReqParsing();
@@ -40,10 +42,12 @@ class ReqParsing {
 	const std::string &getTransferEncoding();
 	const std::string &getBody();
 	const std::string &getFileName();
-	const int			&getContentLength();
-	const int			&getMaxBodySize();
-	const bool 		&getHasBody();
-	const bool 		&getChunkBody();
+	const std::string &getErrorCode();
+	const std::size_t &getContentLength();
+	const std::size_t &getMaxBodySize();
+	const bool 	&getHasBody();
+	const bool	&getHasError();
+	const bool 	&getChunkBody();
 	const Location	*getLocation();
 
    private:

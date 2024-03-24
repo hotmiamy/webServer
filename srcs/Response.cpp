@@ -15,6 +15,10 @@ Response::~Response()
 void Response::checkError()
 {
 	_response = HTTP_VERSION;
+	if (_request.getHasError() == true){
+		errorResponse(ResponseUtils::StatusCodes(_request.getErrorCode()));
+		return ;
+	}
 	if (_request.getLocation() != NULL){
 		if (ResponseUtils::IsMethodAllowed(*_request.getLocation(), _request.getMethod()) == false) {
 			errorResponse(ResponseUtils::StatusCodes("405"));
@@ -26,6 +30,10 @@ void Response::checkError()
 	}
 	if (_request.getContentLength() > 0 && _request.getHasBody() == false){
 		errorResponse(ResponseUtils::StatusCodes("100"));
+		return ;
+	}
+	if (_request.getHasBody() == true && _request.getBody().size() > _request.getMaxBodySize()){
+		errorResponse(ResponseUtils::StatusCodes("413"));
 		return ;
 	}
 	if (ServerUtils::checkFileExist(_serverRoot) == false) {
@@ -79,21 +87,25 @@ void Response::HandlePOST() {
 		_serverRoot += _request.getFileName();
 	else
 		_serverRoot += "file";
+	if (ServerUtils::checkFileExist(_serverRoot) == true)
+		httpResponse << ResponseUtils::StatusCodes("204");
+	else 
+		httpResponse << ResponseUtils::StatusCodes("201");
 	file.open(_serverRoot.c_str(), std::ios::out | std::ios::binary);
 	if (!file) {
 		errorResponse(ResponseUtils::StatusCodes("500"));
-		return ; 
+		return ;
 	}
 	else {
 		file.write(_request.getBody().c_str(), _request.getBody().size());
 		file.close();
 	}
-	httpResponse << ResponseUtils::StatusCodes("200");
 	httpResponse << "Date: " << ResponseUtils::getCurrDate() << "\r\n";
 	httpResponse << "Server: WebServer\r\n";
 	httpResponse << "\r\n";
 	_response += httpResponse.str();
 }
+
 void Response::HandleDELETE()
 {
 	if (ServerUtils::isDirectory(_serverRoot))
