@@ -191,9 +191,12 @@ bool DirectiveHandler::_isAllowedHttpMethod(const std::string &str) const {
 
 void DirectiveHandler::_handleIndexFiles(std::istringstream &iss,
                                          Location &location) {
-    const std::string path = _cfg.getRoot() + location.path;
+    std::string path = _cfg.getRoot() + location.path;
     std::string fileName;
 
+    if (path.at(path.size() - 1) != '/') {
+        path += "/";
+    }
     if (!(iss >> fileName) || !ServerUtils::isFileReadable(path + fileName)) {
         throw std::runtime_error(ERR_LOCATION + "no such file '" + fileName +
                                  "' at " + path);
