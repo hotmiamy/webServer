@@ -27,10 +27,15 @@ void Cgi::execute() {
     _setup();
 
     if (pipe(_pipedes) < 0) {
-        std::perror("pipe (cgi)");
+        return std::perror("pipe (cgi)");
     }
     dup2(_pipedes[0], STDIN_FILENO);
     dup2(_pipedes[1], STDOUT_FILENO);
+
+    if (_httpMethod == "POST") {
+        write(_pipedes[1], _request.getBody().c_str(),
+              _request.getBody().length());
+    }
 
     pid_t pid = fork();
     if (-1 == pid) {
@@ -45,11 +50,11 @@ void Cgi::execute() {
 void Cgi::_childRoutine() {
     const char *argv[] = {_binaryAbsPath.c_str(), _script.c_str(), NULL};
     std::vector<std::string> envpVec = _setupEnv();
-    const char *envp[] = {envpVec[0].c_str(), envpVec[1].c_str(),
-                          envpVec[2].c_str(), envpVec[3].c_str(),
-                          envpVec[4].c_str(), envpVec[5].c_str(),
-                          envpVec[6].c_str(), envpVec[7].c_str(),
-                          envpVec[8].c_str(), NULL};
+    const char *envp[] = {
+        envpVec[0].c_str(), envpVec[1].c_str(),  envpVec[2].c_str(),
+        envpVec[3].c_str(), envpVec[4].c_str(),  envpVec[5].c_str(),
+        envpVec[6].c_str(), envpVec[7].c_str(),  envpVec[8].c_str(),
+        envpVec[9].c_str(), envpVec[10].c_str(), NULL};
 
     if (execve(argv[0], (char *const *)argv, (char *const *)envp) < 0) {
         std::perror("execve (cgi)");
@@ -57,12 +62,12 @@ void Cgi::_childRoutine() {
 }
 
 void Cgi::_parentRoutine(ssize_t pid) {
-    waitpid(pid, NULL, WNOHANG);
-    const size_t nbyte = 4096;
-    char buf[nbyte + 1];
-    // bzero(buf, nbyte);
+    waitpid(pid, NULL, 0);
+    // waitpid(pid, NULL, WNOHANG);
 
-    ssize_t ret = read(_pipedes[0], buf, nbyte);
+    char buf[BUFSIZ] = {0};
+
+    ssize_t ret = read(_pipedes[0], buf, BUFSIZ);
     if (-1 == ret) {
         perror("read (cgi)");
     } else {
@@ -75,18 +80,25 @@ void Cgi::_parentRoutine(ssize_t pid) {
 
 std::vector<std::string> Cgi::_setupEnv() {
     std::vector<std::string> envpVec;
+
     envpVec.push_back("SERVER_PROTOCOL=HTTP/1.1");
     envpVec.push_back("GATEWAY_INTERFACE=CGI/1.1");
     envpVec.push_back("SERVER_SOFTWARE=webserv");
-    // TODO: improve these
-    envpVec.push_back("REQUEST_METHOD=GET");
+    envpVec.push_back("REQUEST_METHOD=" + _httpMethod);
     envpVec.push_back("SERVER_NAME=localhost");
     envpVec.push_back("SERVER_PORT=8080");
-    envpVec.push_back("CONTENT_TYPE=text/html");
+    envpVec.push_back("REQUEST_BODY=" + _request.getBody());
+    if (_httpMethod == "POST") {
+        envpVec.push_back("CONTENT_TYPE=" + _request.getContentType());
+    } else {
+        envpVec.push_back("CONTENT_TYPE=text/html");
+    }
+    envpVec.push_back("SCRIPT_NAME=" + _script);
     std::stringstream ss;
     ss << _request.getBody().length();
     envpVec.push_back("CONTENT_LENGTH=" + ss.str());
-    envpVec.push_back("SCRIPT_NAME=" + _script);
+    envpVec.push_back("PATH_INFO=" + _script);
+
     return envpVec;
 }
 

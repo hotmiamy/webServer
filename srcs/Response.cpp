@@ -1,9 +1,5 @@
 #include "Response.hpp"
 
-#include <iostream>
-
-#include "Cgi.hpp"
-
 Response::Response() {}
 
 Response::Response(ReqParsing request)
@@ -16,27 +12,22 @@ Response::~Response() {}
 void Response::checkError() {
     _response = HTTP_VERSION;
     if (_request.getLocation() != NULL) {
-        if (ResponseUtils::IsMethodAllowed(*_request.getLocation(),
-                                           _request.getMethod()) == false) {
-            errorResponse(ResponseUtils::StatusCodes("405"));
-            return;
-        } else {
-            _serverRoot = _request.getLocation()->indexFiles.front();
+        if (!ResponseUtils::IsMethodAllowed(*_request.getLocation(),
+                                            _request.getMethod())) {
+            return errorResponse(ResponseUtils::StatusCodes("405"));
         }
+        _serverRoot = _request.getLocation()->indexFiles.front();
     }
     if (_request.getContentLength() > 0 && _request.getHasBody() == false) {
-        errorResponse(ResponseUtils::StatusCodes("100"));
-        return;
+        return errorResponse(ResponseUtils::StatusCodes("100"));
     }
     if (ServerUtils::checkFileExist(_serverRoot) == false) {
-        errorResponse(ResponseUtils::StatusCodes("404"));
-        return;
+        return errorResponse(ResponseUtils::StatusCodes("404"));
     }
     generateResponse();
 }
 
 void Response::generateResponse() {
-    std::cout << "url que veio: " << _request.getUrl() << '\n';
     if (_request.getMethod() == "GET")
         HandleGET();
     else if (_request.getMethod() == "POST")
@@ -81,27 +72,37 @@ void Response::HandleGET() {
 }
 
 void Response::HandlePOST() {
-    std::stringstream httpResponse;
+    std::stringstream responseHead, responseBody, fullResponse;
     std::ofstream file;
 
-    if (_request.getFileName() != "")
-        _serverRoot += _request.getFileName();
-    else
-        _serverRoot += "file";
-    file.open(_serverRoot.c_str(), std::ios::out | std::ios::binary);
-    if (!file) {
-        errorResponse(ResponseUtils::StatusCodes("500"));
-        return;
+    if (_request.getUrl().find("post.py") != std::string::npos) {
+        Cgi cgi = Cgi(_request, "POST");
+        cgi.execute();
+        responseBody << cgi.getOut();
     } else {
-        file.write(_request.getBody().c_str(), _request.getBody().size());
-        file.close();
+        if (_request.getFileName() != "") {
+            _serverRoot += _request.getFileName();
+        } else {
+            _serverRoot += "file";
+        }
+
+        file.open(_serverRoot.c_str(), std::ios::out | std::ios::binary);
+        if (!file) {
+            return errorResponse(ResponseUtils::StatusCodes("500"));
+        } else {
+            file.write(_request.getBody().c_str(), _request.getBody().size());
+            file.close();
+        }
     }
-    httpResponse << ResponseUtils::StatusCodes("200");
-    httpResponse << "Date: " << ResponseUtils::getCurrDate() << "\r\n";
-    httpResponse << "Server: WebServer\r\n";
-    httpResponse << "\r\n";
-    _response += httpResponse.str();
+
+    responseHead << ResponseUtils::StatusCodes("201");
+    responseHead << "Date: " << ResponseUtils::getCurrDate() << "\r\n";
+    responseHead << "Server: WebServer\r\n";
+    responseHead << "\r\n\n";
+    fullResponse << responseHead.str() << responseBody.str();
+    _response += fullResponse.str();
 }
+
 void Response::HandleDELETE() {
     if (ServerUtils::isDirectory(_serverRoot))
         _response += ResponseUtils::StatusCodes("405");
