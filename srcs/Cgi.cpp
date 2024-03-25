@@ -2,7 +2,7 @@
 
 Cgi::Cgi(const Cgi &rhs) { *this = rhs; }
 
-Cgi::Cgi(ReqParsing &request, const std::string &httpMethod)
+Cgi::Cgi(const ReqParsing &request, const std::string &httpMethod)
     : _request(request),
       _script(),
       _binaryAbsPath(),
@@ -12,6 +12,12 @@ Cgi::Cgi(ReqParsing &request, const std::string &httpMethod)
 
 Cgi &Cgi::operator=(const Cgi &other) {
     if (this != &other) {
+        _request = other._request;
+        _script = other._script;
+        _binaryAbsPath = other._binaryAbsPath;
+        std::copy(other._pipedes, other._pipedes + 2, _pipedes);
+        _out = other._out;
+        _httpMethod = other._httpMethod;
     }
     return *this;
 }

@@ -9,7 +9,7 @@ ReqParsing::ReqParsing(const std::string &reqRaw, const ServerConfig &conf)
       _contentLength(0),
       _chunkBody(false),
       _hasBody(false),
-      _location(NULL) {
+      _location() {
     parsFirtsLine(reqRaw.substr(0, reqRaw.find("\r\n")));
     extractHeaderInfo(reqRaw, conf);
     setLocation(conf);
@@ -88,8 +88,7 @@ void ReqParsing::setLocation(const ServerConfig &conf) {
         std::map<std::string, Location>::const_iterator it =
             conf.getLocations().find(_url);
         if (it != conf.getLocations().end()) {
-            _location = new Location();
-            *_location = it->second;
+            _location = it->second;
         }
     }
 }
@@ -124,4 +123,4 @@ bool ReqParsing::getChunkBody() const { return (this->_chunkBody); }
 
 bool ReqParsing::getHasBody() const { return (this->_hasBody); }
 
-const Location *ReqParsing::getLocation() { return (_location); }
+const Location &ReqParsing::getLocation() const { return (_location); }

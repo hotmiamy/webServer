@@ -14,4 +14,7 @@ struct Location {
     bool hasPath() const { return !path.empty(); }
     bool hasAllowedMethods() const { return !allowedMethods.empty(); }
     bool hasIndexFiles() const { return !indexFiles.empty(); }
+    bool empty() const {
+        return path.empty() && allowedMethods.empty() && indexFiles.empty();
+    }
 };

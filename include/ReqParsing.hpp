@@ -12,7 +12,7 @@
 
 class ReqParsing {
    private:
-    const std::string _root;
+    std::string _root;
     std::string _method;
     std::string _url;
     std::string _httpVersion;
@@ -24,7 +24,7 @@ class ReqParsing {
     int _maxBodySize;
     bool _chunkBody;
     bool _hasBody;
-    Location *_location;
+    Location _location;
 
    public:
     ReqParsing();
@@ -43,7 +43,7 @@ class ReqParsing {
     int getMaxBodySize() const;
     bool getHasBody() const;
     bool getChunkBody() const;
-    const Location *getLocation();
+    const Location &getLocation() const;
 
    private:
     void parsFirtsLine(const std::string &rawReq);
