@@ -58,7 +58,7 @@ void Response::HandleGET() {
     }
 
     if (_request.getUrl().find("script.py") != std::string::npos) {
-        Cgi cgi = Cgi(_request);
+        Cgi cgi = Cgi(_request, "GET");
         cgi.execute();
         responseBody << cgi.getOut();
     } else {

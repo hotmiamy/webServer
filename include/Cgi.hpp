@@ -4,6 +4,7 @@
 #include <wait.h>
 
 #include <cstdio>
+#include <cstring>
 #include <vector>
 
 #include "ReqParsing.hpp"
@@ -11,7 +12,7 @@
 class Cgi {
    public:
     Cgi(const Cgi &);
-    Cgi(ReqParsing &);
+    Cgi(ReqParsing &, const std::string &);
     Cgi &operator=(const Cgi &);
     ~Cgi();
 
@@ -25,6 +26,7 @@ class Cgi {
     std::string _binaryAbsPath;
     int _pipedes[2];
     std::string _out;
+    std::string _httpMethod;
 
     void _setup();
     void _childRoutine();

@@ -2,8 +2,13 @@
 
 Cgi::Cgi(const Cgi &rhs) { *this = rhs; }
 
-Cgi::Cgi(ReqParsing &request)
-    : _request(request), _script(), _binaryAbsPath(), _pipedes(), _out() {}
+Cgi::Cgi(ReqParsing &request, const std::string &httpMethod)
+    : _request(request),
+      _script(),
+      _binaryAbsPath(),
+      _pipedes(),
+      _out(),
+      _httpMethod(httpMethod) {}
 
 Cgi &Cgi::operator=(const Cgi &other) {
     if (this != &other) {
