@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Number Selector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        button[type="submit"] {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form action="http://localhost:8080/cgi/post.py" method="post" enctype="text/plain">
+            <label for="phoneNumber">Select Phone Number:</label>
+            <input type="range" id="phoneNumberSlider" name="phoneNumber" min="0" max="9999999999" step="1" onchange="updatePhoneNumber()">
+            <input type="text" id="phoneNumberInput" name="phoneNumberFormatted" readonly>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        function updatePhoneNumber() {
+            var slider = document.getElementById("phoneNumberSlider");
+            var input = document.getElementById("phoneNumberInput");
+            var number = slider.value.toString().padStart(10, '0');
+            var formattedNumber = '(' + number.slice(0, 2) + ') ' + number.slice(2, 7) + '-' + number.slice(7);
+            input.value = formattedNumber;
+        }
+    </script>
+</body>
+</html>
