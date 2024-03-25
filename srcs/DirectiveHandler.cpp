@@ -49,21 +49,22 @@ void DirectiveHandler::_handleListenDirective(std::istringstream &iss) {
 }
 
 void DirectiveHandler::_handleServerNameDirective(std::istringstream &iss) {
-    if (!_cfg.getServerNames().empty()) {
+    if (!_cfg.getServerName().empty()) {
         throw std::runtime_error(ERR_SERVER_NAME +
                                  "'server_name' was already specified");
     }
 
     std::string server;
-
     if (!(iss >> server)) {
         throw std::runtime_error(ERR_SERVER_NAME +
-                                 "at least one server name should be provided");
+                                 "a server name should be provided");
     }
-    _cfg.addServer(server);
-    while (iss >> server) {
-        _cfg.addServer(server);
+
+    if (iss.rdbuf()->in_avail() != 0) {
+        throw std::runtime_error(ERR_SERVER_NAME +
+                                 "this directive takes only one argument");
     }
+    _cfg.setServer(server);
 }
 
 void DirectiveHandler::_handleErrorPageDirective(std::istringstream &iss) {
