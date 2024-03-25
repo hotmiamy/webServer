@@ -1,16 +1,54 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<html>
     <head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Minha primeira pagina HTML</title>
- </head>
- <body>
-        <h1>Ola, mundo!</h1>
-        <p>Até agora ta tudo certo</p>
-		<div class="imagem">
-			<img src="/house-like.gif" alt="git-like">
-		<p>Que tal testar o POST agora ? <a href="/post.html">Basta clicar aqui</a> e iremos para a pagina do POST.</p>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>42 Webserver</title>
+        <style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .imagem {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .imagem img {
+            width: 200px;
+            height: auto;
+        }
+        .post-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .post-link:hover {
+            text-decoration: underline;
+        }
+        </style>
+    </head>
+    <body>
+        <h1>This is when you finally understand why a URL starts with HTTP</h1>
+        <p>Um servidor web é um programa que responde a solicitações HTTP (Hypertext Transfer Protocol) de clientes, como navegadores da web, e entrega páginas da web para esses clientes através da internet. Quando você digita um URL (Uniform Resource Locator) em seu navegador, o navegador envia uma solicitação para o servidor web especificado no URL. O servidor web então processa essa solicitação, localiza o recurso solicitado (geralmente um arquivo HTML, imagem, vídeo, etc.), e envia uma resposta de volta para o navegador, que exibe o conteúdo para você.</p>
+
+        <p>Neste projeto...</p>
+
+        <div class="imagem">
+            <img src="/house-like.gif" alt="git-like">
+        </div>
+        <a href="/post.html" class="post-link">Que tal testar o POST agora? Basta clicar aqui!</a>
     </body>
 </html>

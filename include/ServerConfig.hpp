@@ -22,9 +22,7 @@ class ServerConfig {
     const std::map<std::string, std::string> &getErrorPages() const;
     const std::map<std::string, Location> &getLocations() const;
     const std::string &getClientMaxBodySize() const;
-    bool hasCgi() const;
 
-    void setCgi(bool);
     void setPort(const std::string &);
     void setRoot(const std::string &);
     void addServer(const std::string &);
@@ -40,7 +38,6 @@ class ServerConfig {
     std::vector<std::string> _serverNames;
     std::map<std::string, std::string> _errorPages;
     std::map<std::string, Location> _locations;
-    bool _cgi;
     std::string _clientMaxBodySize;
 };
 

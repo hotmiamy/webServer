@@ -8,7 +8,6 @@ ServerConfig::ServerConfig()
       _serverNames(),
       _errorPages(),
       _locations(),
-      _cgi(false),
       _clientMaxBodySize() {}
 
 ServerConfig::ServerConfig(const ServerConfig &other) { *this = other; }
@@ -20,7 +19,6 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
         _serverNames = other._serverNames;
         _errorPages = other._errorPages;
         _locations = other._locations;
-        _cgi = other._cgi;
         _clientMaxBodySize = other._clientMaxBodySize;
     }
     return *this;
@@ -57,10 +55,6 @@ const std::map<std::string, Location> &ServerConfig::getLocations() const {
 const std::string &ServerConfig::getClientMaxBodySize() const {
     return _clientMaxBodySize;
 }
-
-bool ServerConfig::hasCgi() const { return _cgi; }
-
-void ServerConfig::setCgi(bool val) { _cgi = val; }
 
 void ServerConfig::setPort(const std::string &port) { _port = port; }
 
