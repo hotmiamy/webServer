@@ -12,6 +12,7 @@
 #include "Socket.hpp"
 #include "Poll.hpp"
 #include "ReqParsing.hpp"
+#include "Response.hpp"
 
 class WebServer {
    public:
@@ -28,5 +29,5 @@ class WebServer {
 
     void	_launch(SocketVec &socketVec, const ConfigVec &conf);
     void	_read(const ServerConfig &conf);
-    void	_respond(std::string response);
+    void	_respond(Response response);
 };

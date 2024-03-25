@@ -12,24 +12,42 @@
 
 class ReqParsing {
    private:
+	const std::string _root;
     std::string _method;
     std::string _url;
     std::string _httpVersion;
-    std::string _statusCode;
     std::string _contentType;
-    std::string _httpResponse;
-    std::vector<std::string> _allowMethods;
+	std::string _transferEncoding;
+	std::string _body;
+	std::string _fileName;
+	int 		_contentLength;
+	int			_maxBodySize;
+	bool		_chunkBody;
+	bool		_hasBody;
+	Location *_location;
 
    public:
     ReqParsing();
     ReqParsing(const std::string &rawReq, const ServerConfig &conf);
     ~ReqParsing();
 
-    std::string getHttpResponse();
+
+	const std::string &getRoot();
+	const std::string &getMethod();
+	const std::string &getUrl();
+	const std::string &getHttpVersion();
+	const std::string &getContentType();
+	const std::string &getTransferEncoding();
+	const std::string &getBody();
+	const std::string &getFileName();
+	const int			&getContentLength();
+	const int			&getMaxBodySize();
+	const bool 		&getHasBody();
+	const bool 		&getChunkBody();
+	const Location	*getLocation();
 
    private:
-    void parsePath(std::string path, const ServerConfig &conf);
-    void HandleGET();
-    void HandlePOST(const std::string &rawRequest);
-	void HandleDELETE();
+   	void parsFirtsLine(const std::string &rawReq);
+    void setLocation(const ServerConfig &conf);
+   	void extractHeaderInfo(const std::string &rawReq, const ServerConfig &conf);
 };
