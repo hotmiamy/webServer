@@ -33,26 +33,25 @@ void Socket::_setup() {
     info.ai_family = AF_UNSPEC;
     info.ai_socktype = SOCK_STREAM;
 
-    // TODO: handle multiple IPs/hosts (probably not the best way to do it...)
-    std::string ip = "127.0.0.1";
+    std::string ip = _serverName;
 
     _checkConnectionThrow(
         ::getaddrinfo(ip.c_str(), _port.c_str(), &info, &_res),
-        std::runtime_error("..."));
+        std::runtime_error("'getaddrinfo' failed"));
 
     _socketFd = ::socket(_res->ai_family, _res->ai_socktype, _res->ai_protocol);
 
     _checkConnectionThrow(setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR,
                                      &optVal, sizeof(optVal)),
-                          std::runtime_error("..."));
+                          std::runtime_error("'setsockopt' failed"));
 }
 
 void Socket::connect() {
     _setup();
     _checkConnectionThrow(bind(_socketFd, _res->ai_addr, _res->ai_addrlen),
-                          std::runtime_error("..."));
+                          std::runtime_error("'bind' failed"));
     _checkConnectionThrow(listen(_socketFd, Socket::ConnectionRequests),
-                          std::runtime_error("..."));
+                          std::runtime_error("'listen' failed"));
 }
 
 int Socket::accept() {
@@ -63,7 +62,7 @@ int Socket::accept() {
     _clientFd =
         ::accept(_socketFd, (struct sockaddr *)&clientAddr, &clientAddrSize);
 
-    _checkConnectionThrow(_clientFd, std::runtime_error("..."));
+    _checkConnectionThrow(_clientFd, std::runtime_error("'accept' failed"));
     return _clientFd;
 }
 
