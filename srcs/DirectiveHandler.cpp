@@ -109,7 +109,7 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss) {
             continue;
         }
         if (line.find("index") != std::string::npos) {
-            _resolveIndexFiles(lineIss, location);
+            _resolveIndexFile(lineIss, location);
             continue;
         }
         if (line.find("allowed_methods") != std::string::npos) {
@@ -140,14 +140,14 @@ void DirectiveHandler::_resolvePath(std::istringstream &lineIss,
     }
 }
 
-void DirectiveHandler::_resolveIndexFiles(std::istringstream &lineIss,
-                                          Location &location) {
-    if (location.hasIndexFiles()) {
+void DirectiveHandler::_resolveIndexFile(std::istringstream &lineIss,
+                                         Location &location) {
+    if (location.hasIndexFile()) {
         throw std::runtime_error(ERR_LOCATION +
-                                 "index files are already defined");
+                                 "index file was already defined");
     }
     lineIss.ignore(std::numeric_limits<std::streamsize>::max(), ' ');
-    _handleIndexFiles(lineIss, location);
+    _handleIndexFile(lineIss, location);
 }
 
 void DirectiveHandler::_resolveAllowedMethods(std::istringstream &lineIss,
@@ -190,8 +190,8 @@ bool DirectiveHandler::_isAllowedHttpMethod(const std::string &str) const {
     return str == "GET" || str == "POST";
 }
 
-void DirectiveHandler::_handleIndexFiles(std::istringstream &iss,
-                                         Location &location) {
+void DirectiveHandler::_handleIndexFile(std::istringstream &iss,
+                                        Location &location) {
     std::string path = _cfg.getRoot() + location.path;
     std::string fileName;
 
@@ -202,21 +202,10 @@ void DirectiveHandler::_handleIndexFiles(std::istringstream &iss,
         throw std::runtime_error(ERR_LOCATION + "no such file '" + fileName +
                                  "' at " + path);
     }
-    std::string filePath = path + fileName;
-    location.indexFiles.push_back(filePath);
-
-    while (iss >> fileName) {
-        filePath = path + fileName;
-        if (!ServerUtils::isFileReadable(filePath)) {
-            throw std::runtime_error(ERR_LOCATION + "no such file '" +
-                                     fileName + "' at " + path);
-        }
-        if (std::find(location.indexFiles.begin(), location.indexFiles.end(),
-                      fileName) != location.indexFiles.end()) {
-            throw std::runtime_error(ERR_LOCATION + fileName +
-                                     " is already included");
-        }
-        location.indexFiles.push_back(filePath);
+    location.indexFile = path + fileName;
+    if (iss.rdbuf()->in_avail() != 0) {
+        throw std::runtime_error(ERR_LOCATION +
+                                 "'index' directive takes only one argument");
     }
 }
 
