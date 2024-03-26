@@ -22,7 +22,7 @@ class Socket {
 
     void connect();
     int accept();
-	int getSocketFd() const;
+    int getSocketFd() const;
 
    private:
     Socket();
@@ -30,13 +30,12 @@ class Socket {
     int _socketFd;
     int _clientFd;
     struct addrinfo *_res;
-    std::vector<std::string> _serverNames;
+    std::string _serverName;
     std::string _port;
 
     void _setup();
     template <typename ExceptionType>
     void _checkConnectionThrow(int ret, const ExceptionType &);
-
 };
 
 typedef std::vector<Socket> SocketVec;

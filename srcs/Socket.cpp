@@ -1,17 +1,15 @@
 #include "Socket.hpp"
 
 Socket::Socket()
-	: _socketFd(-1),
-	_clientFd(-1),
-	_serverNames(),
-	_port() {}
+    : _socketFd(-1), _clientFd(-1), _res(NULL), _serverName(), _port() {}
 
 Socket::Socket(const Socket &other) { *this = other; }
 
 Socket::Socket(const ServerConfig &cfg)
     : _socketFd(-1),
       _clientFd(-1),
-      _serverNames(cfg.getServerNames()),
+      _res(NULL),
+      _serverName(cfg.getServerName()),
       _port(cfg.getPort()) {}
 
 Socket &Socket::operator=(const Socket &other) {
@@ -19,15 +17,13 @@ Socket &Socket::operator=(const Socket &other) {
         _socketFd = other._socketFd;
         _clientFd = other._clientFd;
         _res = other._res;
-        _serverNames = other._serverNames;
+        _serverName = other._serverName;
         _port = other._port;
     }
     return *this;
 }
 
-Socket::~Socket() {
-
-}
+Socket::~Socket() {}
 
 void Socket::_setup() {
     struct addrinfo info;
@@ -36,37 +32,36 @@ void Socket::_setup() {
     info.ai_family = AF_INET;
     info.ai_socktype = SOCK_STREAM;
 
-    // TODO: handle multiple IPs/hosts (probably not the best way to do it...)
-    std::string ip = "127.0.0.1";
+    std::string ip = _serverName;
 
-	_socketFd = ::socket(info.ai_family, info.ai_socktype, 0);
-    _checkConnectionThrow(::getaddrinfo(ip.c_str(), _port.c_str(), &info, &_res),
-        					std::runtime_error("..."));
+    _checkConnectionThrow(
+        ::getaddrinfo(ip.c_str(), _port.c_str(), &info, &_res),
+        std::runtime_error("'getaddrinfo' failed"));
 
-	_checkConnectionThrow(setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR, &optVal, sizeof(optVal)),
-                        	std::runtime_error("..."));
+    _socketFd = ::socket(_res->ai_family, _res->ai_socktype, _res->ai_protocol);
 
-    _checkConnectionThrow(bind(_socketFd, _res->ai_addr, _res->ai_addrlen),
-        						std::runtime_error("..."));
-
-    _checkConnectionThrow(listen(_socketFd, Socket::ConnectionRequests),
-                                std::runtime_error("..."));
-	freeaddrinfo(_res);
+    _checkConnectionThrow(setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR,
+                                     &optVal, sizeof(optVal)),
+                          std::runtime_error("'setsockopt' failed"));
 }
 
 void Socket::connect() {
-    this->_setup();
+    _setup();
+    _checkConnectionThrow(bind(_socketFd, _res->ai_addr, _res->ai_addrlen),
+                          std::runtime_error("'bind' failed"));
+    _checkConnectionThrow(listen(_socketFd, Socket::ConnectionRequests),
+                          std::runtime_error("'listen' failed"));
 }
 
-int Socket::accept() 
-{
+int Socket::accept() {
     sockaddr_storage clientAddr;
     socklen_t clientAddrSize = sizeof(clientAddr);
     bzero(&clientAddr, clientAddrSize);
 
-    _clientFd = ::accept(_socketFd, (struct sockaddr *)&clientAddr, &clientAddrSize);
+    _clientFd =
+        ::accept(_socketFd, (struct sockaddr *)&clientAddr, &clientAddrSize);
 
-    _checkConnectionThrow(_clientFd, std::runtime_error("..."));
+    _checkConnectionThrow(_clientFd, std::runtime_error("'accept' failed"));
     return _clientFd;
 }
 

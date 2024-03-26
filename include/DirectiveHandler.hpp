@@ -41,11 +41,11 @@ class DirectiveHandler {
     void _handleCgi(std::istringstream &, Location &);
     void _handleLocationDirective(std::istringstream &);
     void _handleAllowedMethodsDirective(std::istringstream &, Location &);
-    void _handleIndexFiles(std::istringstream &, Location &);
+    void _handleIndexFile(std::istringstream &, Location &);
     void _handleClientMaxBodySize(std::istringstream &);
 
     void _resolvePath(std::istringstream &, Location &);
-    void _resolveIndexFiles(std::istringstream &, Location &);
+    void _resolveIndexFile(std::istringstream &, Location &);
     void _resolveAllowedMethods(std::istringstream &, Location &);
 
     bool _isAllowedHttpMethod(const std::string &) const;

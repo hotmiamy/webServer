@@ -12,7 +12,7 @@
 class Cgi {
    public:
     Cgi(const Cgi &);
-    Cgi(ReqParsing &, const std::string &);
+    Cgi(const ReqParsing &, const std::string &);
     Cgi &operator=(const Cgi &);
     ~Cgi();
 
@@ -21,7 +21,7 @@ class Cgi {
     const std::string &getOut() const;
 
    private:
-    const ReqParsing _request;
+    ReqParsing _request;
     std::string _script;
     std::string _binaryAbsPath;
     int _pipedes[2];

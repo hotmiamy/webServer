@@ -16,13 +16,13 @@ void Response::checkError()
 		errorResponse(ResponseUtils::StatusCodes(_request.getErrorCode()));
 		return ;
 	}
-	if (_request.getLocation() != NULL){
-		if (ResponseUtils::IsMethodAllowed(*_request.getLocation(), _request.getMethod()) == false) {
+	if (_request.getLocation().empty() == false){
+		if (ResponseUtils::IsMethodAllowed(_request.getLocation(), _request.getMethod()) == false) {
 			errorResponse(ResponseUtils::StatusCodes("405"));
 			return ;
 		}
 		else{
-			_serverRoot = _request.getLocation()->indexFiles.front();
+			_serverRoot = _request.getLocation().indexFile;
 		}
 	}
 	if (_request.getBody().empty() == false && _request.getBody().size() > _request.getMaxBodySize()){

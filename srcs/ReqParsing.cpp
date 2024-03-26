@@ -10,7 +10,7 @@ ReqParsing::ReqParsing(const std::string &reqRaw, const ServerConfig &conf) :
 	_contentLength(0),
 	_maxBodySize(0),
 	_chunkBody(false),
-	_location(NULL){
+	_location(){
 
 	try
 	{
@@ -99,8 +99,7 @@ void ReqParsing::setLocation(const ServerConfig &conf) {
         std::map<std::string, Location>::const_iterator it =
             conf.getLocations().find(_url);
         if (it != conf.getLocations().end()) {
-            _location = new Location();
-            *_location = it->second;
+            _location = it->second;
         }
     }
 }
@@ -127,12 +126,12 @@ const std::string &ReqParsing::getBody() const { return (this->_body); }
 
 const std::string &ReqParsing::getFileName() const { return (this->_fileName); }
 
-const std::string &ReqParsing::getErrorCode() { return (this->_errorCode); }
+const std::string &ReqParsing::getErrorCode() const { return (this->_errorCode); }
 
-const std::size_t &ReqParsing::getContentLength() { return (this->_contentLength); }
+const std::size_t &ReqParsing::getContentLength() const { return (this->_contentLength); }
 
-const std::size_t &ReqParsing::getMaxBodySize() { return (this->_maxBodySize); }
+const std::size_t &ReqParsing::getMaxBodySize() const { return (this->_maxBodySize); }
 
 bool ReqParsing::getChunkBody() const { return (this->_chunkBody); }
 
-const Location *ReqParsing::getLocation() { return (_location); }
+const Location &ReqParsing::getLocation() const { return (_location); }
