@@ -5,7 +5,7 @@
 ServerConfig::ServerConfig()
     : _port(),
       _root(),
-      _serverNames(),
+      _serverName(),
       _errorPages(),
       _locations(),
       _clientMaxBodySize() {}
@@ -16,7 +16,7 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
     if (this != &other) {
         _port = other._port;
         _root = other._root;
-        _serverNames = other._serverNames;
+        _serverName = other._serverName;
         _errorPages = other._errorPages;
         _locations = other._locations;
         _clientMaxBodySize = other._clientMaxBodySize;
@@ -40,9 +40,7 @@ const std::string &ServerConfig::getPort() const { return _port; }
 
 const std::string &ServerConfig::getRoot() const { return _root; }
 
-const std::vector<std::string> &ServerConfig::getServerNames() const {
-    return _serverNames;
-}
+const std::string &ServerConfig::getServerName() const { return _serverName; }
 
 const std::map<std::string, std::string> &ServerConfig::getErrorPages() const {
     return _errorPages;
@@ -60,8 +58,8 @@ void ServerConfig::setPort(const std::string &port) { _port = port; }
 
 void ServerConfig::setRoot(const std::string &root) { _root = root; }
 
-void ServerConfig::addServer(const std::string &server) {
-    _serverNames.push_back(server);
+void ServerConfig::setServer(const std::string &server) {
+    _serverName = server;
 }
 
 void ServerConfig::addErrorPage(const std::string &errorCode,
@@ -78,6 +76,6 @@ void ServerConfig::setClientMaxBodySize(const std::string &clientMaxBodySize) {
 }
 
 bool ServerConfig::good() const {
-    return !_port.empty() && !_root.empty() && !_serverNames.empty() &&
+    return !_port.empty() && !_root.empty() && !_serverName.empty() &&
            !_errorPages.empty() && !_locations.empty();
 }

@@ -16,7 +16,7 @@ void Response::checkError() {
                                             _request.getMethod())) {
             return errorResponse(ResponseUtils::StatusCodes("405"));
         }
-        _serverRoot = _request.getLocation()->indexFiles.front();
+        _serverRoot = _request.getLocation()->indexFile;
     }
     if (_request.getContentLength() > 0 && _request.getHasBody() == false) {
         return errorResponse(ResponseUtils::StatusCodes("100"));

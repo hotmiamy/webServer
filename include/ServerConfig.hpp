@@ -18,14 +18,14 @@ class ServerConfig {
 
     const std::string &getPort() const;
     const std::string &getRoot() const;
-    const std::vector<std::string> &getServerNames() const;
+    const std::string &getServerName() const;
     const std::map<std::string, std::string> &getErrorPages() const;
     const std::map<std::string, Location> &getLocations() const;
     const std::string &getClientMaxBodySize() const;
 
     void setPort(const std::string &);
     void setRoot(const std::string &);
-    void addServer(const std::string &);
+    void setServer(const std::string &);
     void addErrorPage(const std::string &, const std::string &);
     void addLocation(std::string path, const Location &);
     void setClientMaxBodySize(const std::string &);
@@ -35,7 +35,7 @@ class ServerConfig {
    private:
     std::string _port;
     std::string _root;
-    std::vector<std::string> _serverNames;
+    std::string _serverName;
     std::map<std::string, std::string> _errorPages;
     std::map<std::string, Location> _locations;
     std::string _clientMaxBodySize;
