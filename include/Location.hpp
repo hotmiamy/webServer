@@ -6,10 +6,10 @@
 struct Location {
     std::string path;
     std::vector<std::string> allowedMethods;
-    std::vector<std::string> indexFiles;
+    std::string indexFile;
     bool cgi;
 
-    Location() : path(), allowedMethods(), indexFiles(), cgi(false) {}
+    Location() : path(), allowedMethods(), indexFile(), cgi(false) {}
 
     bool hasPath() const { return !path.empty(); }
     bool hasAllowedMethods() const { return !allowedMethods.empty(); }
