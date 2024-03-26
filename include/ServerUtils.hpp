@@ -21,4 +21,6 @@ bool checkFileExist(const std::string &file);
 
 bool isValidExecutable(const std::string &ex);
 
+const std::string getAbsPath(const std::string &ex);
+
 }  // namespace ServerUtils

@@ -2,8 +2,7 @@
 
 namespace ResponseUtils {
 
-std::string StatusCodes(std::string code)
-{
+std::string StatusCodes(const std::string &code) {
     std::map<std::string, std::string> statusCodes;
 
     statusCodes["100"] = " " + code + " Continue\r\n";
@@ -68,14 +67,13 @@ std::string StatusCodes(std::string code)
     statusCodes["510"] = " " + code + " Not Extended\r\n";
     statusCodes["511"] = " " + code + " Network Authentication Required\r\n";
 
-	std::map<std::string, std::string>::iterator it = statusCodes.find(code);
-
-    if (it == statusCodes.end())
-		return ("");
+    std::map<std::string, std::string>::const_iterator it =
+        statusCodes.find(code);
+    if (it == statusCodes.end()) return ("");
     return (statusCodes[code]);
 }
 
-bool IsMethodAllowed(const Location &locat, std::string method) {
+bool IsMethodAllowed(const Location &locat, const std::string &method) {
     for (std::vector<std::string>::const_iterator it =
              locat.allowedMethods.begin();
          it != locat.allowedMethods.end(); it++) {
@@ -84,13 +82,12 @@ bool IsMethodAllowed(const Location &locat, std::string method) {
     return (false);
 }
 
-std::string getCurrDate(void)
-{
-    time_t   now;
+std::string getCurrDate(void) {
+    time_t now;
     std::tm *local_time;
-    char     buffer[64];
+    char buffer[64];
 
-    now        = std::time(NULL);
+    now = std::time(NULL);
     local_time = std::localtime(&now);
     std::strftime(buffer, sizeof(buffer), "%a, %d %b %Y %T %Z", local_time);
 

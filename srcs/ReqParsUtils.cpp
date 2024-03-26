@@ -24,7 +24,7 @@ std::string ContentFormat(std::string key) {
 
     std::map<std::string, std::string>::iterator it = contentTypes.find(key);
 
-    if (it == contentTypes.end()) return ("");
+    if (it == contentTypes.end()) return ("application/octet-stream");
     return (contentTypes[key]);
 }
 

@@ -33,7 +33,7 @@ void WebServer::_launch(SocketVec &socketVec, const ConfigVec &conf)
 {
 	while (true) 
 	{
-				this->_poll.execute();
+		this->_poll.execute();
 		for (size_t i = 0; i < this->_poll.getSize(); ++i)
 		{
 			if (this->_poll.checkEvent(i))

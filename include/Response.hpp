@@ -2,19 +2,19 @@
 
 #include <iostream>
 #include <sstream>
+
+#include "Cgi.hpp"
 #include "ReqParsing.hpp"
 #include "ResponseUtils.hpp"
 #include "ServerUtils.hpp"
 
-class Response
-{
+class Response {
 	private:
-		ReqParsing _request;
-		std::string _serverRoot;
+    	ReqParsing _request;
+    	std::string _serverRoot;
 
 	public:
-		std::string _response;
-
+    	std::string _response;
 	public:
 		Response();
 		Response(ReqParsing request);
@@ -26,5 +26,4 @@ class Response
 		void HandlePOST();
 		void HandleDELETE();
 		void errorResponse(std::string error);
-
 };

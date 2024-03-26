@@ -3,7 +3,6 @@
 Socket::Socket()
 	: _socketFd(-1),
 	_clientFd(-1),
-	_res(NULL),
 	_serverNames(),
 	_port() {}
 
@@ -12,7 +11,6 @@ Socket::Socket(const Socket &other) { *this = other; }
 Socket::Socket(const ServerConfig &cfg)
     : _socketFd(-1),
       _clientFd(-1),
-      _res(NULL),
       _serverNames(cfg.getServerNames()),
       _port(cfg.getPort()) {}
 
@@ -34,33 +32,30 @@ Socket::~Socket() {
 void Socket::_setup() {
     struct addrinfo info;
     bzero(&info, sizeof(struct addrinfo));
-
     int optVal = 1;
-    info.ai_family = AF_UNSPEC;
+    info.ai_family = AF_INET;
     info.ai_socktype = SOCK_STREAM;
 
     // TODO: handle multiple IPs/hosts (probably not the best way to do it...)
     std::string ip = "127.0.0.1";
 
+	_socketFd = ::socket(info.ai_family, info.ai_socktype, 0);
     _checkConnectionThrow(::getaddrinfo(ip.c_str(), _port.c_str(), &info, &_res),
         					std::runtime_error("..."));
 
-    _socketFd = ::socket(_res->ai_family, _res->ai_socktype, _res->ai_protocol);
-	
-    _checkConnectionThrow(setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR, &optVal, sizeof(optVal)),
-                            std::runtime_error("..."));
-}
-
-void Socket::connect() {
-    this->_setup();
+	_checkConnectionThrow(setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR, &optVal, sizeof(optVal)),
+                        	std::runtime_error("..."));
 
     _checkConnectionThrow(bind(_socketFd, _res->ai_addr, _res->ai_addrlen),
         						std::runtime_error("..."));
 
     _checkConnectionThrow(listen(_socketFd, Socket::ConnectionRequests),
                                 std::runtime_error("..."));
-	
+	freeaddrinfo(_res);
+}
 
+void Socket::connect() {
+    this->_setup();
 }
 
 int Socket::accept() 

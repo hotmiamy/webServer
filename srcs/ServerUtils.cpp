@@ -14,12 +14,10 @@ bool isFileReadable(const std::string &path) {
            (S_ISREG(fileInfo.st_mode) && fileInfo.st_mode & S_IRUSR);
 }
 
-bool checkFileExist(const std::string &file)
-{
-	struct stat fileInfo;
-	if (stat(file.c_str(), &fileInfo) < 0)
-		return false;
-	return true;
+bool checkFileExist(const std::string &file) {
+    struct stat fileInfo;
+    if (stat(file.c_str(), &fileInfo) < 0) return false;
+    return true;
 }
 
 bool isNumeric(const std::string &str) {
@@ -49,6 +47,23 @@ bool isValidExecutable(const std::string &ex) {
         }
     }
     return false;
+}
+
+const std::string getAbsPath(const std::string &ex) {
+    const char *pathEnv = getenv("PATH");
+    if (!pathEnv) {
+        return "";
+    }
+
+    std::istringstream iss(pathEnv);
+    std::string dir;
+    while (std::getline(iss, dir, ':')) {
+        std::string path = dir + '/' + ex;
+        if (access(path.c_str(), X_OK) == 0) {
+            return path;
+        }
+    }
+    return "";
 }
 
 }  // namespace ServerUtils

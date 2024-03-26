@@ -24,7 +24,6 @@ DirectiveHandler::DirectiveHandler() : _cfg() {
     _directiveMap["error_page"] = &DirectiveHandler::_handleErrorPageDirective;
     _directiveMap["location"] = &DirectiveHandler::_handleLocationDirective;
     _directiveMap["root"] = &DirectiveHandler::_handleRoot;
-    _directiveMap["cgi"] = &DirectiveHandler::_handleCgi;
 }
 
 DirectiveHandler::~DirectiveHandler() {}
@@ -106,12 +105,20 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss) {
         std::istringstream lineIss(line);
         if (!location.hasPath()) {
             _resolvePath(lineIss, location);
+            continue;
         }
         if (line.find("index") != std::string::npos) {
             _resolveIndexFiles(lineIss, location);
+            continue;
         }
         if (line.find("allowed_methods") != std::string::npos) {
             _resolveAllowedMethods(lineIss, location);
+            continue;
+        }
+        if (line.find("cgi") != std::string::npos) {
+            std::string aux;
+            lineIss >> aux;
+            _handleCgi(lineIss, location);
         }
     }
     _cfg.addLocation(location.path, location);
@@ -184,9 +191,12 @@ bool DirectiveHandler::_isAllowedHttpMethod(const std::string &str) const {
 
 void DirectiveHandler::_handleIndexFiles(std::istringstream &iss,
                                          Location &location) {
-    const std::string path = _cfg.getRoot() + location.path;
+    std::string path = _cfg.getRoot() + location.path;
     std::string fileName;
 
+    if (path.at(path.size() - 1) != '/') {
+        path += "/";
+    }
     if (!(iss >> fileName) || !ServerUtils::isFileReadable(path + fileName)) {
         throw std::runtime_error(ERR_LOCATION + "no such file '" + fileName +
                                  "' at " + path);
@@ -226,8 +236,8 @@ void DirectiveHandler::_handleRoot(std::istringstream &iss) {
     _cfg.setRoot(path);
 }
 
-void DirectiveHandler::_handleCgi(std::istringstream &iss) {
-    if (_cfg.hasCgi()) {
+void DirectiveHandler::_handleCgi(std::istringstream &iss, Location &location) {
+    if (location.cgi) {
         throw std::runtime_error(ERR_CGI + "cgi was already specified");
     }
 
@@ -244,7 +254,7 @@ void DirectiveHandler::_handleCgi(std::istringstream &iss) {
         throw std::runtime_error(
             ERR_CGI + "there should be one and only one executable specified");
     }
-    _cfg.setCgi(true);
+    location.cgi = true;
 }
 
 void DirectiveHandler::_handleClientMaxBodySize(std::istringstream &iss) {

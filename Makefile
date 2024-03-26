@@ -2,7 +2,7 @@ SHELL    := /bin/sh
 
 OBJDIR   := objdir
 
-CXXFLAGS += -I./include -Wall -Wextra -Werror -g -std=c++98
+CXXFLAGS += -I./include -Wall -Wextra -Werror -std=c++98 -g3
 ifeq ($(DEBUG),true)
 	CXXFLAGS += -g
 endif
@@ -15,7 +15,7 @@ vpath %.cpp $(shell find srcs -type d)
 
 SRCS     := main.cpp WebServer.cpp ServerConfig.cpp ConfigParser.cpp DirectiveHandler.cpp \
 			Socket.cpp Poll.cpp ReqParsing.cpp ServerUtils.cpp ReqParsUtils.cpp Response.cpp \
-			ResponseUtils.cpp
+			ResponseUtils.cpp Cgi.cpp
 OBJS     := $(addprefix $(OBJDIR)/, $(SRCS:.cpp=.o))
 DEPS     := $(OBJS:.o=.d)
 NAME     := webserv
