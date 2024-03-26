@@ -11,12 +11,12 @@ Response::~Response() {}
 
 void Response::checkError() {
     _response = HTTP_VERSION;
-    if (_request.getLocation() != NULL) {
-        if (!ResponseUtils::IsMethodAllowed(*_request.getLocation(),
+    if (!_request.getLocation().empty()) {
+        if (!ResponseUtils::IsMethodAllowed(_request.getLocation(),
                                             _request.getMethod())) {
             return errorResponse(ResponseUtils::StatusCodes("405"));
         }
-        _serverRoot = _request.getLocation()->indexFile;
+        _serverRoot = _request.getLocation().indexFiles.front();
     }
     if (_request.getContentLength() > 0 && _request.getHasBody() == false) {
         return errorResponse(ResponseUtils::StatusCodes("100"));
