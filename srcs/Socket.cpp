@@ -28,9 +28,8 @@ Socket::~Socket() {}
 void Socket::_setup() {
     struct addrinfo info;
     bzero(&info, sizeof(struct addrinfo));
-
     int optVal = 1;
-    info.ai_family = AF_UNSPEC;
+    info.ai_family = AF_INET;
     info.ai_socktype = SOCK_STREAM;
 
     std::string ip = _serverName;

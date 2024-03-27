@@ -142,7 +142,7 @@ void DirectiveHandler::_resolvePath(std::istringstream &lineIss,
 
 void DirectiveHandler::_resolveIndexFile(std::istringstream &lineIss,
                                          Location &location) {
-    if (location.hasIndexFile()) {
+    if (location.hasIndexFiles()) {
         throw std::runtime_error(ERR_LOCATION +
                                  "index file was already defined");
     }

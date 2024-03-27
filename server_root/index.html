@@ -5,39 +5,43 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>42 Webserver</title>
         <style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f5f5f5;
-}
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-        p {
-            color: #666;
-            line-height: 1.6;
-        }
-        .imagem {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .imagem img {
-            width: 200px;
-            height: auto;
-        }
-        .post-link {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            color: #007bff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .post-link:hover {
-            text-decoration: underline;
-        }
+			body {
+			    font-family: Arial, sans-serif;
+			    margin: 0;
+			    padding: 20px;
+			    background-color: #f5f5f5;
+			}
+        	h1 {
+        	    color: #333333;
+        	    text-align: center;
+        	}
+        	p {
+        	    color: #202020;
+        	    line-height: 1.6;
+        	}
+        	.imagem {
+        	    text-align: center;
+        	    margin-top: 20px;
+        	}
+        	.imagem img {
+        	    width: 200px;
+        	    height: auto;
+        	}
+			.button {
+        	display: inline-block;
+        	padding: 10px 20px;
+			position: relative;
+        	background-color: #007bff;
+        	color: #fff;
+        	text-decoration: none;
+        	border: none;
+        	border-radius: 5px;
+        	cursor: pointer;
+        	margin-right: 10px;
+    		}
+    		.button:hover {
+    		    background-color: #0056b3;
+    		}
         </style>
     </head>
     <body>
@@ -49,6 +53,10 @@ body {
         <div class="imagem">
             <img src="/house-like.gif" alt="git-like">
         </div>
-        <a href="/post.html" class="post-link">Que tal testar o POST agora? Basta clicar aqui!</a>
+		<p>Vamos testar algumas das opções do POST ? Escolha uma das opções abaixo:</p>
+		<div>
+			<a href="http://localhost:8080/post.html" class="button">POST multipart/form</a>
+			<a href="http://localhost:8080/post_chunked.html" class="button">POST Chunked</a>
+		</div>
     </body>
 </html>

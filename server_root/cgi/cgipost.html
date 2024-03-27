@@ -52,7 +52,7 @@
 </head>
 <body>
     <div class="container">
-        <form action="http://localhost:8080/cgi/post.py" method="post" enctype="text/plain">
+        <form action="http://localhost:8080/cgi/post.py" method="POST" enctype="text/plain">
             <label for="phoneNumber">Select Phone Number:</label>
             <input type="range" id="phoneNumberSlider" name="phoneNumber" min="0" max="9999999999" step="1" onchange="updatePhoneNumber()">
             <input type="text" id="phoneNumberInput" name="phoneNumberFormatted" readonly>

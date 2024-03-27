@@ -26,7 +26,7 @@ Cgi::~Cgi() {}
 
 void Cgi::_setup() {
     _script = "./server_root" + _request.getUrl();
-    _binaryAbsPath = ServerUtils::getAbsPath("python");
+    _binaryAbsPath = ServerUtils::getAbsPath("python3");
 }
 
 void Cgi::execute() {

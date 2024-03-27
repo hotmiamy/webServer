@@ -24,7 +24,7 @@ std::string ContentFormat(std::string key) {
 
     std::map<std::string, std::string>::iterator it = contentTypes.find(key);
 
-    if (it == contentTypes.end()) return ("");
+    if (it == contentTypes.end()) return ("application/octet-stream");
     return (contentTypes[key]);
 }
 
@@ -48,13 +48,20 @@ std::string ExtractHeader(std::string const &request, std::string key) {
     return (header[key]);
 }
 
-bool hasBody(const std::string &request) {
-	std::size_t startBodyPos = request.rfind("\r\n\r\n") + 4;
-	std::size_t endBodyPos = request.rfind("\r\n\r\n") + 1;
+void extractBody(const std::string &request, std::string &body, std::string &form) {
+	if (request.find("multipart/form-data") == std::string::npos) {
+		std::size_t startBodyPos = request.find("\r\n\r\n") + 4;
+		std::size_t endBodyPos = request.find("\r\n\r\n", startBodyPos);
+		body = request.substr(startBodyPos, endBodyPos - startBodyPos);
+		return ;
+	}
 
-	if (startBodyPos == endBodyPos)
-		return (false);
-	return (true);
+	std::size_t startboundaryPos = request.find("\r\n\r\n") + 4;
+	std::size_t endboundaryPos = request.find("\r\n\r\n", startboundaryPos);
+	form = request.substr(startboundaryPos, endboundaryPos - startboundaryPos);
+	std::size_t startBodyPos = request.find("\r\n\r\n", endboundaryPos) + 4;
+	std::size_t endBodyPos = request.find("\r\n\r\n", startBodyPos - 1);
+	body = request.substr(startBodyPos, endBodyPos - startBodyPos);
 }
 
 }

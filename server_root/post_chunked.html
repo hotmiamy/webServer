@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Método POST com Encoding Chunked</title>
+</head>
+<body>
+    <h1>Teste de Método POST com Encoding Chunked</h1>
+    <textarea id="dados" rows="4" cols="50"></textarea><br><br>
+    <button onclick="enviarDados()">Enviar</button>
+
+    <script>
+        function enviarDados() {
+            var dados = document.getElementById("dados").value;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://localhost:8080/post_files/", true); // URL de teste (pode ser substituída)
+            xhr.setRequestHeader("Content-Type", "text/plain");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        alert("Dados enviados com sucesso!");
+                        console.log(xhr.responseText);
+                    } else {
+                        alert("Ocorreu um erro ao enviar os dados.");
+                    }
+                }
+            };
+            xhr.send(dados);
+        }
+    </script>
+</body>
+</html>

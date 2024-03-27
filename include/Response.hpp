@@ -9,21 +9,21 @@
 #include "ServerUtils.hpp"
 
 class Response {
-   private:
-    ReqParsing _request;
-    std::string _serverRoot;
+	private:
+    	ReqParsing _request;
+    	std::string _serverRoot;
 
-   public:
-    Response();
-    Response(ReqParsing request);
-    ~Response();
+	public:
+    	std::string _response;
+	public:
+		Response();
+		Response(ReqParsing request);
+		~Response();
 
-    std::string _response;
-
-    void generateResponse();
-    void checkError();
-    void HandleGET();
-    void HandlePOST();
-    void HandleDELETE();
-    void errorResponse(std::string error);
+		void checkError();
+		void generateResponse();
+		void HandleGET();
+		void HandlePOST();
+		void HandleDELETE();
+		void errorResponse(std::string error);
 };

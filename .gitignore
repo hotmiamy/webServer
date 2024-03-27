@@ -38,4 +38,4 @@ objdir
 .cache/
 webserv
 
-server_root/post_files
+server_root/*/**/*/

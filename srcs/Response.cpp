@@ -9,22 +9,33 @@ Response::Response(ReqParsing request)
 
 Response::~Response() {}
 
-void Response::checkError() {
-    _response = HTTP_VERSION;
-    if (!_request.getLocation().empty()) {
-        if (!ResponseUtils::IsMethodAllowed(_request.getLocation(),
-                                            _request.getMethod())) {
-            return errorResponse(ResponseUtils::StatusCodes("405"));
-        }
-        _serverRoot = _request.getLocation().indexFiles.front();
-    }
-    if (_request.getContentLength() > 0 && _request.getHasBody() == false) {
-        return errorResponse(ResponseUtils::StatusCodes("100"));
-    }
-    if (ServerUtils::checkFileExist(_serverRoot) == false) {
-        return errorResponse(ResponseUtils::StatusCodes("404"));
-    }
-    generateResponse();
+void Response::checkError()
+{
+	_response = HTTP_VERSION;
+	if (_request.getErrorCode().empty() == false){
+		errorResponse(ResponseUtils::StatusCodes(_request.getErrorCode()));
+		return ;
+	}
+	if (_request.getLocation().empty() == false){
+		if (ResponseUtils::IsMethodAllowed(_request.getLocation(), _request.getMethod()) == false) {
+			errorResponse(ResponseUtils::StatusCodes("405"));
+			return ;
+		}
+		else{
+			_serverRoot = _request.getLocation().indexFile;
+		}
+	}
+	if (_request.getHasBodyLimit() == true) {
+		if (_request.getBody().empty() == false && _request.getBody().length() > _request.getMaxBodySize()){
+			errorResponse(ResponseUtils::StatusCodes("413"));
+			return ;
+		}	
+	}
+	if (ServerUtils::checkFileExist(_serverRoot) == false) {
+		errorResponse(ResponseUtils::StatusCodes("404"));
+		return ;
+	}
+	generateResponse();
 }
 
 void Response::generateResponse() {
@@ -41,12 +52,12 @@ void Response::HandleGET() {
     std::stringstream responseHead, responseBody, fullResponse;
     std::string fileExtension = ServerUtils::getExtension(_serverRoot);
 
-    if (false) {  // check redirect first
+    /* if (false) {  // check redirect first
         return;
     }
     if (false) {  // then, check folder and handle autoindex
         return;
-    }
+    } */
 
     if (_request.getUrl().find("script.py") != std::string::npos) {
         Cgi cgi = Cgi(_request, "GET");
@@ -78,24 +89,28 @@ void Response::HandlePOST() {
     if (_request.getUrl().find("post.py") != std::string::npos) {
         Cgi cgi = Cgi(_request, "POST");
         cgi.execute();
+		std::string fileExtension = ServerUtils::getExtension(_serverRoot);
         responseBody << cgi.getOut();
+		responseHead << ResponseUtils::StatusCodes("200");
+		responseHead << "Content-Format: "
+                 << ReqParsUtils::ContentFormat(fileExtension) << "\r\n";
+    responseHead << "Content-Length: " << responseBody.str().size() << "\r\n";
     } else {
-        if (_request.getFileName() != "") {
-            _serverRoot += _request.getFileName();
-        } else {
-            _serverRoot += "file";
-        }
-
-        file.open(_serverRoot.c_str(), std::ios::out | std::ios::binary);
-        if (!file) {
-            return errorResponse(ResponseUtils::StatusCodes("500"));
-        } else {
-            file.write(_request.getBody().c_str(), _request.getBody().size());
-            file.close();
-        }
-    }
-
-    responseHead << ResponseUtils::StatusCodes("201");
+        _serverRoot += ResponseUtils::genFileName(_request);
+		if (ServerUtils::checkFileExist(_serverRoot) == true)
+			responseHead << ResponseUtils::StatusCodes("204");
+		else 
+			responseHead << ResponseUtils::StatusCodes("201");
+		file.open(_serverRoot.c_str(), std::ios::out | std::ios::binary);
+		if (!file) {
+			errorResponse(ResponseUtils::StatusCodes("500"));
+			return ;
+		}
+		else {
+			file.write(_request.getBody().c_str(), _request.getBody().size());
+			file.close();
+		}
+	}
     responseHead << "Date: " << ResponseUtils::getCurrDate() << "\r\n";
     responseHead << "Server: WebServer\r\n";
     responseHead << "\r\n\n";
