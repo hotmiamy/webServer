@@ -19,10 +19,12 @@ class ReqParsing {
     std::string _contentType;
     std::string _transferEncoding;
     std::string _body;
+	std::string _form;
     std::string _fileName;
 	std::string _errorCode;
     std::size_t _contentLength;
     std::size_t _maxBodySize;
+	bool _hasBodyLimit;
     bool _chunkBody;
     Location _location;
 
@@ -38,15 +40,18 @@ class ReqParsing {
     const std::string &getContentType() const;
     const std::string &getTransferEncoding() const;
     const std::string &getBody() const;
+	const std::string &getForm() const;
     const std::string &getFileName() const;
 	const std::string &getErrorCode() const;
 	const std::size_t &getContentLength() const ;
     const std::size_t &getMaxBodySize() const;
     bool getChunkBody() const;
+	bool getHasBodyLimit() const;
     const Location &getLocation() const;
 
    private:
     void parsFirtsLine(const std::string &rawReq);
     void setLocation(const ServerConfig &conf);
-    void extractHeaderInfo(const std::string &rawReq, const ServerConfig &conf);
+    void extractReqInfo(const std::string &rawReq, const ServerConfig &conf);
+	void parseBody();
 };

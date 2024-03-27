@@ -94,4 +94,16 @@ std::string getCurrDate(void) {
     return (buffer);
 }
 
+std::string genFileName(ReqParsing &req) {
+	if (req.getFileName() != "") {
+        return (req.getFileName());
+	}
+	else if (req.getContentType() != ""){
+		std::string fileExtension = req.getContentType();
+		return("file." + fileExtension.substr(fileExtension.find("/") + 1));
+    } else {
+        return("file");
+	}
+}
+
 }  // namespace ResponseUtils

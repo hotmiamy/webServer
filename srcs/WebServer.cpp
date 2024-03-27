@@ -41,6 +41,8 @@ void WebServer::_launch(SocketVec &socketVec, const ConfigVec &conf)
 				if (i < socketVec.size())
 				{
 					_newSock = socketVec[i].accept();
+					/* if (fcntl(_newSock, F_SETFL, O_NONBLOCK) < 0)
+						std::__throw_runtime_error("Error set nonblocking I/O"); */
 				}
 			}
         	_read(conf[i]);
@@ -51,15 +53,23 @@ void WebServer::_launch(SocketVec &socketVec, const ConfigVec &conf)
 
 void WebServer::_read(const ServerConfig &conf) 
 {
-	char buff[4096] = {0};
+	char buff[4094] = {0};
 	int bytesread;
 	std::string Crequest;
 
+	Crequest.clear();
 	while ((bytesread = recv(_newSock, buff, sizeof(buff), 0)) > 0)
 	{
 		Crequest.append(buff, bytesread);
+		if (Crequest.find("Transfer-Encoding: chunked") != std::string::npos){
+			if (Crequest.find("\r\n0\r\n") != std::string::npos)
+				break;
+			else {
+				continue;
+			}
+		}
 		if (Crequest.find("Expect: 100-continue") != std::string::npos) {
-            sleep(2);
+
             continue;
         }
 		if (Crequest.find("multipart/form-data") != std::string::npos)
@@ -81,12 +91,14 @@ void WebServer::_read(const ServerConfig &conf)
             if (Crequest.find(terminatingBoundary) != std::string::npos)
                 break;
 		}
-		else if (Crequest.find("\r\n\r\n") != std::string::npos)
+ 		else if (Crequest.find("\r\n\r\n") != std::string::npos)
             break;
 	}
-	ReqParsing parsing(Crequest, conf);
-	Response response(parsing);
-	_respond(response);
+	if (Crequest.empty() == false){
+		ReqParsing parsing(Crequest, conf);
+		Response response(parsing);
+		_respond(response);
+	}
 }
 
 void WebServer::_respond(Response response)

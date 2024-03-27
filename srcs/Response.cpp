@@ -25,9 +25,11 @@ void Response::checkError()
 			_serverRoot = _request.getLocation().indexFile;
 		}
 	}
-	if (_request.getBody().empty() == false && _request.getBody().size() > _request.getMaxBodySize()){
-		errorResponse(ResponseUtils::StatusCodes("413"));
-		return ;
+	if (_request.getHasBodyLimit() == true) {
+		if (_request.getBody().empty() == false && _request.getBody().length() > _request.getMaxBodySize()){
+			errorResponse(ResponseUtils::StatusCodes("413"));
+			return ;
+		}	
 	}
 	if (ServerUtils::checkFileExist(_serverRoot) == false) {
 		errorResponse(ResponseUtils::StatusCodes("404"));
@@ -94,11 +96,7 @@ void Response::HandlePOST() {
                  << ReqParsUtils::ContentFormat(fileExtension) << "\r\n";
     responseHead << "Content-Length: " << responseBody.str().size() << "\r\n";
     } else {
-        if (_request.getFileName() != "") {
-            _serverRoot += _request.getFileName();
-        } else {
-            _serverRoot += "file";
-		}
+        _serverRoot += ResponseUtils::genFileName(_request);
 		if (ServerUtils::checkFileExist(_serverRoot) == true)
 			responseHead << ResponseUtils::StatusCodes("204");
 		else 
@@ -117,7 +115,6 @@ void Response::HandlePOST() {
     responseHead << "Server: WebServer\r\n";
     responseHead << "\r\n\n";
     fullResponse << responseHead.str() << responseBody.str();
-	std::cout << responseBody.str() << std::endl;
     _response += fullResponse.str();
 }
 

@@ -5,6 +5,7 @@ ReqParsing::ReqParsing() {}
 ReqParsing::ReqParsing(const std::string &reqRaw, const ServerConfig &conf) : 
 	_root(conf.getRoot()),
 	_body(""),
+	_form(""),
 	_fileName(""),
 	_errorCode(""),
 	_contentLength(0),
@@ -15,14 +16,14 @@ ReqParsing::ReqParsing(const std::string &reqRaw, const ServerConfig &conf) :
 	try
 	{
 		parsFirtsLine(reqRaw.substr(0, reqRaw.find("\r\n")));
-		extractHeaderInfo(reqRaw, conf);
+		extractReqInfo(reqRaw, conf);
+		parseBody();
 		setLocation(conf);
 	}
 	catch(const std::exception& e)
 	{
 		_errorCode = e.what();
 	}
-	
 }
 
 void ReqParsing::parsFirtsLine(const std::string &firstline) {
@@ -64,7 +65,7 @@ void ReqParsing::parsFirtsLine(const std::string &firstline) {
 	}
 }
 
-void ReqParsing::extractHeaderInfo(const std::string &rawReq,
+void ReqParsing::extractReqInfo(const std::string &rawReq,
                                    const ServerConfig &conf) {
     if (ReqParsUtils::ExtractHeader(rawReq, "Transfer-Encoding") == "chunked")
         _chunkBody = true;
@@ -75,19 +76,38 @@ void ReqParsing::extractHeaderInfo(const std::string &rawReq,
 
         issBSize >> _maxBodySize;
         issCLength >> _contentLength;
-        if (_contentLength > 0 && ReqParsUtils::hasBody(rawReq) == true) {
-            _body = rawReq.substr(rawReq.rfind("\r\n\r\n") + 4);
-        }
     }
-    if (ReqParsUtils::ExtractHeader(rawReq, "Content-Type") != "")
+    if (ReqParsUtils::ExtractHeader(rawReq, "Content-Type") != ""){
         _contentType = ReqParsUtils::ExtractHeader(rawReq, "Content-Type");
+	}
+	ReqParsUtils::extractBody(rawReq, _body, _form);
     if (_contentType.find("multipart/form-data") != std::string::npos &&
-        _body.empty() == false) {
-        std::string form = ReqParsUtils::ExtractHeader(
-            rawReq.substr(rawReq.find("\r\n\r\n") + 4), "Content-Disposition");
-        _fileName = form.substr(form.find("filename=\"") + 10);
+        _form.empty() == false) {
+        _fileName = _form.substr(_form.find("filename=\"") + 10);
         _fileName.erase(_fileName.find("\""));
     }
+}
+
+void ReqParsing::parseBody()
+{
+	std::string unparsed(_body);
+
+	if (_chunkBody == true){
+		_body = "";
+		while (unparsed.size() > 0)
+		{
+			if (unparsed.find("\r\n0\r\n") == 0 || unparsed.find("0") == 0)
+				break;
+			std::string chunkSizeStr = unparsed.substr(0, unparsed.find("\r\n"));
+			std::stringstream ss(chunkSizeStr);
+			std::size_t       chunkSize = 0;
+			ss >> std::hex >> chunkSize;
+
+			unparsed.erase(0, chunkSizeStr.size() + 2);
+			_body.append(unparsed.substr(0, chunkSize));
+			unparsed.erase(0, chunkSize + 2);
+		}
+	}
 }
 
 ReqParsing::~ReqParsing(void) {}
@@ -110,19 +130,15 @@ const std::string &ReqParsing::getMethod() const { return (this->_method); }
 
 const std::string &ReqParsing::getUrl() const { return (this->_url); }
 
-const std::string &ReqParsing::getHttpVersion() const {
-    return (this->_httpVersion);
-}
+const std::string &ReqParsing::getHttpVersion() const { return (this->_httpVersion); }
 
-const std::string &ReqParsing::getContentType() const {
-    return (this->_contentType);
-}
+const std::string &ReqParsing::getContentType() const { return (this->_contentType); }
 
-const std::string &ReqParsing::getTransferEncoding() const {
-    return (this->_transferEncoding);
-}
+const std::string &ReqParsing::getTransferEncoding() const { return (this->_transferEncoding); }
 
 const std::string &ReqParsing::getBody() const { return (this->_body); }
+
+const std::string &ReqParsing::getForm() const { return (this->_form); }
 
 const std::string &ReqParsing::getFileName() const { return (this->_fileName); }
 
@@ -133,5 +149,7 @@ const std::size_t &ReqParsing::getContentLength() const { return (this->_content
 const std::size_t &ReqParsing::getMaxBodySize() const { return (this->_maxBodySize); }
 
 bool ReqParsing::getChunkBody() const { return (this->_chunkBody); }
+
+bool ReqParsing::getHasBodyLimit() const { return (this->_hasBodyLimit); }
 
 const Location &ReqParsing::getLocation() const { return (_location); }

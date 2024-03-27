@@ -16,7 +16,7 @@ void Poll::addSocketFd(Socket &socket)
 
 void Poll::execute()
 {
-	int ret = poll(this->_pollfds.data(), this->_pollfds.size(), -1);
+	int ret = poll(this->_pollfds.data(), this->_pollfds.size(), 0);
 	checkerror(ret, std::runtime_error("poll error"));
 }
 
@@ -39,6 +39,6 @@ size_t Poll::getSize() const {return (this->_pollfds.size());}
 template <typename ExceptionType>
 void Poll::checkerror(int ret, const ExceptionType &exception)
 {
-	if (ret <= 0)
+	if (ret < 0)
 		throw exception;
 }
