@@ -14,7 +14,7 @@ bool isFileReadable(const std::string &path) {
            (S_ISREG(fileInfo.st_mode) && fileInfo.st_mode & S_IRUSR);
 }
 
-bool checkFileExist(const std::string &file) {
+bool fileExists(const std::string &file) {
     struct stat fileInfo;
     if (stat(file.c_str(), &fileInfo) < 0) return false;
     return true;
@@ -64,6 +64,23 @@ const std::string getAbsPath(const std::string &ex) {
         }
     }
     return "";
+}
+
+std::vector<std::pair<std::string, std::string> > getDefaultErrorPages() {
+    std::vector<std::pair<std::string, std::string> > defaultErrorPages;
+
+    defaultErrorPages.push_back(
+        std::make_pair("404", "./server_root/error_pages/error404.html"));
+
+    for (std::vector<std::pair<std::string, std::string> >::const_iterator it =
+             defaultErrorPages.begin();
+         it != defaultErrorPages.end(); ++it) {
+        if (!isFileReadable(it->second)) {
+            throw std::runtime_error("no such file: " + it->second);
+        }
+    }
+
+    return defaultErrorPages;
 }
 
 }  // namespace ServerUtils
