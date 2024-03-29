@@ -27,4 +27,8 @@ const std::string getAbsPath(const std::string &ex);
 
 std::vector<std::pair<std::string, std::string> > getDefaultErrorPages();
 
+bool withinRange(int n, std::pair<int, int> range);
+
+int stoi(const std::string &str);
+
 }  // namespace ServerUtils
