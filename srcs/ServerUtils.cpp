@@ -83,4 +83,15 @@ std::vector<std::pair<std::string, std::string> > getDefaultErrorPages() {
     return defaultErrorPages;
 }
 
+bool withinRange(int n, std::pair<int, int> range) {
+    return n >= range.first && n <= range.second;
+}
+
+int stoi(const std::string &str) {
+    std::istringstream iss(str);
+    int res;
+    iss >> res;
+    return res;
+}
+
 }  // namespace ServerUtils
