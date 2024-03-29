@@ -11,40 +11,40 @@ Response::~Response() {}
 
 void Response::checkError() {
     _response = HTTP_VERSION;
-    if (_request.getErrorCode().empty() == false) {
-        errorResponse(ResponseUtils::StatusCodes(_request.getErrorCode()));
-        return;
+    if (!(_request.getErrorCode().empty())) {
+        return errorResponse(
+            ResponseUtils::StatusCodes(_request.getErrorCode()));
     }
-    if (_request.getLocation().empty() == false) {
-        if (ResponseUtils::IsMethodAllowed(_request.getLocation(),
-                                           _request.getMethod()) == false) {
-            errorResponse(ResponseUtils::StatusCodes("405"));
-            return;
-        } else {
-            _serverRoot = _request.getLocation().indexFile;
+    if (!(_request.getLocation().empty())) {
+        if (!(ResponseUtils::IsMethodAllowed(_request.getLocation(),
+                                             _request.getMethod()))) {
+            return errorResponse(ResponseUtils::StatusCodes("405"));
         }
+        _serverRoot = _request.getLocation().indexFile;
     }
-    if (_request.getHasBodyLimit() == true) {
-        if (_request.getBody().empty() == false &&
+    if (_request.getHasBodyLimit()) {
+        if (!_request.getBody().empty() &&
             _request.getBody().length() > _request.getMaxBodySize()) {
-            errorResponse(ResponseUtils::StatusCodes("413"));
-            return;
+            return errorResponse(ResponseUtils::StatusCodes("413"));
         }
     }
-    if (ServerUtils::fileExists(_serverRoot) == false) {
-        errorResponse(ResponseUtils::StatusCodes("404"));
-        return;
+    if (!_serverRoot.empty() && !ServerUtils::fileExists(_serverRoot)) {
+        return errorResponse(ResponseUtils::StatusCodes("404"));
     }
     generateResponse();
 }
 
 void Response::generateResponse() {
-    if (_request.getMethod() == "GET")
-        HandleGET();
-    else if (_request.getMethod() == "POST")
-        HandlePOST();
-    else if (_request.getMethod() == "DELETE")
-        HandleDELETE();
+    if (_request.getMethod() == "GET") {
+        return HandleGET();
+    }
+    if (_request.getMethod() == "POST") {
+        return HandlePOST();
+    }
+    if (_request.getMethod() == "DELETE") {
+        return HandleDELETE();
+    }
+    errorResponse(ResponseUtils::StatusCodes("405"));
 }
 
 void Response::HandleGET() {
@@ -52,12 +52,20 @@ void Response::HandleGET() {
     std::stringstream responseHead, responseBody, fullResponse;
     std::string fileExtension = ServerUtils::getExtension(_serverRoot);
 
-    /* if (false) {  // check redirect first
+    if (!_request.getLocation().empty() &&
+        _request.getLocation().redirectionSet()) {
+        std::string code = _request.getLocation().redirection.first,
+                    redirectedURL = _request.getLocation().redirection.second;
+        file.open(_request.getUrl().c_str(), std::ios::binary);
+        fullResponse << ResponseUtils::StatusCodes(code)
+                     << "Location: " << redirectedURL << "\r\n\r\n";
+        _response += fullResponse.str();
         return;
     }
-    if (false) {  // then, check folder and handle autoindex
-        return;
-    } */
+
+    // if (false) {  // then, check folder and handle autoindex
+    //     return;
+    // }
 
     if (_request.getUrl().find("script.py") != std::string::npos) {
         Cgi cgi = Cgi(_request, "GET");

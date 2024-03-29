@@ -19,4 +19,7 @@ struct Location {
     bool empty() const {
         return path.empty() && allowedMethods.empty() && indexFile.empty();
     }
+    bool redirectionSet() const {
+        return !(redirection.first.empty() || redirection.second.empty());
+    }
 };
