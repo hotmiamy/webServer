@@ -29,6 +29,8 @@ class ServerConfig {
     void addErrorPage(const std::string &, const std::string &);
     void addLocation(std::string path, const Location &);
     void setClientMaxBodySize(const std::string &);
+    void setErrorPages(
+        const std::vector<std::pair<std::string, std::string> > &);
 
     bool good() const;
 
