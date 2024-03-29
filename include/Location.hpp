@@ -8,8 +8,10 @@ struct Location {
     std::vector<std::string> allowedMethods;
     std::string indexFile;
     bool cgi;
+    std::pair<std::string, std::string> redirection;
 
-    Location() : path(), allowedMethods(), indexFile(), cgi(false) {}
+    Location()
+        : path(), allowedMethods(), indexFile(), cgi(false), redirection() {}
 
     bool hasPath() const { return !path.empty(); }
     bool hasAllowedMethods() const { return !allowedMethods.empty(); }
