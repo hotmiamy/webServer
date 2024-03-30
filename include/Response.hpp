@@ -1,5 +1,7 @@
 #pragma once
 
+#include <dirent.h>
+
 #include <iostream>
 #include <sstream>
 
@@ -9,26 +11,25 @@
 #include "ServerUtils.hpp"
 
 class Response {
-	private:
-    	ReqParsing _request;
-    	std::string _serverRoot;
-		std::size_t	_statusCode;
+   public:
+    std::string response;
+    Response();
+    Response(ReqParsing request);
+    ~Response();
 
-	public:
-    	std::string _response;
+    size_t getStatusCode() const;
 
-	public:
-		Response();
-		Response(ReqParsing request);
-		~Response();
+   private:
+    ReqParsing _request;
+    std::string _serverRoot;
+    std::size_t _statusCode;
 
-		void checkError();
-		void generateResponse();
-		void HandleGET();
-		void HandlePOST();
-		void HandleDELETE();
-		
-		std::string setStatusCode(std::string code);
+    void _checkError();
+    void _generateResponse();
+    void _HandleGET();
+    void _HandlePOST();
+    void _HandleDELETE();
+    const std::string _handleAutoindex(const std::string&);
 
-		const std::size_t &getStatusCode() const;
+    std::string setStatusCode(const std::string&);
 };
