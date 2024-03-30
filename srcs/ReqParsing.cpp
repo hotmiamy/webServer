@@ -18,7 +18,8 @@ ReqParsing::ReqParsing(const ServerConfig &server)
       _bodyParsed(false),
       _isParsed(false),
       _location(),
-      _server(server) {}
+      _server(server),
+	  _errorPagePath(){}
 
 void ReqParsing::parse(const std::string &reqRaw, int clientRes) {
     try {
@@ -88,6 +89,8 @@ void ReqParsing::parsFirtsLine(const std::string &firstline) {
 
 void ReqParsing::extractReqInfo(const std::string &rawReq,
                                 const ServerConfig &conf) {
+	if (_server.getErrorPages().empty() == false) 
+		_errorPagePath = _server.getErrorPages();
     if (rawReq.find("\r\n\r\n") == std::string::npos)
         throw std::runtime_error("400");
     if (_method == "POST") {
@@ -232,3 +235,5 @@ bool ReqParsing::getIsParsed() const { return (this->_isParsed); }
 const Location &ReqParsing::getLocation() const { return (_location); }
 
 const ServerConfig &ReqParsing::getServer() const { return _server; }
+
+const std::map<std::string, std::string> &ReqParsing::getErrorPagePath() const { return (_errorPagePath); }

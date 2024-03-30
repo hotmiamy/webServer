@@ -3,7 +3,7 @@
 Response::Response() {}
 
 Response::Response(ReqParsing request)
-    : _request(request), _serverRoot(request.getRoot() + request.getUrl()) {
+    : _errorPagePath(request.getRoot() + request.getUrl()), _serverRoot(request.getRoot() + request.getUrl()), _request(request) {
 	try
 	{
 		checkError();
@@ -11,12 +11,7 @@ Response::Response(ReqParsing request)
 	}
 	catch(const std::exception& e)
 	{
-		_response = HTTP_VERSION;
-		_response += e.what();
-		_response += _request.getConnection();
-		_response += "Date: " + ResponseUtils::getCurrDate() + "\r\n";
-    	_response += "Server: WebServer\r\n";
-    	_response += "\r\n\r\n";
+		_HandleErrorPage(e.what());		
 	}
 }
 
@@ -193,6 +188,30 @@ const std::string Response::_handleAutoindex(const std::string& path) {
     ss << "</ul></body></html>";
     closedir(dir);
     return ss.str();
+}
+
+void Response::_HandleErrorPage(std::string errorCode) {
+	 std::stringstream responseHead, responseBody, fullResponse;
+
+	_response = HTTP_VERSION;
+	// this->_errorPagePath = std::string com caminho até a pasta do arquivo
+	if (this->_errorPagePath.empty() != true) { // << já verificar antes se o path existe
+		_errorPagePath += errorCode + ".html";
+		if (ServerUtils::fileExists(_errorPagePath) == true) {
+			std::ifstream file(_errorPagePath.c_str());
+			responseBody << file.rdbuf();
+			responseHead << ResponseUtils::StatusCodes(errorCode);
+			responseHead << "Content-Format: "
+						 << ReqParsUtils::ContentFormat("html") << "\r\n";
+			responseHead << "Content-Length: " << responseBody.str().size() << "\r\n";
+		}
+		else
+			responseHead << ResponseUtils::StatusCodes(errorCode);
+		responseHead << "Connection: close\r\n";
+		responseHead << "Date: " + ResponseUtils::getCurrDate() + "\r\n";
+    	responseHead << "Server: WebServer\r\n";
+    	responseHead << "\r\n\r\n";
+	}
 }
 
 std::string Response::setStatusCode(const std::string& code) {
