@@ -46,8 +46,8 @@ void Cgi::execute() {
         return std::perror("fork (cgi)");
     }
     if (0 == pid) {
-		dup2(_pipedes[0], STDIN_FILENO);
-    	dup2(_pipedes[1], STDOUT_FILENO);
+        dup2(_pipedes[0], STDIN_FILENO);
+        dup2(_pipedes[1], STDOUT_FILENO);
         _childRoutine();
     }
     _parentRoutine(pid);
@@ -69,7 +69,6 @@ void Cgi::_childRoutine() {
 
 void Cgi::_parentRoutine(ssize_t pid) {
     waitpid(pid, NULL, 0);
-    // waitpid(pid, NULL, WNOHANG);
 
     char buf[BUFSIZ] = {0};
 
