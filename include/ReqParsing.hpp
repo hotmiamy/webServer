@@ -21,17 +21,28 @@ class ReqParsing {
     std::string _body;
 	std::string _form;
     std::string _fileName;
-	std::string _errorCode;
+	std::string _statusCode;
+	std::string _connection;
     std::size_t _contentLength;
     std::size_t _maxBodySize;
 	bool _hasBodyLimit;
     bool _chunkBody;
+	bool _firtLineParsed;
+	bool _headerParsed;
+	bool _bodyParsed;
+	bool _isParsed;
     Location _location;
+	ServerConfig _server;
 
    public:
     ReqParsing();
-    ReqParsing(const std::string &rawReq, const ServerConfig &conf);
+    ReqParsing(const ServerConfig &server);
     ~ReqParsing();
+
+	void parse(const std::string &rawReq, int clientRes);
+
+	void setStatusCode(const std::string &statusCode);
+	void setConnection(const std::string &connection);
 
     const std::string &getRoot() const;
     const std::string &getMethod() const;
@@ -42,16 +53,19 @@ class ReqParsing {
     const std::string &getBody() const;
 	const std::string &getForm() const;
     const std::string &getFileName() const;
-	const std::string &getErrorCode() const;
+	const std::string &getStatusCode() const;
+	const std::string &getConnection() const;
 	const std::size_t &getContentLength() const ;
     const std::size_t &getMaxBodySize() const;
     bool getChunkBody() const;
 	bool getHasBodyLimit() const;
+	bool getIsParsed() const;
     const Location &getLocation() const;
 
    private:
     void parsFirtsLine(const std::string &rawReq);
-    void setLocation(const ServerConfig &conf);
-    void extractReqInfo(const std::string &rawReq, const ServerConfig &conf);
-	void parseBody();
+    void setLocation(const ServerConfig &server);
+    void extractReqInfo(const std::string &rawReq, const ServerConfig &server);
+	void parseBody(const std::string &reqRaw);
+	void isMultiPart();
 };

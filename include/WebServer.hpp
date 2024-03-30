@@ -14,6 +14,8 @@
 #include "ReqParsing.hpp"
 #include "Response.hpp"
 
+#define SEPARATOR "\n-------------------------------------------------\n"
+
 class WebServer {
    public:
     WebServer();
@@ -21,13 +23,20 @@ class WebServer {
     WebServer &operator=(const WebServer &);
     ~WebServer();
 
-    void	run(const ConfigVec &configs);
+    void	init(char **argv);
 
    private:
+	std::map<int, time_t> _keepAlive;
+	std::map<int, ReqParsing> _reqs;
+	std::string _rawRequest;
+	ServerVec _server;
+	bool	_timeout;
 	Poll	_poll;
-	int		_newSock;
 
-    void	_launch(SocketVec &socketVec, const ConfigVec &conf);
-    void	_read(const ServerConfig &conf);
-    void	_respond(Response response);
+
+    void	_launch();
+    int		_read(Socket &socket);
+    void	_respond(Socket &client, int clientRes);
+
+	const ServerConfig &getCurrentServer(const Socket &socket);
 };

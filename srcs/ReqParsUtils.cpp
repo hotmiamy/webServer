@@ -48,20 +48,4 @@ std::string ExtractHeader(std::string const &request, std::string key) {
     return (header[key]);
 }
 
-void extractBody(const std::string &request, std::string &body, std::string &form) {
-	if (request.find("multipart/form-data") == std::string::npos) {
-		std::size_t startBodyPos = request.find("\r\n\r\n") + 4;
-		std::size_t endBodyPos = request.find("\r\n\r\n", startBodyPos);
-		body = request.substr(startBodyPos, endBodyPos - startBodyPos);
-		return ;
-	}
-
-	std::size_t startboundaryPos = request.find("\r\n\r\n") + 4;
-	std::size_t endboundaryPos = request.find("\r\n\r\n", startboundaryPos);
-	form = request.substr(startboundaryPos, endboundaryPos - startboundaryPos);
-	std::size_t startBodyPos = request.find("\r\n\r\n", endboundaryPos) + 4;
-	std::size_t endBodyPos = request.find("\r\n\r\n", startBodyPos - 1);
-	body = request.substr(startBodyPos, endBodyPos - startBodyPos);
-}
-
 }

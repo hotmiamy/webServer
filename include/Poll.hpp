@@ -10,15 +10,21 @@ class Poll
 {
 	private:
 		std::vector<pollfd> _pollfds;
+		std::vector<Socket> _sockets;
+
 	public:
 		Poll();
 		~Poll();
 
-		void addSocketFd(Socket &socket);
+		void addFd(const Socket &socket,const int &fd);
 		void execute();
-		bool checkEvent(size_t inx);
+		bool checkEvent(size_t inx, long diff, bool &timeout);
+		void removeEventFd(const Socket &socket);
+		void clearAllFds();
 
-		size_t getSize() const;
+		std::size_t getSize();
+		const Socket &getSocket(size_t inx) const;
+		const int &getFd(int inx) const;
 
 		template <typename ExceptionType>
 		void checkerror(int ret, const ExceptionType &exception);
