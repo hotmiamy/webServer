@@ -2,6 +2,8 @@
 
 WebServer::WebServer() {}
 
+WebServer::WebServer(ServerVec server) : _keepAlive(), _server(server), _timeout(false), _poll() {}
+
 WebServer::WebServer(const WebServer &other) { *this = other; }
 
 WebServer &WebServer::operator=(const WebServer &other) {
@@ -16,10 +18,7 @@ WebServer::~WebServer() {
 	_poll.clearAllFds();
 }
 
-void WebServer::init(char **argv) {
-
-	_server = ServerConfig::fromFile(argv[1]);
-
+void WebServer::init() {
     for (ServerVec::size_type i = 0; i < _server.size(); ++i) {
 	        Socket socket(_server.at(i));
         int serverFD = socket.connect();
@@ -44,19 +43,29 @@ void WebServer::_launch()
 				std::time(&now);
 				long diff = 0;
 
-				if (_poll.getFd(i) != _server[i].getSocketFD()){
+				if (i > _server.size()){
 					diff = std::difftime(now, _keepAlive[this->_poll.getSocket(i).getClientFd()]);
 				}
 				if (this->_poll.checkEvent(i, diff, _timeout))
 				{
 					Socket event = this->_poll.getSocket(i);
-					if (_poll.getFd(i) == _server[i].getSocketFD())
+					struct pollfd pollEvent = this->_poll.getEvent()[i];
+					if (pollEvent.revents & POLLHUP){
+						std::cout << "Client on fd: " << event.getClientFd() << " disconnected hang up" << std::endl;
+						_keepAlive.erase(event.getClientFd());
+						_poll.removeEventFd(event);
+					}
+					else if (pollEvent.revents & POLLERR){
+						std::cout << "Client on fd: " << event.getClientFd() << " disconnected error" << std::endl;
+						_keepAlive.erase(event.getClientFd());
+						_poll.removeEventFd(event);
+					}
+					else if (i < _server.size())
 					{
-						event.accept(_server[i].getSocketFD());
+						if (event.accept(_server[i].getSocketFD()) < 0)
+							continue;
 						std::cout << "New connection on fd: " << event.getClientFd() << std::endl;
-						if (_keepAlive.find(event.getClientFd()) == _keepAlive.end()) {
-							_keepAlive.insert(std::pair<int, time_t>(event.getClientFd(), now));
-						}
+						_keepAlive[event.getClientFd()] =  now;
 						if (fcntl(event.getClientFd(), F_SETFL, O_NONBLOCK) < 0)
 							std::__throw_runtime_error("Error set nonblocking I/O");
 						_poll.addFd(event, event.getClientFd());
@@ -91,41 +100,29 @@ void WebServer::_respond(Socket &client, int clientRes)
 
 	if (_timeout == true) {
 		_timeout = false;
-		if (_reqs[client.getClientFd()].getConnection().find("keep-alive") != std::string::npos) {
-			std::cout << "Response on Fd: " << client.getClientFd();
-			req.setStatusCode("204");
-			req.setConnection("Connection: close\r\n");
-			Response res(req);
-			client.send(res._response);
-			_keepAlive.erase(client.getClientFd());
-			_reqs.erase(client.getClientFd());
-			_poll.removeEventFd(client);
-			return ;
-		}
-		else{
-			std::cout << "Response on Fd " << client.getClientFd();
-			req.setStatusCode("408");
-			req.setConnection("Connection: close\r\n");
-			Response res(req);
-			_reqs.erase(client.getClientFd());
-			_keepAlive.erase(client.getClientFd());
-			client.send(res._response);
-			_poll.removeEventFd(client);
-			return ;
-		}
+		std::cout << "Client on fd: " << client.getClientFd() << " timeout" << std::endl;
+		_keepAlive.erase(client.getClientFd());
+		_poll.removeEventFd(client);
+		return ;
 	}
 	std::cout << "Request of FD: " << client.getClientFd();
 	std::cout << SEPARATOR << _rawRequest.substr(0, _rawRequest.find("\r\n\r\n")) << SEPARATOR;
 	req.parse(_rawRequest, clientRes);
-	if (_reqs.find(client.getClientFd()) == _reqs.end()){
-		_reqs[client.getClientFd()] = req;
-	}
 	if ((req.getIsParsed() == true || req.getStatusCode().empty() == false)) {
 		Response res(req);
+		int sendRes;
 
 		std::cout << "Response to connection on Fd " << client.getClientFd();
-		_reqs.erase(client.getClientFd());
-		client.send(res._response);
+		sendRes = client.send(res._response);
+		if (res.getStatusCode() >= 400 || sendRes < 0) {
+			_poll.removeEventFd(client);
+			_keepAlive.erase(client.getClientFd());
+			std::cout << "Client on Fd: " << client.getClientFd();
+			if (sendRes < 0) 
+				std::cout << " send error " << std::endl;
+			else
+				std::cout << " removed" << std::endl;
+		}
 		_rawRequest = "";
 	}
 }

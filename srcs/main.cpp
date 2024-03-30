@@ -8,8 +8,8 @@ int main(int argc, char *argv[]) {    if (argc != 2) {
         return 1;
     }
     try {
-        WebServer webServer;
-        webServer.init(argv);
+        WebServer webServer(ServerConfig::fromFile(argv[1]));
+        webServer.init();
     } catch (const std::exception &e) {
         std::cerr << e.what() << '\n';
         return 1;

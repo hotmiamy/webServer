@@ -22,6 +22,7 @@ class Poll
 		void removeEventFd(const Socket &socket);
 		void clearAllFds();
 
+		const std::vector<pollfd> &getEvent() const;
 		std::size_t getSize();
 		const Socket &getSocket(size_t inx) const;
 		const int &getFd(int inx) const;

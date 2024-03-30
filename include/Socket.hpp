@@ -24,9 +24,9 @@ class Socket {
     const static int ConnectionRequests = 10;
 
     int connect();
-    void accept(int serverFd);
+    int accept(int serverFd);
 	int read(std::string &request);
-	void send(const std::string &response);
+	int send(const std::string &response);
 
 
     int getServerFD() const;

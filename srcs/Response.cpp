@@ -27,18 +27,18 @@ void Response::checkError()
 {
 	_response = HTTP_VERSION;
 	if (_request.getStatusCode().empty() == false)
-		throw std::runtime_error(ResponseUtils::StatusCodes(_request.getStatusCode()));
+		throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode(_request.getStatusCode())));
 	if (_request.getLocation().empty() == false){
 		if (ResponseUtils::IsMethodAllowed(_request.getLocation(), _request.getMethod()) == false)
-			throw std::runtime_error(ResponseUtils::StatusCodes("405"));
+			throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode("405")));
 		_serverRoot = _request.getLocation().indexFile;
 	}
 	if (_request.getHasBodyLimit() == true) {
 		if (_request.getBody().empty() == false && _request.getBody().length() > _request.getMaxBodySize())
-			throw std::runtime_error(ResponseUtils::StatusCodes("413"));
+			throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode("413")));
 	}
 	if (!_serverRoot.empty() && !ServerUtils::fileExists(_serverRoot)) {
-		throw std::runtime_error(ResponseUtils::StatusCodes("404"));
+		throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode("404")));
 	}
 }
 void Response::generateResponse() {
@@ -77,15 +77,15 @@ void Response::HandleGET() {
         Cgi cgi = Cgi(_request, "GET");
         cgi.execute();
         responseBody << cgi.getOut();
-		responseHead << ResponseUtils::StatusCodes("200");
+		responseHead << ResponseUtils::StatusCodes(setStatusCode("200"));
 		responseHead << "Content-Format: "
 					<< ReqParsUtils::ContentFormat("txt") << "\r\n";
     } else {
         file.open(_serverRoot.c_str(), std::ios::binary);
         if (file.fail())
-            throw std::runtime_error(ResponseUtils::StatusCodes("500"));
+            throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode("500")));
         responseBody << file.rdbuf();
-		responseHead << ResponseUtils::StatusCodes("200");
+		responseHead << ResponseUtils::StatusCodes(setStatusCode("200"));
 		responseHead << "Content-Format: "
 					<< ReqParsUtils::ContentFormat(fileExtension) << "\r\n";
     }
@@ -107,19 +107,19 @@ void Response::HandlePOST() {
         cgi.execute();
         std::string fileExtension = ServerUtils::getExtension(_serverRoot);
         responseBody << cgi.getOut();
-		responseHead << ResponseUtils::StatusCodes("200");
+		responseHead << ResponseUtils::StatusCodes(setStatusCode("200"));
 		responseHead << "Content-Format: "
                  << ReqParsUtils::ContentFormat(fileExtension) << "\r\n";
     	responseHead << "Content-Length: " << responseBody.str().size() << "\r\n";
     } else {
         _serverRoot += ResponseUtils::genFileName(_request);
 		if (ServerUtils::fileExists(_serverRoot) == true)
-			throw std::runtime_error(ResponseUtils::StatusCodes("409"));
+			throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode("409")));
 		else 
-			responseHead << ResponseUtils::StatusCodes("201");
+			responseHead << ResponseUtils::StatusCodes(setStatusCode("201"));
 		file.open(_serverRoot.c_str(), std::ios::out | std::ios::binary);
 		if (!file)
-			throw std::runtime_error(ResponseUtils::StatusCodes("500"));
+			throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode("500")));
 		else {
 			file.write(_request.getBody().c_str(), _request.getBody().size());
 			file.close();
@@ -136,14 +136,24 @@ void Response::HandleDELETE() {
 	if (_request.getQueryUrl().empty() == false)
 		_serverRoot += _request.getQueryUrl().substr(_request.getQueryUrl().find("=") + 1);
     if (ServerUtils::isDirectory(_serverRoot))
-        throw std::runtime_error(ResponseUtils::StatusCodes("405"));
+        throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode("405")));
     else if (ServerUtils::isFileReadable(_serverRoot) == false)
-        throw std::runtime_error(ResponseUtils::StatusCodes("403"));
+        throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode("403")));
     else {
         std::remove(_serverRoot.c_str());
-        _response += ResponseUtils::StatusCodes("200");
+        _response += ResponseUtils::StatusCodes(setStatusCode("200"));
         _response += "Date: " + ResponseUtils::getCurrDate() + "\r\n";
         _response += "Server: WebServer\r\n";
         _response += "\r\n";
     }
+}
+
+std::string Response::setStatusCode(std::string code) {
+	std::istringstream iss(code);
+	iss >> _statusCode;
+	return code;
+}
+
+const std::size_t &Response::getStatusCode() const {
+	return _statusCode;
 }

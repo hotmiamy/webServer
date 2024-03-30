@@ -50,6 +50,8 @@ int Socket::_setup() {
     _checkConnectionThrow(bind(serverFD, _res->ai_addr, _res->ai_addrlen),
                           std::runtime_error("'bind' failed"));
 
+	freeaddrinfo(_res);
+
     _checkConnectionThrow(listen(serverFD, Socket::ConnectionRequests),
                           std::runtime_error("'listen' failed"));
 	return serverFD;
@@ -59,16 +61,19 @@ int Socket::connect() {
 	return _setup();
 }
 
-void Socket::accept(int serverFD) {
+int Socket::accept(int serverFD) {
     sockaddr_storage clientAddr;
     socklen_t clientAddrSize = sizeof(clientAddr);
     bzero(&clientAddr, clientAddrSize);
 
+	
+	_serverFD = serverFD;
     _clientFd =
         ::accept(serverFD, (struct sockaddr *)&clientAddr, &clientAddrSize);
 
-    _checkConnectionThrow(_clientFd, std::runtime_error("'accept' failed"));
-	_serverFD = serverFD;
+	if (_clientFd == -1)
+		return _clientFd;
+	return _clientFd;
 }
 
 int Socket::read(std::string &request) {
@@ -116,7 +121,7 @@ int Socket::read(std::string &request) {
 	return ((bytesread <= 0) ? bytesread : totalbytesread);
 }
 
-void Socket::send(const std::string &response) {
+int Socket::send(const std::string &response) {
 
 	int bytesreturned, totalbytes = 0;
 	std::cout << SEPARATOR << response.substr(0, response.find("\r\n\r\n")) << SEPARATOR;
@@ -124,11 +129,12 @@ void Socket::send(const std::string &response) {
 	{
 		bytesreturned = ::send(this->_clientFd, response.c_str(), response.size(), 0);
 		if (bytesreturned < 0)
-			throw std::runtime_error("Failed to send data");
+			return bytesreturned;
 		if (bytesreturned == 0)
 			break;
 		totalbytes += bytesreturned;
 	}
+	return (totalbytes);
 }
 
 template <typename ExceptionType>

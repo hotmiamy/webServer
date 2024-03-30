@@ -1,6 +1,6 @@
 #include "Poll.hpp"
 
-Poll::Poll() {}
+Poll::Poll() : _pollfds(), _sockets() {}
 
 Poll::~Poll() {}
 
@@ -10,7 +10,7 @@ void Poll::addFd(const Socket &socket,const int &fd)
 
 	_sockets.push_back(socket);
 	pfd.fd = fd;
-	pfd.events = POLLIN | POLLOUT;
+	pfd.events = POLLIN | POLLOUT | POLLERR | POLLHUP;
 	pfd.revents = 0;
 	this->_pollfds.push_back(pfd);
 }
@@ -46,12 +46,18 @@ bool Poll::checkEvent(size_t inx, long diff, bool &timeout)
 		timeout = true;
 		return (true);
 	}
+	if (this->_pollfds[inx].revents & POLLHUP)
+		return (true);
+	if (this->_pollfds[inx].revents & POLLERR)
+		return (true);
 	if (this->_pollfds[inx].revents & POLLIN)
 		return (true);
 	if (this->_pollfds[inx].revents & POLLOUT)	
 		return (true);
 	return (false);
 }
+
+const std::vector<pollfd> &Poll::getEvent() const {return (this->_pollfds);}
 
 std::size_t Poll::getSize() {return (this->_pollfds.size());}
 
