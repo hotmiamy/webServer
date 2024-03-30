@@ -4,24 +4,26 @@ Response::Response() {}
 
 Response::Response(ReqParsing request)
     : _request(request), _serverRoot(request.getRoot() + request.getUrl()) {
-    try {
-        _checkError();
-        _generateResponse();
-    } catch (const std::exception& e) {
-        response = HTTP_VERSION;
-        response += e.what();
-        if (request.getConnection().find("close") != std::string::npos)
-            response += _request.getConnection();
-        response += "Date: " + ResponseUtils::getCurrDate() + "\r\n";
-        response += "Server: WebServer\r\n";
-        response += "\r\n\r\n";
-    }
+	try
+	{
+		checkError();
+		generateResponse();
+	}
+	catch(const std::exception& e)
+	{
+		_response = HTTP_VERSION;
+		_response += e.what();
+		_response += _request.getConnection();
+		_response += "Date: " + ResponseUtils::getCurrDate() + "\r\n";
+    	_response += "Server: WebServer\r\n";
+    	_response += "\r\n\r\n";
+	}
 }
 
 Response::~Response() {}
 
-void Response::_checkError() {
-    response = HTTP_VERSION;
+void Response::checkError() {
+    _response = HTTP_VERSION;
     if (_request.getStatusCode().empty() == false)
         throw std::runtime_error(ResponseUtils::StatusCodes(
             setStatusCode(_request.getStatusCode())));
@@ -44,7 +46,7 @@ void Response::_checkError() {
     }
 }
 
-void Response::_generateResponse() {
+void Response::generateResponse() {
     if (_request.getMethod() == "GET") {
         return _HandleGET();
     }
@@ -68,7 +70,7 @@ void Response::_HandleGET() {
         file.open(_request.getUrl().c_str(), std::ios::binary);
         fullResponse << ResponseUtils::StatusCodes(code)
                      << "Location: " << redirectedURL << "\r\n\r\n";
-        response += fullResponse.str();
+        _response += fullResponse.str();
         return;
     }
 
@@ -101,13 +103,12 @@ void Response::_HandleGET() {
                          << "\r\n";
         }
     }
-
     responseHead << "Content-Length: " << responseBody.str().size() << "\r\n";
     responseHead << "Date: " << ResponseUtils::getCurrDate() << "\r\n";
     responseHead << "Server: WebServer\r\n";
     responseHead << "\r\n";
     fullResponse << responseHead.str() << responseBody.str();
-    response += fullResponse.str();
+    _response += fullResponse.str();
 }
 
 void Response::_HandlePOST() {
@@ -125,6 +126,8 @@ void Response::_HandlePOST() {
         responseHead << "Content-Length: " << responseBody.str().size()
                      << "\r\n";
     } else {
+		if (_request.getBody().empty()== true)
+			throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode("204")));
         _serverRoot += ResponseUtils::genFileName(_request);
         if (ServerUtils::fileExists(_serverRoot) == true) {
             throw std::runtime_error(ResponseUtils::StatusCodes("409"));
@@ -141,7 +144,7 @@ void Response::_HandlePOST() {
     responseHead << "Server: WebServer\r\n";
     responseHead << "\r\n";
     fullResponse << responseHead.str() << responseBody.str();
-    response += fullResponse.str();
+    _response += fullResponse.str();
 }
 
 void Response::_HandleDELETE() {
@@ -159,10 +162,10 @@ void Response::_HandleDELETE() {
         throw std::runtime_error(ResponseUtils::StatusCodes("403"));
     }
     std::remove(_serverRoot.c_str());
-    response += ResponseUtils::StatusCodes("200");
-    response += "Date: " + ResponseUtils::getCurrDate() + "\r\n";
-    response += "Server: WebServer\r\n";
-    response += "\r\n";
+    _response += ResponseUtils::StatusCodes("200");
+    _response += "Date: " + ResponseUtils::getCurrDate() + "\r\n";
+    _response += "Server: WebServer\r\n";
+    _response += "\r\n";
 }
 
 const std::string Response::_handleAutoindex(const std::string& path) {

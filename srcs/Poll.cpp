@@ -71,6 +71,7 @@ void Poll::clearAllFds()
 		close(this->_pollfds[i].fd);
 	}
 	this->_pollfds.clear();
+	this->_sockets.clear();
 }
 
 template <typename ExceptionType>

@@ -12,7 +12,7 @@
 
 class Response {
    public:
-    std::string response;
+    std::string _response;
     Response();
     Response(ReqParsing request);
     ~Response();
@@ -24,8 +24,8 @@ class Response {
     std::string _serverRoot;
     std::size_t _statusCode;
 
-    void _checkError();
-    void _generateResponse();
+    void checkError();
+    void generateResponse();
     void _HandleGET();
     void _HandlePOST();
     void _HandleDELETE();

@@ -127,23 +127,23 @@ void ReqParsing::parseBody(const std::string &reqRaw) {
             std::size_t chunkSize = 0;
             ss >> std::hex >> chunkSize;
 
-            unparsedBody.erase(0, chunkSizeStr.size() + 2);
-            _body.append(unparsedBody.substr(0, chunkSize));
-            unparsedBody.erase(0, chunkSize + 2);
-            if (unparsedBody.find("\r\n0\r\n") == 0 ||
-                unparsedBody.find("0") == 0 || chunkSize == 0) {
-                _bodyParsed = true;
-                break;
-            }
-        }
-    } else if (_contentLength > 0) {
-        if (unparsedBody.size() > _maxBodySize) throw std::runtime_error("413");
+			if (unparsedBody.find("\r\n0\r\n") == 0 || unparsedBody.find("0") == 0 || chunkSize == 0){
+				_bodyParsed = true;
+				break;
+			}
+			unparsedBody.erase(0, chunkSizeStr.size() + 2);
+			_body.append(unparsedBody.substr(0, chunkSize));
+			unparsedBody.erase(0, chunkSize + 2);
+		}
+	}
+	else if (_contentLength > 0){
+		if (unparsedBody.size() > _maxBodySize) throw std::runtime_error("413");
 
-        _body = unparsedBody.substr(0, _contentLength);
-        unparsedBody.erase(0, _contentLength);
-        _bodyParsed = true;
-        return;
-    }
+		_body = unparsedBody.substr(0, _contentLength);
+		unparsedBody.erase(0, _contentLength);
+		_bodyParsed = true;
+		return;
+	}
 }
 
 void ReqParsing::isMultiPart() {

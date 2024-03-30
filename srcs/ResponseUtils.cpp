@@ -98,7 +98,7 @@ std::string genFileName(ReqParsing &req) {
 	if (req.getFileName() != "") {
         return (req.getFileName());
 	}
-	else if (req.getContentType() != ""){
+	else if (req.getContentType() != "" && req.getContentType().find("x-www-form-urlencoded") == std::string::npos) {
 		std::string fileExtension = req.getContentType();
 		return("file." + fileExtension.substr(fileExtension.find("/") + 1));
     } else {
