@@ -69,16 +69,26 @@ const std::string getAbsPath(const std::string &ex) {
 std::vector<std::pair<std::string, std::string> > getDefaultErrorPages() {
     std::vector<std::pair<std::string, std::string> > defaultErrorPages;
 
-    defaultErrorPages.push_back(
-        std::make_pair("404", "./server_root/error_pages/error404.html"));
+    std::string errorPagesDir = "./server_root/error_pages/";
 
-    for (std::vector<std::pair<std::string, std::string> >::const_iterator it =
-             defaultErrorPages.begin();
-         it != defaultErrorPages.end(); ++it) {
-        if (!isFileReadable(it->second)) {
-            throw std::runtime_error("no such file: " + it->second);
+    DIR *dir = opendir(errorPagesDir.c_str());
+    if (!dir) {
+        throw std::runtime_error("error opening " + errorPagesDir);
+    }
+
+    dirent *entry;
+    while ((entry = readdir(dir))) {
+        std::string fileName = entry->d_name;
+        if (ServerUtils::getExtension(fileName) == "html") {
+            std::string errorCode = fileName.substr(0, fileName.length() - 5),
+                        filePath = errorPagesDir + fileName;
+            if (!isFileReadable(filePath)) {
+                throw std::runtime_error("no such file: " + filePath);
+            }
+            defaultErrorPages.push_back(std::make_pair(errorCode, filePath));
         }
     }
+    closedir(dir);
 
     return defaultErrorPages;
 }
