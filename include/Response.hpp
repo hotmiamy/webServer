@@ -12,9 +12,11 @@ class Response {
 	private:
     	ReqParsing _request;
     	std::string _serverRoot;
+		std::size_t	_statusCode;
 
 	public:
     	std::string _response;
+
 	public:
 		Response();
 		Response(ReqParsing request);
@@ -25,5 +27,8 @@ class Response {
 		void HandleGET();
 		void HandlePOST();
 		void HandleDELETE();
-		void errorResponse(std::string error);
+		
+		std::string setStatusCode(std::string code);
+
+		const std::size_t &getStatusCode() const;
 };

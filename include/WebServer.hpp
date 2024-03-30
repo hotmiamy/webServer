@@ -18,16 +18,16 @@
 
 class WebServer {
    public:
-    WebServer();
+	WebServer();
+    WebServer(ServerVec server);
     WebServer(const WebServer &);
     WebServer &operator=(const WebServer &);
     ~WebServer();
 
-    void	init(char **argv);
+    void	init();
 
    private:
 	std::map<int, time_t> _keepAlive;
-	std::map<int, ReqParsing> _reqs;
 	std::string _rawRequest;
 	ServerVec _server;
 	bool	_timeout;
