@@ -38,4 +38,4 @@ objdir
 .cache/
 webserv
 
-server_root/*/**/*/
+server_root/*/**/*/*/*
