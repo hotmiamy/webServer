@@ -25,6 +25,7 @@ class WebServer {
     ~WebServer();
 
     void	init();
+	void	stop();
 
    private:
 	std::map<int, time_t> _keepAlive;
@@ -34,9 +35,9 @@ class WebServer {
 	Poll	_poll;
 
 
-    void	_launch();
-    int		_read(Socket &socket);
-    void	_respond(Socket &client, int clientRes);
+    void	launch();
+    int		read(Socket &socket);
+    void	respond(Socket &client, int clientRes);
 
 	const ServerConfig &getCurrentServer(const Socket &socket);
 };

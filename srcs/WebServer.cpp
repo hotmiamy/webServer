@@ -27,10 +27,10 @@ void WebServer::init() {
 		this->_poll.addFd(socket, serverFD);
 		_server[i].setSocketFD(serverFD);
     }
-    _launch();
+    launch();
 }
 
-void WebServer::_launch()
+void WebServer::launch()
 {
 	while (true)
 	{
@@ -43,7 +43,7 @@ void WebServer::_launch()
 				std::time(&now);
 				long diff = 0;
 
-				if (i > _server.size()){
+				if (i >= _server.size()){
 					diff = std::difftime(now, _keepAlive[this->_poll.getSocket(i).getClientFd()]);
 				}
 				if (this->_poll.checkEvent(i, diff, _timeout))
@@ -71,9 +71,9 @@ void WebServer::_launch()
 						_poll.addFd(event, event.getClientFd());
 					}
 					else{
-        				int clientRes = _read(event);
+        				int clientRes = event.read(_rawRequest);
 						if (clientRes > 0 || _timeout == true){
-							_respond(event, clientRes);
+							respond(event, clientRes);
 						}
 					}
 				}
@@ -86,12 +86,7 @@ void WebServer::_launch()
 	}
 }
 
-int WebServer::_read(Socket &client)
-{
-	return(client.read(_rawRequest));
-}
-
-void WebServer::_respond(Socket &client, int clientRes)
+void WebServer::respond(Socket &client, int clientRes)
 {
 	std::time_t now;
 	std::time(&now);
@@ -135,4 +130,9 @@ const ServerConfig &WebServer::getCurrentServer(const Socket &socket)
 		}
 	}
 	throw std::runtime_error("Socket not found");
+}
+
+void WebServer::stop()
+{
+	_poll.clearAllFds();
 }

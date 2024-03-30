@@ -13,8 +13,7 @@ Response::Response(ReqParsing request)
 	{
 		_response = HTTP_VERSION;
 		_response += e.what();
-		if (request.getConnection().find("close") != std::string::npos)
-			_response += _request.getConnection();
+		_response += _request.getConnection();
 		_response += "Date: " + ResponseUtils::getCurrDate() + "\r\n";
     	_response += "Server: WebServer\r\n";
     	_response += "\r\n\r\n";
@@ -89,7 +88,6 @@ void Response::HandleGET() {
 		responseHead << "Content-Format: "
 					<< ReqParsUtils::ContentFormat(fileExtension) << "\r\n";
     }
-    
     responseHead << "Content-Length: " << responseBody.str().size() << "\r\n";
     responseHead << "Date: " << ResponseUtils::getCurrDate() << "\r\n";
     responseHead << "Server: WebServer\r\n";
@@ -112,6 +110,8 @@ void Response::HandlePOST() {
                  << ReqParsUtils::ContentFormat(fileExtension) << "\r\n";
     	responseHead << "Content-Length: " << responseBody.str().size() << "\r\n";
     } else {
+		if (_request.getBody().empty()== true)
+			throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode("204")));
         _serverRoot += ResponseUtils::genFileName(_request);
 		if (ServerUtils::fileExists(_serverRoot) == true)
 			throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode("409")));
