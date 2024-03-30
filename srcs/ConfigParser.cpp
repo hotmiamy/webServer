@@ -125,6 +125,9 @@ ServerConfig serverBlockToServerConfig(std::string &block) {
     }
 
     ServerConfig cfg = handler.getCfg();
+    if (cfg.getErrorPages().size() == 0) {
+        cfg.setErrorPages(ServerUtils::getDefaultErrorPages());
+    }
     if (cfg.good()) {
         return cfg;
     }

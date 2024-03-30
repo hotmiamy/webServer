@@ -12,6 +12,8 @@ const std::string DirectiveHandler::ERR_ALLOWED_METHODS =
     "error at 'allowed_methods' directive: ";
 const std::string DirectiveHandler::ERR_MAX_BODY_SIZE =
     "error at 'client_max_body_size' directive: ";
+const std::string DirectiveHandler::ERR_RETURN =
+    "error at 'return' directive: ";
 const std::string DirectiveHandler::ERR_ROOT = "error at 'root' directive: ";
 const std::string DirectiveHandler::ERR_CGI = "error at 'cgi' directive: ";
 
@@ -120,6 +122,12 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss) {
             std::string aux;
             lineIss >> aux;
             _handleCgi(lineIss, location);
+            continue;
+        }
+        if (line.find("return") != std::string::npos) {
+            std::string aux;
+            lineIss >> aux;
+            _handleReturn(lineIss, location);
         }
     }
     _cfg.addLocation(location.path, location);
@@ -245,6 +253,28 @@ void DirectiveHandler::_handleCgi(std::istringstream &iss, Location &location) {
             ERR_CGI + "there should be one and only one executable specified");
     }
     location.cgi = true;
+}
+
+void DirectiveHandler::_handleReturn(std::istringstream &iss,
+                                     Location &location) {
+    if (location.redirection.second != "") {
+        throw std::runtime_error(ERR_RETURN + "was already defined");
+    }
+    std::string code, redirect;
+    if (!(iss >> code) || !ServerUtils::withinRange(ServerUtils::stoi(code),
+                                                    std::make_pair(300, 399))) {
+        throw std::runtime_error(
+            ERR_RETURN + "first argument should be a numeric value (30x)");
+    }
+    if (!(iss >> redirect)) {
+        throw std::runtime_error(ERR_RETURN + "an URL should be specified");
+    }
+    if (iss.rdbuf()->in_avail() != 0) {
+        throw std::runtime_error("this directive takes only two arguments");
+    }
+    std::stringstream ss;
+    ss << code;
+    location.redirection = std::make_pair(ss.str(), redirect);
 }
 
 void DirectiveHandler::_handleClientMaxBodySize(std::istringstream &iss) {

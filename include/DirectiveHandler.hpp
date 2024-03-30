@@ -7,6 +7,7 @@
 #include <limits>
 #include <map>
 #include <sstream>
+#include <utility>
 
 #include "ServerConfig.hpp"
 #include "ServerUtils.hpp"
@@ -30,6 +31,7 @@ class DirectiveHandler {
     static const std::string ERR_ROOT;
     static const std::string ERR_CGI;
     static const std::string ERR_MAX_BODY_SIZE;
+    static const std::string ERR_RETURN;
 
     ServerConfig _cfg;
     std::map<std::string, DirectiveFunction> _directiveMap;
@@ -39,6 +41,7 @@ class DirectiveHandler {
     void _handleErrorPageDirective(std::istringstream &);
     void _handleRoot(std::istringstream &);
     void _handleCgi(std::istringstream &, Location &);
+    void _handleReturn(std::istringstream &, Location &);
     void _handleLocationDirective(std::istringstream &);
     void _handleAllowedMethodsDirective(std::istringstream &, Location &);
     void _handleIndexFile(std::istringstream &, Location &);

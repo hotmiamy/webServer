@@ -79,6 +79,15 @@ void ServerConfig::setClientMaxBodySize(const std::string &clientMaxBodySize) {
     _clientMaxBodySize = clientMaxBodySize;
 }
 
+void ServerConfig::setErrorPages(
+    const std::vector<std::pair<std::string, std::string> > &v) {
+    for (std::vector<std::pair<std::string, std::string> >::const_iterator it =
+             v.begin();
+         it != v.end(); ++it) {
+        _errorPages.insert(std::make_pair(it->first, it->second));
+    }
+}
+
 bool ServerConfig::good() const {
     return !_port.empty() && !_root.empty() && !_serverName.empty() &&
            !_errorPages.empty() && !_locations.empty();
