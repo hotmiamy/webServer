@@ -7,28 +7,8 @@
 </head>
 <body>
     <h1>Teste de Método POST com Encoding Chunked</h1>
-    <textarea id="dados" rows="4" cols="50"></textarea><br><br>
-    <button onclick="enviarDados()">Enviar</button>
-
-    <script>
-        function enviarDados() {
-            var dados = document.getElementById("dados").value;
-
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", "http://localhost:8080/post_files/", true); // URL de teste (pode ser substituída)
-            xhr.setRequestHeader("Content-Type", "text/plain");
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === XMLHttpRequest.DONE) {
-                    if (xhr.status === 200) {
-                        alert("Dados enviados com sucesso!");
-                        console.log(xhr.responseText);
-                    } else {
-                        alert("Ocorreu um erro ao enviar os dados.");
-                    }
-                }
-            };
-            xhr.send(dados);
-        }
-    </script>
+    <p>Bem para Testar isso você tera q usar o terminal, digite o seguinte código nele: </p>
+	<p><code>"curl -X POST   --data-binary "Texto ou arquivo"   --header "Transfer-Encoding: chunked" --header "Content-Type: " http://localhost:8080/post_files/"</code></p>
+	<p>Ps: para mandar arquivo colocar '@' no começo; se não mandar Content-Type ele vai definir como arquivo comum sem extenção.</p>
 </body>
 </html>

@@ -4,36 +4,43 @@ Response::Response() {}
 
 Response::Response(ReqParsing request)
     : _request(request), _serverRoot(request.getRoot() + request.getUrl()) {
-    checkError();
+	try
+	{
+		checkError();
+		generateResponse();
+	}
+	catch(const std::exception& e)
+	{
+		_response = HTTP_VERSION;
+		_response += e.what();
+		if (request.getConnection().find("close") != std::string::npos)
+			_response += _request.getConnection();
+		_response += "Date: " + ResponseUtils::getCurrDate() + "\r\n";
+    	_response += "Server: WebServer\r\n";
+    	_response += "\r\n\r\n";
+	}
 }
 
 Response::~Response() {}
 
-void Response::checkError() {
-    _response = HTTP_VERSION;
-    if (!(_request.getErrorCode().empty())) {
-        return errorResponse(
-            ResponseUtils::StatusCodes(_request.getErrorCode()));
-    }
-    if (!(_request.getLocation().empty())) {
-        if (!(ResponseUtils::IsMethodAllowed(_request.getLocation(),
-                                             _request.getMethod()))) {
-            return errorResponse(ResponseUtils::StatusCodes("405"));
-        }
-        _serverRoot = _request.getLocation().indexFile;
-    }
-    if (_request.getHasBodyLimit()) {
-        if (!_request.getBody().empty() &&
-            _request.getBody().length() > _request.getMaxBodySize()) {
-            return errorResponse(ResponseUtils::StatusCodes("413"));
-        }
-    }
-    if (!_serverRoot.empty() && !ServerUtils::fileExists(_serverRoot)) {
-        return errorResponse(ResponseUtils::StatusCodes("404"));
-    }
-    generateResponse();
+void Response::checkError()
+{
+	_response = HTTP_VERSION;
+	if (_request.getStatusCode().empty() == false)
+		throw std::runtime_error(ResponseUtils::StatusCodes(_request.getStatusCode()));
+	if (_request.getLocation().empty() == false){
+		if (ResponseUtils::IsMethodAllowed(_request.getLocation(), _request.getMethod()) == false)
+			throw std::runtime_error(ResponseUtils::StatusCodes("405"));
+		_serverRoot = _request.getLocation().indexFile;
+	}
+	if (_request.getHasBodyLimit() == true) {
+		if (_request.getBody().empty() == false && _request.getBody().length() > _request.getMaxBodySize())
+			throw std::runtime_error(ResponseUtils::StatusCodes("413"));
+	}
+	if (!_serverRoot.empty() && !ServerUtils::fileExists(_serverRoot)) {
+		throw std::runtime_error(ResponseUtils::StatusCodes("404"));
+	}
 }
-
 void Response::generateResponse() {
     if (_request.getMethod() == "GET") {
         return HandleGET();
@@ -44,7 +51,6 @@ void Response::generateResponse() {
     if (_request.getMethod() == "DELETE") {
         return HandleDELETE();
     }
-    errorResponse(ResponseUtils::StatusCodes("405"));
 }
 
 void Response::HandleGET() {
@@ -67,21 +73,23 @@ void Response::HandleGET() {
     //     return;
     // }
 
-    if (_request.getUrl().find("script.py") != std::string::npos) {
+    if (_request.getUrl().find(".py") != std::string::npos) {
         Cgi cgi = Cgi(_request, "GET");
         cgi.execute();
         responseBody << cgi.getOut();
+		responseHead << ResponseUtils::StatusCodes("200");
+		responseHead << "Content-Format: "
+					<< ReqParsUtils::ContentFormat("txt") << "\r\n";
     } else {
         file.open(_serverRoot.c_str(), std::ios::binary);
-        if (file.fail()) {
-            return errorResponse(ResponseUtils::StatusCodes("500"));
-        }
+        if (file.fail())
+            throw std::runtime_error(ResponseUtils::StatusCodes("500"));
         responseBody << file.rdbuf();
+		responseHead << ResponseUtils::StatusCodes("200");
+		responseHead << "Content-Format: "
+					<< ReqParsUtils::ContentFormat(fileExtension) << "\r\n";
     }
-
-    responseHead << ResponseUtils::StatusCodes("200");
-    responseHead << "Content-Format: "
-                 << ReqParsUtils::ContentFormat(fileExtension) << "\r\n";
+    
     responseHead << "Content-Length: " << responseBody.str().size() << "\r\n";
     responseHead << "Date: " << ResponseUtils::getCurrDate() << "\r\n";
     responseHead << "Server: WebServer\r\n";
@@ -99,38 +107,38 @@ void Response::HandlePOST() {
         cgi.execute();
         std::string fileExtension = ServerUtils::getExtension(_serverRoot);
         responseBody << cgi.getOut();
-        responseHead << ResponseUtils::StatusCodes("200");
-        responseHead << "Content-Format: "
-                     << ReqParsUtils::ContentFormat(fileExtension) << "\r\n";
-        responseHead << "Content-Length: " << responseBody.str().size()
-                     << "\r\n";
+		responseHead << ResponseUtils::StatusCodes("200");
+		responseHead << "Content-Format: "
+                 << ReqParsUtils::ContentFormat(fileExtension) << "\r\n";
+    	responseHead << "Content-Length: " << responseBody.str().size() << "\r\n";
     } else {
         _serverRoot += ResponseUtils::genFileName(_request);
-        if (ServerUtils::fileExists(_serverRoot) == true)
-            responseHead << ResponseUtils::StatusCodes("204");
-        else
-            responseHead << ResponseUtils::StatusCodes("201");
-        file.open(_serverRoot.c_str(), std::ios::out | std::ios::binary);
-        if (!file) {
-            errorResponse(ResponseUtils::StatusCodes("500"));
-            return;
-        } else {
-            file.write(_request.getBody().c_str(), _request.getBody().size());
-            file.close();
-        }
-    }
+		if (ServerUtils::fileExists(_serverRoot) == true)
+			throw std::runtime_error(ResponseUtils::StatusCodes("409"));
+		else 
+			responseHead << ResponseUtils::StatusCodes("201");
+		file.open(_serverRoot.c_str(), std::ios::out | std::ios::binary);
+		if (!file)
+			throw std::runtime_error(ResponseUtils::StatusCodes("500"));
+		else {
+			file.write(_request.getBody().c_str(), _request.getBody().size());
+			file.close();
+		}
+	}
     responseHead << "Date: " << ResponseUtils::getCurrDate() << "\r\n";
     responseHead << "Server: WebServer\r\n";
-    responseHead << "\r\n\n";
+    responseHead << "\r\n";
     fullResponse << responseHead.str() << responseBody.str();
     _response += fullResponse.str();
 }
 
 void Response::HandleDELETE() {
+	if (_request.getQueryUrl().empty() == false)
+		_serverRoot += _request.getQueryUrl().substr(_request.getQueryUrl().find("=") + 1);
     if (ServerUtils::isDirectory(_serverRoot))
-        _response += ResponseUtils::StatusCodes("405");
+        throw std::runtime_error(ResponseUtils::StatusCodes("405"));
     else if (ServerUtils::isFileReadable(_serverRoot) == false)
-        _response += ResponseUtils::StatusCodes("403");
+        throw std::runtime_error(ResponseUtils::StatusCodes("403"));
     else {
         std::remove(_serverRoot.c_str());
         _response += ResponseUtils::StatusCodes("200");
@@ -138,11 +146,4 @@ void Response::HandleDELETE() {
         _response += "Server: WebServer\r\n";
         _response += "\r\n";
     }
-}
-
-void Response::errorResponse(std::string error) {
-    _response += error;
-    _response += "Date: " + ResponseUtils::getCurrDate() + "\r\n";
-    _response += "Server: WebServer\r\n";
-    _response += "\r\n\r\n";
 }

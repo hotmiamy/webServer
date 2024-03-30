@@ -1,6 +1,6 @@
 #include "WebServer.hpp"
 
-WebServer::WebServer() :  _newSock(0) {}
+WebServer::WebServer() {}
 
 WebServer::WebServer(const WebServer &other) { *this = other; }
 
@@ -8,114 +8,134 @@ WebServer &WebServer::operator=(const WebServer &other) {
     if (this != &other) 
 	{
 		_poll = other._poll;
-        _newSock = other._newSock;
     }
     return *this;
 }
 
-WebServer::~WebServer() {}
-
-void WebServer::run(const ConfigVec &configs) {
-    SocketVec socketVec;
-
-    for (ConfigVec::size_type i = 0; i < configs.size(); ++i) {
-	        Socket socket(configs.at(i));
-        socket.connect();
-        socketVec.push_back(socket);
-		if (fcntl(socketVec[i].getSocketFd(), F_SETFL, O_NONBLOCK) < 0)
-			std::__throw_runtime_error("Error set nonblocking I/O");
-		this->_poll.addSocketFd(socket);
-    }
-    _launch(socketVec, configs);
+WebServer::~WebServer() {
+	_poll.clearAllFds();
 }
 
-void WebServer::_launch(SocketVec &socketVec, const ConfigVec &conf) 
+void WebServer::init(char **argv) {
+
+	_server = ServerConfig::fromFile(argv[1]);
+
+    for (ServerVec::size_type i = 0; i < _server.size(); ++i) {
+	        Socket socket(_server.at(i));
+        int serverFD = socket.connect();
+		if (fcntl(serverFD, F_SETFL, O_NONBLOCK) < 0)
+			std::__throw_runtime_error("Error set nonblocking I/O");
+		this->_poll.addFd(socket, serverFD);
+		_server[i].setSocketFD(serverFD);
+    }
+    _launch();
+}
+
+void WebServer::_launch()
 {
-	while (true) 
+	while (true)
 	{
-		this->_poll.execute();
-		for (size_t i = 0; i < this->_poll.getSize(); ++i)
+		try
 		{
-			if (this->_poll.checkEvent(i))
+			this->_poll.execute();
+			for (size_t i = 0; i < this->_poll.getSize(); ++i)
 			{
-				if (i < socketVec.size())
+				std::time_t now;
+				std::time(&now);
+				long diff = 0;
+
+				if (_poll.getFd(i) != _server[i].getSocketFD()){
+					diff = std::difftime(now, _keepAlive[this->_poll.getSocket(i).getClientFd()]);
+				}
+				if (this->_poll.checkEvent(i, diff, _timeout))
 				{
-					_newSock = socketVec[i].accept();
-					/* if (fcntl(_newSock, F_SETFL, O_NONBLOCK) < 0)
-						std::__throw_runtime_error("Error set nonblocking I/O"); */
+					Socket event = this->_poll.getSocket(i);
+					if (_poll.getFd(i) == _server[i].getSocketFD())
+					{
+						event.accept(_server[i].getSocketFD());
+						std::cout << "New connection on fd: " << event.getClientFd() << std::endl;
+						if (_keepAlive.find(event.getClientFd()) == _keepAlive.end()) {
+							_keepAlive.insert(std::pair<int, time_t>(event.getClientFd(), now));
+						}
+						if (fcntl(event.getClientFd(), F_SETFL, O_NONBLOCK) < 0)
+							std::__throw_runtime_error("Error set nonblocking I/O");
+						_poll.addFd(event, event.getClientFd());
+					}
+					else{
+        				int clientRes = _read(event);
+						if (clientRes > 0 || _timeout == true){
+							_respond(event, clientRes);
+						}
+					}
 				}
 			}
-        	_read(conf[i]);
 		}
-
-    }
-}
-
-void WebServer::_read(const ServerConfig &conf) 
-{
-	char buff[4094] = {0};
-	int bytesread;
-	std::string Crequest;
-
-	Crequest.clear();
-	while ((bytesread = recv(_newSock, buff, sizeof(buff), 0)) > 0)
-	{
-		Crequest.append(buff, bytesread);
-		if (Crequest.find("Transfer-Encoding: chunked") != std::string::npos){
-			if (Crequest.find("\r\n0\r\n") != std::string::npos)
-				break;
-			else {
-				continue;
-			}
-		}
-		if (Crequest.find("Expect: 100-continue") != std::string::npos) {
-
-            continue;
-        }
-		if (Crequest.find("multipart/form-data") != std::string::npos)
+		catch(const std::exception& e)
 		{
-            std::string boundary;
-            size_t      contentTypePos = Crequest.find("Content-Type: ");
-
-            if (contentTypePos != std::string::npos) {
-                size_t lineEndPos = Crequest.find("\r\n", contentTypePos);
-                if (lineEndPos != std::string::npos) {
-                    std::string contentTypeLine = Crequest.substr(contentTypePos, lineEndPos - contentTypePos);
-                    size_t boundaryPos = contentTypeLine.find("boundary=");
-                    if (boundaryPos != std::string::npos) {
-                        boundary = contentTypeLine.substr(boundaryPos + 9);
-                    }
-                }
-            }
-            std::string terminatingBoundary = "\r\n--" + boundary + "--";
-            if (Crequest.find(terminatingBoundary) != std::string::npos)
-                break;
+			std::cerr << e.what() << '\n';
 		}
- 		else if (Crequest.find("\r\n\r\n") != std::string::npos)
-            break;
-	}
-	if (Crequest.empty() == false){
-		ReqParsing parsing(Crequest, conf);
-		Response response(parsing);
-		_respond(response);
 	}
 }
 
-void WebServer::_respond(Response response)
+int WebServer::_read(Socket &client)
 {
-	int bytesreturned, totalbytes = 0;
-	while ((size_t)totalbytes < response._response.size())
-	{
-		bytesreturned = send(_newSock, response._response.c_str(), response._response.size(), 0);
-		std::cout << response._response << std::endl;
-		if (bytesreturned < 0)
-		{
-			std::cerr << "fail send" << std::endl;
+	return(client.read(_rawRequest));
+}
+
+void WebServer::_respond(Socket &client, int clientRes)
+{
+	std::time_t now;
+	std::time(&now);
+	ReqParsing req(getCurrentServer(client));
+
+
+	if (_timeout == true) {
+		_timeout = false;
+		if (_reqs[client.getClientFd()].getConnection().find("keep-alive") != std::string::npos) {
+			std::cout << "Response on Fd: " << client.getClientFd();
+			req.setStatusCode("204");
+			req.setConnection("Connection: close\r\n");
+			Response res(req);
+			client.send(res._response);
+			_keepAlive.erase(client.getClientFd());
+			_reqs.erase(client.getClientFd());
+			_poll.removeEventFd(client);
 			return ;
 		}
-		if (bytesreturned == 0)
-			break;
-		totalbytes += bytesreturned;
+		else{
+			std::cout << "Response on Fd " << client.getClientFd();
+			req.setStatusCode("408");
+			req.setConnection("Connection: close\r\n");
+			Response res(req);
+			_reqs.erase(client.getClientFd());
+			_keepAlive.erase(client.getClientFd());
+			client.send(res._response);
+			_poll.removeEventFd(client);
+			return ;
+		}
 	}
-    close(_newSock);
+	std::cout << "Request of FD: " << client.getClientFd();
+	std::cout << SEPARATOR << _rawRequest.substr(0, _rawRequest.find("\r\n\r\n")) << SEPARATOR;
+	req.parse(_rawRequest, clientRes);
+	if (_reqs.find(client.getClientFd()) == _reqs.end()){
+		_reqs[client.getClientFd()] = req;
+	}
+	if ((req.getIsParsed() == true || req.getStatusCode().empty() == false)) {
+		Response res(req);
+
+		std::cout << "Response to connection on Fd " << client.getClientFd();
+		_reqs.erase(client.getClientFd());
+		client.send(res._response);
+		_rawRequest = "";
+	}
+}
+
+const ServerConfig &WebServer::getCurrentServer(const Socket &socket)
+{
+	for (size_t i = 0; i < _server.size();  ++i) {
+		if (_server[i].getSocketFD() == socket.getServerFD()) {
+			return _server[i];
+		}
+	}
+	throw std::runtime_error("Socket not found");
 }

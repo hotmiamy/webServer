@@ -25,7 +25,7 @@ Cgi &Cgi::operator=(const Cgi &other) {
 Cgi::~Cgi() {}
 
 void Cgi::_setup() {
-    _script = "./server_root" + _request.getUrl();
+    _script = "server_root" + _request.getUrl();
     _binaryAbsPath = ServerUtils::getAbsPath("python3");
 }
 
@@ -35,8 +35,6 @@ void Cgi::execute() {
     if (pipe(_pipedes) < 0) {
         return std::perror("pipe (cgi)");
     }
-    dup2(_pipedes[0], STDIN_FILENO);
-    dup2(_pipedes[1], STDOUT_FILENO);
 
     if (_httpMethod == "POST") {
         write(_pipedes[1], _request.getBody().c_str(),
@@ -48,6 +46,8 @@ void Cgi::execute() {
         return std::perror("fork (cgi)");
     }
     if (0 == pid) {
+		dup2(_pipedes[0], STDIN_FILENO);
+    	dup2(_pipedes[1], STDOUT_FILENO);
         _childRoutine();
     }
     _parentRoutine(pid);

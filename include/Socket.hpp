@@ -6,13 +6,16 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <iostream>
-
+#include <sstream>
 #include <vector>
 
 #include "ServerConfig.hpp"
 
+#define SEPARATOR "\n-------------------------------------------------\n"
+
 class Socket {
    public:
+	Socket();
     Socket(const Socket &);
     Socket(const ServerConfig &);
     Socket &operator=(const Socket &);
@@ -20,22 +23,24 @@ class Socket {
 
     const static int ConnectionRequests = 10;
 
-    void connect();
-    int accept();
-    int getSocketFd() const;
+    int connect();
+    void accept(int serverFd);
+	int read(std::string &request);
+	void send(const std::string &response);
+
+
+    int getServerFD() const;
+	int getClientFd() const;
 
    private:
-    Socket();
-
-    int _socketFd;
-    int _clientFd;
-    struct addrinfo *_res;
     std::string _serverName;
+    struct addrinfo *_res;
     std::string _port;
+    int _serverFD;
+    int _clientFd;
+	std::size_t _contentLength;
 
-    void _setup();
+    int _setup();
     template <typename ExceptionType>
     void _checkConnectionThrow(int ret, const ExceptionType &);
 };
-
-typedef std::vector<Socket> SocketVec;

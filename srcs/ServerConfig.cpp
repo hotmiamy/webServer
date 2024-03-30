@@ -8,7 +8,8 @@ ServerConfig::ServerConfig()
       _serverName(),
       _errorPages(),
       _locations(),
-      _clientMaxBodySize() {}
+      _clientMaxBodySize(),
+	  _socketFd(){}
 
 ServerConfig::ServerConfig(const ServerConfig &other) { *this = other; }
 
@@ -20,6 +21,7 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
         _errorPages = other._errorPages;
         _locations = other._locations;
         _clientMaxBodySize = other._clientMaxBodySize;
+		_socketFd = other._socketFd;
     }
     return *this;
 }
@@ -42,6 +44,8 @@ const std::string &ServerConfig::getRoot() const { return _root; }
 
 const std::string &ServerConfig::getServerName() const { return _serverName; }
 
+const int &ServerConfig::getSocketFD() const { return _socketFd; }
+
 const std::map<std::string, std::string> &ServerConfig::getErrorPages() const {
     return _errorPages;
 }
@@ -58,9 +62,9 @@ void ServerConfig::setPort(const std::string &port) { _port = port; }
 
 void ServerConfig::setRoot(const std::string &root) { _root = root; }
 
-void ServerConfig::setServer(const std::string &server) {
-    _serverName = server;
-}
+void ServerConfig::setServer(const std::string &server) { _serverName = server; }
+
+void ServerConfig::setSocketFD(const int &socket) { _socketFd = socket; }
 
 void ServerConfig::addErrorPage(const std::string &errorCode,
                                 const std::string &path) {
