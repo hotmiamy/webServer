@@ -9,9 +9,15 @@ struct Location {
     std::string indexFile;
     bool cgi;
     std::pair<std::string, std::string> redirection;
+    bool autoindex;
 
     Location()
-        : path(), allowedMethods(), indexFile(), cgi(false), redirection() {}
+        : path(),
+          allowedMethods(),
+          indexFile(),
+          cgi(false),
+          redirection(),
+          autoindex(false) {}
 
     bool hasPath() const { return !path.empty(); }
     bool hasAllowedMethods() const { return !allowedMethods.empty(); }

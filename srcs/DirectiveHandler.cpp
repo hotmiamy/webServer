@@ -14,6 +14,8 @@ const std::string DirectiveHandler::ERR_MAX_BODY_SIZE =
     "error at 'client_max_body_size' directive: ";
 const std::string DirectiveHandler::ERR_RETURN =
     "error at 'return' directive: ";
+const std::string DirectiveHandler::ERR_AUTOINDEX =
+    "error at 'autoindex' directive: ";
 const std::string DirectiveHandler::ERR_ROOT = "error at 'root' directive: ";
 const std::string DirectiveHandler::ERR_CGI = "error at 'cgi' directive: ";
 
@@ -110,6 +112,10 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss) {
             _resolvePath(lineIss, location);
             continue;
         }
+        if (line.find("autoindex") != std::string::npos) {
+            _handleAutoindex(lineIss, location);
+            continue;
+        }
         if (line.find("index") != std::string::npos) {
             _resolveIndexFile(lineIss, location);
             continue;
@@ -119,14 +125,10 @@ void DirectiveHandler::_handleLocationDirective(std::istringstream &iss) {
             continue;
         }
         if (line.find("cgi") != std::string::npos) {
-            std::string aux;
-            lineIss >> aux;
             _handleCgi(lineIss, location);
             continue;
         }
         if (line.find("return") != std::string::npos) {
-            std::string aux;
-            lineIss >> aux;
             _handleReturn(lineIss, location);
         }
     }
@@ -235,11 +237,13 @@ void DirectiveHandler::_handleRoot(std::istringstream &iss) {
 }
 
 void DirectiveHandler::_handleCgi(std::istringstream &iss, Location &location) {
+    std::string aux, extension, executable;
+    iss >> aux;
+
     if (location.cgi) {
         throw std::runtime_error(ERR_CGI + "cgi was already specified");
     }
 
-    std::string extension, executable;
     if (!(iss >> extension) || extension != ".py") {
         throw std::runtime_error(
             ERR_CGI + "a valid file extension (.py) must be specified");
@@ -257,10 +261,12 @@ void DirectiveHandler::_handleCgi(std::istringstream &iss, Location &location) {
 
 void DirectiveHandler::_handleReturn(std::istringstream &iss,
                                      Location &location) {
+    std::string aux, code, redirect;
+    iss >> aux;
+
     if (location.redirection.second != "") {
-        throw std::runtime_error(ERR_RETURN + "was already defined");
+        throw std::runtime_error(ERR_RETURN + "already defined");
     }
-    std::string code, redirect;
     if (!(iss >> code) || !ServerUtils::withinRange(ServerUtils::stoi(code),
                                                     std::make_pair(300, 399))) {
         throw std::runtime_error(
@@ -275,6 +281,25 @@ void DirectiveHandler::_handleReturn(std::istringstream &iss,
     std::stringstream ss;
     ss << code;
     location.redirection = std::make_pair(ss.str(), redirect);
+}
+
+void DirectiveHandler::_handleAutoindex(std::istringstream &iss,
+                                        Location &location) {
+    if (location.autoindex) {
+        throw std::runtime_error(ERR_AUTOINDEX + "already defined");
+    }
+
+    std::string aux, flag;
+    iss >> aux;
+    if (!(iss >> flag) || flag != "on") {
+        throw std::runtime_error(ERR_AUTOINDEX +
+                                 "argument should be a flag ('on')");
+    }
+    if (iss.rdbuf()->in_avail() != 0) {
+        throw std::runtime_error(ERR_AUTOINDEX +
+                                 "this directive takes only one argument");
+    }
+    location.autoindex = true;
 }
 
 void DirectiveHandler::_handleClientMaxBodySize(std::istringstream &iss) {
