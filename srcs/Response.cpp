@@ -168,12 +168,12 @@ void Response::_HandleDELETE() {
 const std::string Response::_handleAutoindex(const std::string& path) {
     std::stringstream ss;
 
-    ss << "<h1>Index of " + path + "</h1>\n<ul>";
     DIR* dir = opendir(path.c_str());
     dirent* entry;
+    ss << "<h1>Index of " + _request.getLocation().path + "</h1>\n<ul>";
     while ((entry = readdir(dir))) {
         ss << "<li><a href=\"";
-        ss << path;
+        ss << _request.getLocation().path;
         if (ss.str().at(ss.str().size() - 1) != '/') {
             ss << "/";
         }
