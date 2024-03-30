@@ -77,7 +77,7 @@ int Socket::read(std::string &request) {
 
 	while ((bytesread = recv(this->_clientFd, buff, sizeof(buff), 0)))
 	{
-		if (bytesread > 0) {
+		if (bytesread >= 0) {
 			request.append(buff, bytesread);			
 			totalbytesread += bytesread;
 		}
@@ -119,7 +119,7 @@ int Socket::read(std::string &request) {
 void Socket::send(const std::string &response) {
 
 	int bytesreturned, totalbytes = 0;
-	std::cout <<  SEPARATOR << response.substr(0, response.find("\r\n\r\n")) << SEPARATOR;
+	std::cout << SEPARATOR << response.substr(0, response.find("\r\n\r\n")) << SEPARATOR;
 	while ((size_t)totalbytes < response.size())
 	{
 		bytesreturned = ::send(this->_clientFd, response.c_str(), response.size(), 0);

@@ -35,37 +35,44 @@ void WebServer::_launch()
 {
 	while (true)
 	{
-		this->_poll.execute();
-		for (size_t i = 0; i < this->_poll.getSize(); ++i)
+		try
 		{
-			std::time_t now;
-			std::time(&now);
-			long diff = 0;
-	
-			if (_poll.getFd(i) != _server[i].getSocketFD()){
-				diff = std::difftime(now, _keepAlive[this->_poll.getSocket(i).getClientFd()]);
-			}
-			if (this->_poll.checkEvent(i, diff, _timeout))
+			this->_poll.execute();
+			for (size_t i = 0; i < this->_poll.getSize(); ++i)
 			{
-				Socket event = this->_poll.getSocket(i);
-				if (_poll.getFd(i) == _server[i].getSocketFD())
-				{
-					event.accept(_server[i].getSocketFD());
-					std::cout << "New connection on fd: " << event.getClientFd() << std::endl;
-					if (_keepAlive.find(event.getClientFd()) == _keepAlive.end()) {
-						_keepAlive.insert(std::pair<int, time_t>(event.getClientFd(), now));
-					}
-					if (fcntl(event.getClientFd(), F_SETFL, O_NONBLOCK) < 0)
-						std::__throw_runtime_error("Error set nonblocking I/O");
-					_poll.addFd(event, event.getClientFd());
+				std::time_t now;
+				std::time(&now);
+				long diff = 0;
+
+				if (_poll.getFd(i) != _server[i].getSocketFD()){
+					diff = std::difftime(now, _keepAlive[this->_poll.getSocket(i).getClientFd()]);
 				}
-				else{
-        			int clientRes = _read(event);
-					if (clientRes > 0 || _timeout == true){
-						_respond(event, clientRes);
+				if (this->_poll.checkEvent(i, diff, _timeout))
+				{
+					Socket event = this->_poll.getSocket(i);
+					if (_poll.getFd(i) == _server[i].getSocketFD())
+					{
+						event.accept(_server[i].getSocketFD());
+						std::cout << "New connection on fd: " << event.getClientFd() << std::endl;
+						if (_keepAlive.find(event.getClientFd()) == _keepAlive.end()) {
+							_keepAlive.insert(std::pair<int, time_t>(event.getClientFd(), now));
+						}
+						if (fcntl(event.getClientFd(), F_SETFL, O_NONBLOCK) < 0)
+							std::__throw_runtime_error("Error set nonblocking I/O");
+						_poll.addFd(event, event.getClientFd());
+					}
+					else{
+        				int clientRes = _read(event);
+						if (clientRes > 0 || _timeout == true){
+							_respond(event, clientRes);
+						}
 					}
 				}
 			}
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << '\n';
 		}
 	}
 }
@@ -107,9 +114,9 @@ void WebServer::_respond(Socket &client, int clientRes)
 			return ;
 		}
 	}
-	req.parse(_rawRequest, clientRes);
 	std::cout << "Request of FD: " << client.getClientFd();
 	std::cout << SEPARATOR << _rawRequest.substr(0, _rawRequest.find("\r\n\r\n")) << SEPARATOR;
+	req.parse(_rawRequest, clientRes);
 	if (_reqs.find(client.getClientFd()) == _reqs.end()){
 		_reqs[client.getClientFd()] = req;
 	}

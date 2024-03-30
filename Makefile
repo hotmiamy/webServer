@@ -4,7 +4,7 @@ OBJDIR   := objdir
 
 CXXFLAGS += -I./include -Wall -Wextra -Werror -std=c++98
 ifeq ($(DEBUG),true)
-	CXXFLAGS += -g3
+	CXXFLAGS += -g
 endif
 LDFLAGS  +=
 LDLIBS   +=

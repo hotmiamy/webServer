@@ -73,19 +73,23 @@ void Response::HandleGET() {
     //     return;
     // }
 
-    if (_request.getUrl().find("script.py") != std::string::npos) {
+    if (_request.getUrl().find(".py") != std::string::npos) {
         Cgi cgi = Cgi(_request, "GET");
         cgi.execute();
         responseBody << cgi.getOut();
+		responseHead << ResponseUtils::StatusCodes("200");
+		responseHead << "Content-Format: "
+					<< ReqParsUtils::ContentFormat("txt") << "\r\n";
     } else {
         file.open(_serverRoot.c_str(), std::ios::binary);
         if (file.fail())
             throw std::runtime_error(ResponseUtils::StatusCodes("500"));
         responseBody << file.rdbuf();
+		responseHead << ResponseUtils::StatusCodes("200");
+		responseHead << "Content-Format: "
+					<< ReqParsUtils::ContentFormat(fileExtension) << "\r\n";
     }
-    responseHead << ResponseUtils::StatusCodes("200");
-    responseHead << "Content-Format: "
-                 << ReqParsUtils::ContentFormat(fileExtension) << "\r\n";
+    
     responseHead << "Content-Length: " << responseBody.str().size() << "\r\n";
     responseHead << "Date: " << ResponseUtils::getCurrDate() << "\r\n";
     responseHead << "Server: WebServer\r\n";
@@ -129,6 +133,8 @@ void Response::HandlePOST() {
 }
 
 void Response::HandleDELETE() {
+	if (_request.getQueryUrl().empty() == false)
+		_serverRoot += _request.getQueryUrl().substr(_request.getQueryUrl().find("=") + 1);
     if (ServerUtils::isDirectory(_serverRoot))
         throw std::runtime_error(ResponseUtils::StatusCodes("405"));
     else if (ServerUtils::isFileReadable(_serverRoot) == false)

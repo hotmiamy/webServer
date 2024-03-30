@@ -41,7 +41,7 @@ std::string ExtractHeader(std::string const &request, std::string key) {
         startPos = request.find('\n', startPos + 1) + 1;
         endPos = request.find('\n', startPos + 1) + 1;
     }
-
+	
     std::map<std::string, std::string>::iterator it = header.find(key);
 
     if (it == header.end()) return ("");

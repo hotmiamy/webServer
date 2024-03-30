@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delete File</title>
+</head>
+<body>
+<h2>Selecione um arquivo para excluir:</h2>
+<select id="fileSelect">
+</select>
+<button onclick="deleteFile()">Excluir</button>
+
+<script>
+window.onload = function() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/delete/delete.py', true);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            var jsonResponse = xhr.responseText;
+            try {
+                var files = JSON.parse(jsonResponse);
+                var fileSelect = document.getElementById('fileSelect');
+                files.forEach(function(file) {
+                    var option = document.createElement('option');
+                    option.value = file;
+                    option.text = file;
+                    fileSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao analisar JSON:', error);
+                alert('Erro ao analisar a lista de arquivos.');
+            }
+        } else {
+            alert('Erro ao obter a lista de arquivos.');
+        }
+    };
+    xhr.send();
+};
+
+function deleteFile() {
+    var fileSelect = document.getElementById('fileSelect');
+    var filename = fileSelect.options[fileSelect.selectedIndex].value;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('DELETE', '/delete/files/?filename=' + encodeURIComponent(filename), true);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            alert('Arquivo excluído com sucesso.');
+            // Atualiza a lista de arquivos após a exclusão bem-sucedida (opcional)
+            location.reload();
+        } else {
+            alert('Erro ao excluir o arquivo.');
+        }
+    };
+    xhr.send();
+}
+</script>
+</body>
+</html>

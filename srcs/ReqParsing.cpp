@@ -4,6 +4,7 @@ ReqParsing::ReqParsing() {}
 
 ReqParsing::ReqParsing(const ServerConfig &server) :
 	_root(server.getRoot()),
+	_queryUrl(""),
 	_body(""),
 	_form(""),
 	_fileName(""),
@@ -21,26 +22,35 @@ ReqParsing::ReqParsing(const ServerConfig &server) :
 
 void ReqParsing::parse(const std::string &reqRaw, int clientRes)
 {
-	if (_firtLineParsed == false){
+	try
+	{
+		if (_firtLineParsed == false){
 		parsFirtsLine(reqRaw.substr(0, reqRaw.find("\r\n")));
 		setLocation(_server);
 		if (_firtLineParsed == false)
 			return ;
+		}
+		if (_headerParsed == false){
+			extractReqInfo(reqRaw, _server);
+			if (_headerParsed == false)
+				return ;
+		}
+		if (_bodyParsed== false && clientRes > 0)
+		{
+			parseBody(reqRaw);
+			isMultiPart();
+			if (_bodyParsed == false)
+				return ;
+		}
+		if (_firtLineParsed == true && _headerParsed == true && _bodyParsed == true)
+			_isParsed = true;
 	}
-	if (_headerParsed == false){
-		extractReqInfo(reqRaw, _server);
-		if (_headerParsed == false)
-			return ;
-	}
-	if (_bodyParsed== false && clientRes > 0)
+	catch(const std::exception& e)
 	{
-		parseBody(reqRaw);
-		isMultiPart();
-		if (_bodyParsed == false)
-			return ;
+		setStatusCode(e.what());
 	}
-	if (_firtLineParsed == true && _headerParsed == true && _bodyParsed == true)
-		_isParsed = true;
+	
+	
 }
 
 void ReqParsing::parsFirtsLine(const std::string &firstline) {
@@ -61,22 +71,25 @@ void ReqParsing::parsFirtsLine(const std::string &firstline) {
 		{
 			case METHOD:
 				if (buff != "GET" && buff != "POST" && buff != "DELETE") {
-					setStatusCode("501");
-					return ;
+					throw std::runtime_error("501");
 				}
 				_method = buff;
 				state = URL;
 				break;
 			case URL:
 				if (buff[0] == '/'){
-					_url = buff;
+					if (buff.find("?") != std::string::npos){
+						_url = buff.substr(0, buff.find("?"));
+						_queryUrl = buff.substr(buff.find("?") + 1);
+					}
+					else
+						_url = buff;
 					state = HTTP;
 				}
 				break;
 			case HTTP:
 				if (buff != HTTP_VERSION) {
-					setStatusCode("505");
-					return ;
+					throw std::runtime_error("505");
 				}
 				_httpVersion = buff;
 				break;
@@ -87,9 +100,12 @@ void ReqParsing::parsFirtsLine(const std::string &firstline) {
 
 void ReqParsing::extractReqInfo(const std::string &rawReq,
                                    const ServerConfig &conf) {
+	if (rawReq.find("\r\n\r\n") == std::string::npos)
+		throw std::runtime_error("400");
 	if (_method == "POST"){
-		if (ReqParsUtils::ExtractHeader(rawReq, "Transfer-Encoding") == "chunked")
+		if (ReqParsUtils::ExtractHeader(rawReq, "Transfer-Encoding") == "chunked"){
 			_chunkBody = true;
+		}
 		else if (ReqParsUtils::ExtractHeader(rawReq, "Content-Length") != "") {
 			std::istringstream issCLength(
 				ReqParsUtils::ExtractHeader(rawReq, "Content-Length"));
@@ -97,10 +113,8 @@ void ReqParsing::extractReqInfo(const std::string &rawReq,
 			issBSize >> _maxBodySize;
 			issCLength >> _contentLength;
 		}
-		else{
-			setStatusCode("411");
-			return ;
-		} 
+		else
+			throw std::runtime_error("411");
 	}
 	if (ReqParsUtils::ExtractHeader(rawReq, "Content-Type") != "") {
 		_contentType = ReqParsUtils::ExtractHeader(rawReq, "Content-Type");
@@ -129,18 +143,16 @@ void ReqParsing::parseBody(const std::string &reqRaw)
 			unparsedBody.erase(0, chunkSizeStr.size() + 2);
 			_body.append(unparsedBody.substr(0, chunkSize));
 			unparsedBody.erase(0, chunkSize + 2);
-			if (unparsedBody.find("\r\n0\r\n") == 0 || unparsedBody.find("0") == 0){
+			if (unparsedBody.find("\r\n0\r\n") == 0 || unparsedBody.find("0") == 0 || chunkSize == 0){
 				_bodyParsed = true;
 				break;
 			}
 		}
 	}
 	else if (_contentLength > 0){
-		if (unparsedBody.size() > _maxBodySize){
-			setStatusCode("413");
-			return ;
-		}
-
+		if (unparsedBody.size() > _maxBodySize)
+			throw std::runtime_error("413");
+	
 		_body = unparsedBody.substr(0, _contentLength);
 		unparsedBody.erase(0, _contentLength);
 		_bodyParsed = true;
@@ -184,6 +196,8 @@ const std::string &ReqParsing::getRoot() const { return (_root); }
 const std::string &ReqParsing::getMethod() const { return (this->_method); }
 
 const std::string &ReqParsing::getUrl() const { return (this->_url); }
+
+const std::string &ReqParsing::getQueryUrl() const { return (this->_queryUrl); }
 
 const std::string &ReqParsing::getHttpVersion() const { return (this->_httpVersion); }
 

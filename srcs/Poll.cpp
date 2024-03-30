@@ -10,7 +10,7 @@ void Poll::addFd(const Socket &socket,const int &fd)
 
 	_sockets.push_back(socket);
 	pfd.fd = fd;
-	pfd.events = POLLIN | POLLOUT; //| POLLERR | POLLHUP;
+	pfd.events = POLLIN | POLLOUT;
 	pfd.revents = 0;
 	this->_pollfds.push_back(pfd);
 }
