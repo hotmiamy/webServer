@@ -14,6 +14,7 @@ class ServerConfig {
     ServerConfig &operator=(const ServerConfig &);
     ~ServerConfig();
 
+    bool cgi;
     static std::vector<ServerConfig> fromFile(const std::string &);
 
     const std::string &getPort() const;
@@ -22,12 +23,12 @@ class ServerConfig {
     const std::map<std::string, std::string> &getErrorPages() const;
     const std::map<std::string, Location> &getLocations() const;
     const std::string &getClientMaxBodySize() const;
-	const int &getSocketFD() const;
+    const int &getSocketFD() const;
 
     void setPort(const std::string &);
     void setRoot(const std::string &);
     void setServer(const std::string &);
-	void setSocketFD(const int &);
+    void setSocketFD(const int &);
     void addErrorPage(const std::string &, const std::string &);
     void addLocation(std::string path, const Location &);
     void setClientMaxBodySize(const std::string &);
@@ -43,7 +44,7 @@ class ServerConfig {
     std::map<std::string, std::string> _errorPages;
     std::map<std::string, Location> _locations;
     std::string _clientMaxBodySize;
-	int _socketFd;
+    int _socketFd;
 };
 
 typedef std::vector<ServerConfig> ServerVec;
