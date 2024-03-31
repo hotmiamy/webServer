@@ -3,21 +3,20 @@
 Response::Response() {}
 
 Response::Response(ReqParsing request)
-    : _request(request), _serverRoot(request.getRoot() + request.getUrl()) {
-	try
-	{
-		checkError();
-		generateResponse();
-	}
-	catch(const std::exception& e)
-	{
-		_response = HTTP_VERSION;
-		_response += e.what();
-		_response += _request.getConnection();
-		_response += "Date: " + ResponseUtils::getCurrDate() + "\r\n";
-    	_response += "Server: WebServer\r\n";
-    	_response += "\r\n\r\n";
-	}
+    : _request(request),
+      _serverRoot(request.getRoot() + request.getUrl()),
+      _statusCode() {
+    try {
+        checkError();
+        generateResponse();
+    } catch (const std::exception& e) {
+        _response = HTTP_VERSION;
+        _response += e.what();
+        _response += _request.getConnection();
+        _response += "Date: " + ResponseUtils::getCurrDate() + "\r\n";
+        _response += "Server: WebServer\r\n";
+        _response += "\r\n\r\n";
+    }
 }
 
 Response::~Response() {}
@@ -126,8 +125,9 @@ void Response::_HandlePOST() {
         responseHead << "Content-Length: " << responseBody.str().size()
                      << "\r\n";
     } else {
-		if (_request.getBody().empty()== true)
-			throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode("204")));
+        if (_request.getBody().empty() == true)
+            throw std::runtime_error(
+                ResponseUtils::StatusCodes(setStatusCode("204")));
         _serverRoot += ResponseUtils::genFileName(_request);
         if (ServerUtils::fileExists(_serverRoot) == true) {
             throw std::runtime_error(ResponseUtils::StatusCodes("409"));
@@ -173,7 +173,9 @@ const std::string Response::_handleAutoindex(const std::string& path) {
 
     DIR* dir = opendir(path.c_str());
     dirent* entry;
-    ss << "<h1>Index of " + _request.getLocation().path + "</h1>\n<ul>";
+
+    ss << "<h1>Index of " << _request.getLocation().path << "</h1>\n<ul>";
+
     while ((entry = readdir(dir))) {
         ss << "<li><a href=\"";
         ss << _request.getLocation().path;

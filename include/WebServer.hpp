@@ -24,8 +24,8 @@ class WebServer {
     WebServer &operator=(const WebServer &);
     ~WebServer();
 
-    void	init();
-	void	stop();
+    void init();
+    void stop();
 
    private:
     std::map<int, time_t> _keepAlive;
@@ -37,5 +37,5 @@ class WebServer {
     void launch();
     void respond(Socket &client, int clientRes);
 
-	const ServerConfig &getCurrentServer(const Socket &socket);
+    const ServerConfig &getCurrentServer(const Socket &socket);
 };
