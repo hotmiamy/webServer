@@ -4,7 +4,7 @@ Response::Response() : _statusCode(0) {}
 
 Response::Response(ReqParsing request)
     : _errorPagePath(request.getRoot() + request.getUrl()), 
-	_serverRoot(request.getRoot() + request.getUrl()), 
+	_serverRoot(request.getRoot() + request.getUrl()),
 	_statusCode(0), 
 	_request(request) {
 	try
@@ -28,7 +28,8 @@ void Response::checkError() {
         if (ResponseUtils::IsMethodAllowed(_request.getLocation(),
                                            _request.getMethod()) == false)
             throw std::runtime_error(setStatusCode("405"));
-        _serverRoot = _request.getLocation().indexFile;
+			if (_request.getLocation().indexFile.empty() == false && _request.getMethod() == "GET")
+        		_serverRoot = _request.getLocation().indexFile;
     }
     if (_request.getHasBodyLimit() == true) {
         if (_request.getBody().empty() == false &&
@@ -109,7 +110,7 @@ void Response::_HandlePOST() {
     std::stringstream responseHead, responseBody, fullResponse;
     std::ofstream file;
 
-    if (_request.getUrl().find("post.py") != std::string::npos) {
+    if (_request.getUrl().find(".py") != std::string::npos) {
         Cgi cgi = Cgi(_request, "POST");
         cgi.execute();
         std::string fileExtension = ServerUtils::getExtension(_serverRoot);
@@ -121,8 +122,7 @@ void Response::_HandlePOST() {
                      << "\r\n";
     } else {
         if (_request.getBody().empty() == true)
-            throw std::runtime_error(
-                ResponseUtils::StatusCodes(setStatusCode("204")));
+            throw std::runtime_error(setStatusCode("204"));
         _serverRoot += ResponseUtils::genFileName(_request);
         if (ServerUtils::fileExists(_serverRoot) == true) {
             throw std::runtime_error(setStatusCode("409"));
@@ -149,9 +149,6 @@ void Response::_HandleDELETE() {
     }
     if (ServerUtils::isDirectory(_serverRoot)) {
         throw std::runtime_error(setStatusCode("405"));
-    }
-    if (ServerUtils::isFileReadable(_serverRoot) == false) {
-        throw std::runtime_error(setStatusCode("403"));
     }
     if (ServerUtils::isFileReadable(_serverRoot) == false) {
         throw std::runtime_error(setStatusCode("403"));
@@ -195,9 +192,16 @@ const std::string Response::_handleAutoindex(const std::string& path) {
 void Response::_HandleErrorPage(std::string errorCode) {
 	 std::stringstream responseHead, responseBody, fullResponse;
 
-	_response = HTTP_VERSION;
-	this->_errorPagePath = _request.getErrorPagePath().at(errorCode);
-	if (this->_errorPagePath.empty() != true) { // << já verificar antes se o path existe
+	if (_request.getErrorPagePath().find(errorCode) == _request.getErrorPagePath().end())
+	{
+		responseHead << ResponseUtils::StatusCodes(errorCode);
+		responseHead << "Connection: close\r\n";
+		responseHead << "Date: " + ResponseUtils::getCurrDate() + "\r\n";
+    	responseHead << "Server: WebServer\r\n";
+    	responseHead << "\r\n";
+	}
+	else{
+		this->_errorPagePath = _request.getErrorPagePath().at(errorCode);
 		if (ServerUtils::fileExists(_errorPagePath) == true) {
 			std::ifstream file(_errorPagePath.c_str());
 			responseBody << file.rdbuf();
@@ -206,13 +210,11 @@ void Response::_HandleErrorPage(std::string errorCode) {
 						 << ReqParsUtils::ContentFormat("html") << "\r\n";
 			responseHead << "Content-Length: " << responseBody.str().size() << "\r\n";
 		}
-		else
-			responseHead << ResponseUtils::StatusCodes(errorCode);
 		responseHead << "Connection: close\r\n";
 		responseHead << "Date: " + ResponseUtils::getCurrDate() + "\r\n";
     	responseHead << "Server: WebServer\r\n";
-    	responseHead << "\r\n\r\n";
-	}
+    	responseHead << "\r\n";
+	}	
 	fullResponse << responseHead.str() << responseBody.str();
 	_response += fullResponse.str();
 }

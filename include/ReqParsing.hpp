@@ -7,6 +7,7 @@
 #include "ReqParsUtils.hpp"
 #include "ServerConfig.hpp"
 #include "ServerUtils.hpp"
+#include "Socket.hpp"
 
 #define HTTP_VERSION "HTTP/1.1"
 
@@ -17,6 +18,7 @@ class ReqParsing {
     std::string _url;
     std::string _queryUrl;
     std::string _httpVersion;
+	std::string _host;
     std::string _contentType;
     std::string _transferEncoding;
     std::string _body;
@@ -33,12 +35,13 @@ class ReqParsing {
     bool _bodyParsed;
     bool _isParsed;
     Location _location;
-    ServerConfig _server;
+    ServerVec _server;
+	Socket _clientSocket;
 	std::map<std::string, std::string> _errorPagePath;
 
    public:
     ReqParsing();
-    ReqParsing(const ServerConfig &server);
+    ReqParsing(const ServerVec &server, Socket &client);
     ~ReqParsing();
 
     void parse(const std::string &rawReq, int clientRes);
@@ -64,13 +67,13 @@ class ReqParsing {
     bool getHasBodyLimit() const;
     bool getIsParsed() const;
     const Location &getLocation() const;
-    const ServerConfig &getServer() const;
 	const std::map<std::string, std::string> &getErrorPagePath() const;
 
    private:
     void parsFirtsLine(const std::string &rawReq);
-    void setLocation(const ServerConfig &server);
-    void extractReqInfo(const std::string &rawReq, const ServerConfig &server);
+    void extractServerInfo();
+	bool validateAllServerName();
+    void extractHeaderInfo(const std::string &rawReq);
     void parseBody(const std::string &reqRaw);
     void isMultiPart();
 };

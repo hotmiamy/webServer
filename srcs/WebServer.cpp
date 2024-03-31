@@ -29,6 +29,10 @@ void WebServer::init() {
         this->_poll.addFd(socket, serverFD);
         _server[i].setSocketFD(serverFD);
     }
+	if (this->_server.size() == 0) {
+		std::cout << "No server configured" << std::endl;
+		exit(1);
+	}
     launch();
 }
 
@@ -87,7 +91,7 @@ void WebServer::launch() {
 void WebServer::respond(Socket &client, int clientRes) {
     std::time_t now;
     std::time(&now);
-    ReqParsing req(getCurrentServer(client));
+    ReqParsing req(_server, client);
 
     if (_timeout == true) {
         _timeout = false;
@@ -104,28 +108,21 @@ void WebServer::respond(Socket &client, int clientRes) {
     req.parse(_rawRequest, clientRes);
 	if ((req.getIsParsed() == true || req.getStatusCode().empty() == false)) {
 		Response res(req);
+		int sendRes = 0;
 		std::cout << "Response to connection on Fd " << client.getClientFd() << std::endl;
-		int sendRes = client.send(res._response);
-		if (res.getStatusCode() >= 400 || sendRes < 0) {
+		sendRes = client.send(res._response);
+		if (sendRes < 0) {
+			sleep(2);
 			_poll.removeEventFd(client);
 			_keepAlive.erase(client.getClientFd());
 			std::cout << "Client on Fd: " << client.getClientFd();
-			if (sendRes < 0) 
+			if (sendRes < 0)
 				std::cout << " send error " << std::endl;
 			else
 				std::cout << " removed" << std::endl;
 		}
 		_rawRequest = "";
 	}
-}
-
-const ServerConfig &WebServer::getCurrentServer(const Socket &socket) {
-    for (size_t i = 0; i < _server.size(); ++i) {
-        if (_server[i].getSocketFD() == socket.getServerFD()) {
-            return _server[i];
-        }
-    }
-    throw std::runtime_error("Socket not found");
 }
 
 void WebServer::stop() { _poll.clearAllFds(); }

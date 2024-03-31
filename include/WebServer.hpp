@@ -37,5 +37,5 @@ class WebServer {
     void launch();
     void respond(Socket &client, int clientRes);
 
-    const ServerConfig &getCurrentServer(const Socket &socket);
+    const std::vector<ServerConfig> &getServerVec();
 };

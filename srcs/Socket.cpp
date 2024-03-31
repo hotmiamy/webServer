@@ -35,7 +35,7 @@ int Socket::_setup() {
     info.ai_family = AF_INET;
     info.ai_socktype = SOCK_STREAM;
 
-    std::string ip = _serverName;
+    std::string ip = "127.0.0.1";
 
     _checkConnectionThrow(
         ::getaddrinfo(ip.c_str(), _port.c_str(), &info, &_res),
@@ -77,7 +77,7 @@ int Socket::accept(int serverFD) {
 }
 
 int Socket::read(std::string &request) {
-	char buff[1024] = {0};
+	char buff[4096] = {0};
 	int bytesread, totalbytesread = 0;
 
 	while ((bytesread = recv(this->_clientFd, buff, sizeof(buff), 0)))
@@ -123,16 +123,15 @@ int Socket::read(std::string &request) {
 
 int Socket::send(const std::string &response) {
 
-	int bytesreturned, totalbytes = 0;
+	long int bytesreturned = 0, totalbytes = 0;
 	std::cout << SEPARATOR << response.substr(0, response.find("\r\n\r\n")) << SEPARATOR;
 	while ((size_t)totalbytes < response.size())
 	{
+
 		bytesreturned = ::send(this->_clientFd, response.c_str(), response.size(), 0);
-		if (bytesreturned < 0)
-			return bytesreturned;
-		if (bytesreturned == 0)
-			break;
 		totalbytes += bytesreturned;
+		if (bytesreturned < 0)
+			break;
 	}
 	return (totalbytes);
 }
