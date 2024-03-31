@@ -17,7 +17,7 @@ ReqParsing::ReqParsing(const ServerConfig &server)
       _connection(),
       _contentLength(0),
       _maxBodySize(0),
-	  _hasBodyLimit(false),
+      _hasBodyLimit(false),
       _chunkBody(false),
       _firtLineParsed(false),
       _headerParsed(false),
@@ -25,7 +25,7 @@ ReqParsing::ReqParsing(const ServerConfig &server)
       _isParsed(false),
       _location(),
       _server(server),
-	  _errorPagePath(){}
+      _errorPagePath() {}
 
 void ReqParsing::parse(const std::string &reqRaw, int clientRes) {
     try {
@@ -91,8 +91,8 @@ void ReqParsing::parsFirtsLine(const std::string &firstline) {
 
 void ReqParsing::extractReqInfo(const std::string &rawReq,
                                 const ServerConfig &conf) {
-	if (_server.getErrorPages().empty() == false) 
-		_errorPagePath = _server.getErrorPages();
+    if (_server.getErrorPages().empty() == false)
+        _errorPagePath = _server.getErrorPages();
     if (rawReq.find("\r\n\r\n") == std::string::npos)
         throw std::runtime_error("400");
     if (_method == "POST") {
@@ -170,8 +170,11 @@ void ReqParsing::setLocation(const ServerConfig &server) {
     std::string rootServer = _root + _url;
 
     if (ServerUtils::isDirectory(rootServer)) {
+        std::string aux =
+            _url.length() == 1 ? _url : _url.substr(0, _url.find_last_of("/"));
+
         std::map<std::string, Location>::const_iterator it =
-            server.getLocations().find(_url);
+            server.getLocations().find(aux);
         if (it != server.getLocations().end()) {
             _location = it->second;
         }
@@ -238,4 +241,6 @@ const Location &ReqParsing::getLocation() const { return (_location); }
 
 const ServerConfig &ReqParsing::getServer() const { return _server; }
 
-const std::map<std::string, std::string> &ReqParsing::getErrorPagePath() const { return (_errorPagePath); }
+const std::map<std::string, std::string> &ReqParsing::getErrorPagePath() const {
+    return (_errorPagePath);
+}
