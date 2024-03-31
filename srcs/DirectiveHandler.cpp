@@ -28,6 +28,7 @@ DirectiveHandler::DirectiveHandler() : _cfg() {
     _directiveMap["error_page"] = &DirectiveHandler::_handleErrorPageDirective;
     _directiveMap["location"] = &DirectiveHandler::_handleLocationDirective;
     _directiveMap["root"] = &DirectiveHandler::_handleRoot;
+    _directiveMap["cgi"] = &DirectiveHandler::_handleCgiServer;
 }
 
 DirectiveHandler::~DirectiveHandler() {}
@@ -323,6 +324,28 @@ void DirectiveHandler::_handleClientMaxBodySize(std::istringstream &iss) {
                                  "this directive takes only one argument");
     }
     _cfg.setClientMaxBodySize(maxBodySize);
+}
+
+void DirectiveHandler::_handleCgiServer(std::istringstream &iss) {
+    std::string extension, executable;
+
+    if (_cfg.cgi) {
+        throw std::runtime_error(ERR_CGI + "cgi was already specified");
+    }
+
+    if (!(iss >> extension) || extension != ".py") {
+        throw std::runtime_error(
+            ERR_CGI + "a valid file extension (.py) must be specified");
+    }
+    if (!(iss >> executable) || !ServerUtils::isValidExecutable(executable)) {
+        throw std::runtime_error(ERR_CGI + '\'' + executable + '\'' +
+                                 " is not a valid binary");
+    }
+    if (iss.rdbuf()->in_avail() != 0) {
+        throw std::runtime_error(
+            ERR_CGI + "there should be one and only one executable specified");
+    }
+    _cfg.cgi = true;
 }
 
 void DirectiveHandler::process(const std::string &directive,

@@ -3,13 +3,14 @@
 #include "ConfigParser.hpp"
 
 ServerConfig::ServerConfig()
-    : _port(),
+    : cgi(false),
+      _port(),
       _root(),
       _serverName(),
       _errorPages(),
       _locations(),
       _clientMaxBodySize(),
-	  _socketFd(){}
+      _socketFd() {}
 
 ServerConfig::ServerConfig(const ServerConfig &other) { *this = other; }
 
@@ -21,7 +22,7 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
         _errorPages = other._errorPages;
         _locations = other._locations;
         _clientMaxBodySize = other._clientMaxBodySize;
-		_socketFd = other._socketFd;
+        _socketFd = other._socketFd;
     }
     return *this;
 }
@@ -62,7 +63,9 @@ void ServerConfig::setPort(const std::string &port) { _port = port; }
 
 void ServerConfig::setRoot(const std::string &root) { _root = root; }
 
-void ServerConfig::setServer(const std::string &server) { _serverName = server; }
+void ServerConfig::setServer(const std::string &server) {
+    _serverName = server;
+}
 
 void ServerConfig::setSocketFD(const int &socket) { _socketFd = socket; }
 
