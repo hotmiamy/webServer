@@ -4,12 +4,17 @@ ReqParsing::ReqParsing() {}
 
 ReqParsing::ReqParsing(const ServerConfig &server)
     : _root(server.getRoot()),
-      _queryUrl(""),
-      _body(""),
-      _form(""),
-      _fileName(""),
-      _statusCode(""),
-      _connection(""),
+      _method(),
+      _url(),
+      _queryUrl(),
+      _httpVersion(),
+      _contentType(),
+      _transferEncoding(),
+      _body(),
+      _form(),
+      _fileName(),
+      _statusCode(),
+      _connection(),
       _contentLength(0),
       _maxBodySize(0),
 	  _hasBodyLimit(false),
@@ -50,11 +55,7 @@ void ReqParsing::parsFirtsLine(const std::string &firstline) {
     std::istringstream iss(firstline);
     std::string buff;
 
-    enum {
-        METHOD,
-        URL,
-        HTTP,
-    } state;
+    enum { METHOD, URL, HTTP } state;
 
     state = METHOD;
 
@@ -131,23 +132,23 @@ void ReqParsing::parseBody(const std::string &reqRaw) {
             std::size_t chunkSize = 0;
             ss >> std::hex >> chunkSize;
 
-			if (unparsedBody.find("\r\n0\r\n") == 0 || unparsedBody.find("0") == 0 || chunkSize == 0){
-				_bodyParsed = true;
-				break;
-			}
-			unparsedBody.erase(0, chunkSizeStr.size() + 2);
-			_body.append(unparsedBody.substr(0, chunkSize));
-			unparsedBody.erase(0, chunkSize + 2);
-		}
-	}
-	else if (_contentLength > 0){
-		if (unparsedBody.size() > _maxBodySize) throw std::runtime_error("413");
+            if (unparsedBody.find("\r\n0\r\n") == 0 ||
+                unparsedBody.find("0") == 0 || chunkSize == 0) {
+                _bodyParsed = true;
+                break;
+            }
+            unparsedBody.erase(0, chunkSizeStr.size() + 2);
+            _body.append(unparsedBody.substr(0, chunkSize));
+            unparsedBody.erase(0, chunkSize + 2);
+        }
+    } else if (_contentLength > 0) {
+        if (unparsedBody.size() > _maxBodySize) throw std::runtime_error("413");
 
-		_body = unparsedBody.substr(0, _contentLength);
-		unparsedBody.erase(0, _contentLength);
-		_bodyParsed = true;
-		return;
-	}
+        _body = unparsedBody.substr(0, _contentLength);
+        unparsedBody.erase(0, _contentLength);
+        _bodyParsed = true;
+        return;
+    }
 }
 
 void ReqParsing::isMultiPart() {

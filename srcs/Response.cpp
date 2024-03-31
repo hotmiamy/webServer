@@ -120,8 +120,9 @@ void Response::_HandlePOST() {
         responseHead << "Content-Length: " << responseBody.str().size()
                      << "\r\n";
     } else {
-		if (_request.getBody().empty()== true)
-			throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode("204")));
+        if (_request.getBody().empty() == true)
+            throw std::runtime_error(
+                ResponseUtils::StatusCodes(setStatusCode("204")));
         _serverRoot += ResponseUtils::genFileName(_request);
         if (ServerUtils::fileExists(_serverRoot) == true) {
             throw std::runtime_error(setStatusCode("409"));
@@ -167,7 +168,9 @@ const std::string Response::_handleAutoindex(const std::string& path) {
 
     DIR* dir = opendir(path.c_str());
     dirent* entry;
-    ss << "<h1>Index of " + _request.getLocation().path + "</h1>\n<ul>";
+
+    ss << "<h1>Index of " << _request.getLocation().path << "</h1>\n<ul>";
+
     while ((entry = readdir(dir))) {
         ss << "<li><a href=\"";
         ss << _request.getLocation().path;
