@@ -12,6 +12,7 @@ ReqParsing::ReqParsing(const ServerConfig &server)
       _connection(""),
       _contentLength(0),
       _maxBodySize(0),
+	  _hasBodyLimit(false),
       _chunkBody(false),
       _firtLineParsed(false),
       _headerParsed(false),

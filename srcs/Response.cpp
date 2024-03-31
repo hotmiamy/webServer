@@ -1,9 +1,12 @@
 #include "Response.hpp"
 
-Response::Response() {}
+Response::Response() : _statusCode(0) {}
 
 Response::Response(ReqParsing request)
-    : _errorPagePath(request.getRoot() + request.getUrl()), _serverRoot(request.getRoot() + request.getUrl()), _request(request) {
+    : _errorPagePath(request.getRoot() + request.getUrl()), 
+	_serverRoot(request.getRoot() + request.getUrl()), 
+	_statusCode(0), 
+	_request(request) {
 	try
 	{
 		checkError();
@@ -20,24 +23,20 @@ Response::~Response() {}
 void Response::checkError() {
     _response = HTTP_VERSION;
     if (_request.getStatusCode().empty() == false)
-        throw std::runtime_error(ResponseUtils::StatusCodes(
-            setStatusCode(_request.getStatusCode())));
+        throw std::runtime_error(setStatusCode(_request.getStatusCode()));
     if (_request.getLocation().empty() == false) {
         if (ResponseUtils::IsMethodAllowed(_request.getLocation(),
                                            _request.getMethod()) == false)
-            throw std::runtime_error(
-                ResponseUtils::StatusCodes(setStatusCode("405")));
+            throw std::runtime_error(setStatusCode("405"));
         _serverRoot = _request.getLocation().indexFile;
     }
     if (_request.getHasBodyLimit() == true) {
         if (_request.getBody().empty() == false &&
             _request.getBody().length() > _request.getMaxBodySize())
-            throw std::runtime_error(
-                ResponseUtils::StatusCodes(setStatusCode("413")));
+            throw std::runtime_error(setStatusCode("413"));
     }
     if (!_serverRoot.empty() && !ServerUtils::fileExists(_serverRoot)) {
-        throw std::runtime_error(
-            ResponseUtils::StatusCodes(setStatusCode("404")));
+        throw std::runtime_error(setStatusCode("404"));
     }
 }
 
@@ -89,7 +88,7 @@ void Response::_HandleGET() {
         } else {
             file.open(_serverRoot.c_str(), std::ios::binary);
             if (file.fail()) {
-                throw std::runtime_error(ResponseUtils::StatusCodes("500"));
+                throw std::runtime_error(setStatusCode("500"));
             }
             responseBody << file.rdbuf();
             responseHead << ResponseUtils::StatusCodes("200");
@@ -125,12 +124,12 @@ void Response::_HandlePOST() {
 			throw std::runtime_error(ResponseUtils::StatusCodes(setStatusCode("204")));
         _serverRoot += ResponseUtils::genFileName(_request);
         if (ServerUtils::fileExists(_serverRoot) == true) {
-            throw std::runtime_error(ResponseUtils::StatusCodes("409"));
+            throw std::runtime_error(setStatusCode("409"));
         }
         responseHead << ResponseUtils::StatusCodes("201");
         file.open(_serverRoot.c_str(), std::ios::out | std::ios::binary);
         if (!file) {
-            throw std::runtime_error(ResponseUtils::StatusCodes("500"));
+            throw std::runtime_error(setStatusCode("500"));
         }
         file.write(_request.getBody().c_str(), _request.getBody().size());
         file.close();
@@ -148,13 +147,13 @@ void Response::_HandleDELETE() {
             _request.getQueryUrl().substr(_request.getQueryUrl().find("=") + 1);
     }
     if (ServerUtils::isDirectory(_serverRoot)) {
-        throw std::runtime_error(ResponseUtils::StatusCodes("405"));
+        throw std::runtime_error(setStatusCode("405"));
     }
     if (ServerUtils::isFileReadable(_serverRoot) == false) {
-        throw std::runtime_error(ResponseUtils::StatusCodes("403"));
+        throw std::runtime_error(setStatusCode("403"));
     }
     if (ServerUtils::isFileReadable(_serverRoot) == false) {
-        throw std::runtime_error(ResponseUtils::StatusCodes("403"));
+        throw std::runtime_error(setStatusCode("403"));
     }
     std::remove(_serverRoot.c_str());
     _response += ResponseUtils::StatusCodes("200");
@@ -194,9 +193,8 @@ void Response::_HandleErrorPage(std::string errorCode) {
 	 std::stringstream responseHead, responseBody, fullResponse;
 
 	_response = HTTP_VERSION;
-	// this->_errorPagePath = std::string com caminho até a pasta do arquivo
+	this->_errorPagePath = _request.getErrorPagePath().at(errorCode);
 	if (this->_errorPagePath.empty() != true) { // << já verificar antes se o path existe
-		_errorPagePath += errorCode + ".html";
 		if (ServerUtils::fileExists(_errorPagePath) == true) {
 			std::ifstream file(_errorPagePath.c_str());
 			responseBody << file.rdbuf();
@@ -212,6 +210,8 @@ void Response::_HandleErrorPage(std::string errorCode) {
     	responseHead << "Server: WebServer\r\n";
     	responseHead << "\r\n\r\n";
 	}
+	fullResponse << responseHead.str() << responseBody.str();
+	_response += fullResponse.str();
 }
 
 std::string Response::setStatusCode(const std::string& code) {
