@@ -102,23 +102,21 @@ void WebServer::respond(Socket &client, int clientRes) {
               << _rawRequest.substr(0, _rawRequest.find("\r\n\r\n"))
               << SEPARATOR;
     req.parse(_rawRequest, clientRes);
-    if ((req.getIsParsed() == true || req.getStatusCode().empty() == false)) {
-        Response res(req);
-        int sendRes;
-
-        std::cout << "Response to connection on Fd " << client.getClientFd();
-        sendRes = client.send(res._response);
-        if (res.getStatusCode() >= 400 || sendRes < 0) {
-            _poll.removeEventFd(client);
-            _keepAlive.erase(client.getClientFd());
-            std::cout << "Client on Fd: " << client.getClientFd();
-            if (sendRes < 0)
-                std::cout << " send error " << std::endl;
-            else
-                std::cout << " removed" << std::endl;
-        }
-        _rawRequest = "";
-    }
+	if ((req.getIsParsed() == true || req.getStatusCode().empty() == false)) {
+		Response res(req);
+		std::cout << "Response to connection on Fd " << client.getClientFd() << std::endl;
+		int sendRes = client.send(res._response);
+		if (res.getStatusCode() >= 400 || sendRes < 0) {
+			_poll.removeEventFd(client);
+			_keepAlive.erase(client.getClientFd());
+			std::cout << "Client on Fd: " << client.getClientFd();
+			if (sendRes < 0) 
+				std::cout << " send error " << std::endl;
+			else
+				std::cout << " removed" << std::endl;
+		}
+		_rawRequest = "";
+	}
 }
 
 const ServerConfig &WebServer::getCurrentServer(const Socket &socket) {

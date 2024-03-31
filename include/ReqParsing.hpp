@@ -34,6 +34,7 @@ class ReqParsing {
     bool _isParsed;
     Location _location;
     ServerConfig _server;
+	std::map<std::string, std::string> _errorPagePath;
 
    public:
     ReqParsing();
@@ -64,6 +65,7 @@ class ReqParsing {
     bool getIsParsed() const;
     const Location &getLocation() const;
     const ServerConfig &getServer() const;
+	const std::map<std::string, std::string> &getErrorPagePath() const;
 
    private:
     void parsFirtsLine(const std::string &rawReq);

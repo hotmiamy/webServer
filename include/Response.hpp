@@ -20,9 +20,10 @@ class Response {
     size_t getStatusCode() const;
 
    private:
-    ReqParsing _request;
+	std::string _errorPagePath;
     std::string _serverRoot;
     std::size_t _statusCode;
+    ReqParsing _request;
 
     void checkError();
     void generateResponse();
@@ -30,6 +31,7 @@ class Response {
     void _HandlePOST();
     void _HandleDELETE();
     const std::string _handleAutoindex(const std::string&);
+	void _HandleErrorPage(std::string errorCode);
 
     std::string setStatusCode(const std::string&);
 };
