@@ -28,6 +28,12 @@ std::string ContentFormat(std::string key) {
     return (contentTypes[key]);
 }
 
+void trimHostname(std::string &hostname) {
+	if (hostname.find(":") != std::string::npos) {
+		hostname = hostname.substr(0, hostname.find(":"));
+	}
+}
+
 std::string ExtractHeader(std::string const &request, std::string key) {
     std::map<std::string, std::string> header;
     std::string inBuff;
