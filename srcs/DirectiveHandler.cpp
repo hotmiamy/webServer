@@ -72,9 +72,10 @@ void DirectiveHandler::_handleServerNameDirective(std::istringstream &iss) {
 }
 
 void DirectiveHandler::_handleErrorPageDirective(std::istringstream &iss) {
-    if (!_cfg.getErrorPages().empty()) {
-        throw std::runtime_error(ERR_ERROR_PAGE +
-                                 "'error_page' was already specified");
+    if (_cfg.getRoot().empty()) {
+        throw std::runtime_error(
+            ERR_ERROR_PAGE +
+            "make sure 'root' is set before the 'location' blocks");
     }
 
     std::string errorCode, path;
@@ -83,7 +84,9 @@ void DirectiveHandler::_handleErrorPageDirective(std::istringstream &iss) {
         throw std::runtime_error(ERR_ERROR_PAGE +
                                  "the error code should be a numeric value");
     }
-    if (!(iss >> path) || !ServerUtils::isFileReadable(path)) {
+
+    if (!(iss >> path) ||
+        !ServerUtils::isFileReadable(_cfg.getRoot() + "/" + path)) {
         throw std::runtime_error(ERR_ERROR_PAGE +
                                  "page should point to a valid path");
     }
@@ -93,8 +96,8 @@ void DirectiveHandler::_handleErrorPageDirective(std::istringstream &iss) {
             "there shouldn't exist any more args for this directive, just "
             "<error_code> <error_page>");
     }
-
-    _cfg.addErrorPage(errorCode, path);
+    std::string fullPath = _cfg.getRoot() + "/" + path;
+    _cfg.addErrorPage(errorCode, fullPath);
 }
 
 void DirectiveHandler::_handleLocationDirective(std::istringstream &iss) {

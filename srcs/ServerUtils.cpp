@@ -67,10 +67,11 @@ const std::string getAbsPath(const std::string &ex) {
 }
 
 std::vector<std::pair<std::string, std::string> > getDefaultErrorPages(
-    const std::map<std::string, std::string> &m) {
+    const std::map<std::string, std::string> &m,
+    const std::string &serverRoot) {
     std::vector<std::pair<std::string, std::string> > defaultErrorPages;
 
-    std::string errorPagesDir = "./server_root/error_pages/";
+    std::string errorPagesDir = "./" + serverRoot + "/error_pages/";
 
     DIR *dir = opendir(errorPagesDir.c_str());
     if (!dir) {
