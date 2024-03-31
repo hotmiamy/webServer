@@ -1,5 +1,7 @@
 #include "Response.hpp"
 
+#include "Location.hpp"
+
 Response::Response() : _statusCode(0) {}
 
 Response::Response(ReqParsing request)
@@ -54,11 +56,15 @@ void Response::_HandleGET() {
     std::stringstream responseHead, responseBody, fullResponse;
     std::string fileExtension = ServerUtils::getExtension(_serverRoot);
 
-    if (!_request.getLocation().empty() &&
-        _request.getLocation().redirectionSet()) {
-        std::string code = _request.getLocation().redirection.first,
-                    redirectedURL = _request.getLocation().redirection.second;
-        file.open(_request.getUrl().c_str(), std::ios::binary);
+    std::map<std::string, Location>::const_iterator it =
+        _request.getServer().getLocations().find(_request.getUrl());
+
+    Location l = it != _request.getServer().getLocations().end() ? it->second
+                                                                 : Location();
+
+    if (!l.empty() && l.redirectionSet()) {
+        std::string code = l.redirection.first,
+                    redirectedURL = l.redirection.second;
         fullResponse << ResponseUtils::StatusCodes(code)
                      << "Location: " << redirectedURL << "\r\n\r\n";
         _response += fullResponse.str();
@@ -66,13 +72,21 @@ void Response::_HandleGET() {
     }
 
     std::string filePath = _request.getRoot() + _request.getUrl();
-    if (ServerUtils::isDirectory(filePath) &&
-        _request.getLocation().autoindex) {
-        if (_request.getLocation().autoindex) {
+    if (ServerUtils::isDirectory(filePath) && !l.empty()) {
+        if (l.autoindex) {
             responseHead << ResponseUtils::StatusCodes("200")
                          << "Content-Format: "
                          << ReqParsUtils::ContentFormat("html") << "\r\n";
-            responseBody << _handleAutoindex(filePath);
+            responseBody << _handleAutoindex(filePath, l);
+        } else if (!l.indexFile.empty()) {
+            responseHead << ResponseUtils::StatusCodes("200")
+                         << "Content-Format: "
+                         << ReqParsUtils::ContentFormat("html") << "\r\n";
+            file.open(l.indexFile.c_str());
+            std::string line;
+            while (std::getline(file, line)) {
+                responseBody << line << '\n';
+            }
         }
     } else {
         if (_request.getUrl().find(".py") != std::string::npos) {
@@ -84,7 +98,7 @@ void Response::_HandleGET() {
 
             if (it == _request.getServer().getLocations().end() ||
                 !it->second.cgi) {
-                throw std::runtime_error(setStatusCode("404"));  // 403 actually
+                throw std::runtime_error(setStatusCode("403"));
             }
 
             Cgi cgi = Cgi(_request, "GET");
@@ -118,6 +132,17 @@ void Response::_HandlePOST() {
     std::ofstream file;
 
     if (_request.getUrl().find("post.py") != std::string::npos) {
+        std::string aux =
+            _request.getUrl().substr(0, _request.getUrl().find_last_of("/"));
+
+        std::map<std::string, Location>::const_iterator it =
+            _request.getServer().getLocations().find(aux);
+
+        if (it == _request.getServer().getLocations().end() ||
+            !it->second.cgi) {
+            throw std::runtime_error(setStatusCode("403"));
+        }
+
         Cgi cgi = Cgi(_request, "POST");
         cgi.execute();
         std::string fileExtension = ServerUtils::getExtension(_serverRoot);
@@ -171,17 +196,18 @@ void Response::_HandleDELETE() {
     _response += "\r\n";
 }
 
-const std::string Response::_handleAutoindex(const std::string& path) {
+const std::string Response::_handleAutoindex(const std::string& path,
+                                             const Location& l) {
     std::stringstream ss;
 
     DIR* dir = opendir(path.c_str());
     dirent* entry;
 
-    ss << "<h1>Index of " << _request.getLocation().path << "</h1>\n<ul>";
+    ss << "<h1>Index of " << l.path << "</h1>\n<ul>";
 
     while ((entry = readdir(dir))) {
         ss << "<li><a href=\"";
-        ss << _request.getLocation().path;
+        ss << l.path;
         if (ss.str().at(ss.str().size() - 1) != '/') {
             ss << "/";
         }

@@ -200,7 +200,7 @@ void DirectiveHandler::_handleAllowedMethodsDirective(std::istringstream &iss,
 }
 
 bool DirectiveHandler::_isAllowedHttpMethod(const std::string &str) const {
-    return str == "GET" || str == "POST";
+    return str == "GET" || str == "POST" || str == "DELETE";
 }
 
 void DirectiveHandler::_handleIndexFile(std::istringstream &iss,
