@@ -30,6 +30,12 @@ std::vector<ServerConfig> parse(std::ifstream &ifs) {
         configs.push_back(config);
     }
 
+    std::string default_server_root = configs.begin()->getRoot();
+    for (ServerVec::iterator it = configs.begin() + 1; it != configs.end();
+         ++it) {
+        it->setRoot(default_server_root);
+    }
+
     std::set<std::string> set;
     for (ServerVec::const_iterator it = configs.begin(); it != configs.end();
          ++it) {
@@ -135,9 +141,7 @@ ServerConfig serverBlockToServerConfig(std::string &block) {
     }
 
     ServerConfig cfg = handler.getCfg();
-    if (cfg.getErrorPages().size() == 0) {
-        cfg.setErrorPages(ServerUtils::getDefaultErrorPages());
-    }
+    cfg.setErrorPages(ServerUtils::getDefaultErrorPages(cfg.getErrorPages()));
     if (cfg.good()) {
         return cfg;
     }
