@@ -24,11 +24,23 @@ std::vector<ServerConfig> parse(std::ifstream &ifs) {
             "a config file must contain at least one server block");
     }
 
-    std::vector<ServerConfig> configs;
+    ServerVec configs;
     for (std::string::size_type i = 0; i < serverConfigBlocks.size(); ++i) {
         ServerConfig config = serverBlockToServerConfig(serverConfigBlocks[i]);
         configs.push_back(config);
     }
+
+    std::set<std::string> set;
+    for (ServerVec::const_iterator it = configs.begin(); it != configs.end();
+         ++it) {
+        std::string port = it->getPort();
+        if (set.count(port) > 0) {
+            throw std::runtime_error(
+                "there are 2 or more servers with the same port: " + port);
+        }
+        set.insert(port);
+    }
+
     return configs;
 }
 
@@ -80,8 +92,6 @@ std::string removeConsecutiveWhitespaces(const std::string &str) {
 }
 
 void trimWhitespaces(std::string &line) {
-    // respectively: remove leading whitespaces from start, end, and between the
-    // string
     line.erase(line.begin(),
                std::find_if(line.begin(), line.end(), IsNotSpace()));
     line.erase(std::find_if(line.rbegin(), line.rend(), IsNotSpace()).base(),
