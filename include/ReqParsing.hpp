@@ -67,6 +67,7 @@ class ReqParsing {
     bool getHasBodyLimit() const;
     bool getIsParsed() const;
     const Location &getLocation() const;
+	const ServerConfig &getServer() const;
 	const std::map<std::string, std::string> &getErrorPagePath() const;
 
    private:

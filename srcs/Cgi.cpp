@@ -25,7 +25,7 @@ Cgi &Cgi::operator=(const Cgi &other) {
 Cgi::~Cgi() {}
 
 void Cgi::_setup() {
-    _script = "server_root" + _request.getUrl();
+    _script = _request.getServer().getRoot() + _request.getUrl();
     _binaryAbsPath = ServerUtils::getAbsPath("python3");
 }
 

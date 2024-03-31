@@ -66,10 +66,12 @@ const std::string getAbsPath(const std::string &ex) {
     return "";
 }
 
-std::vector<std::pair<std::string, std::string> > getDefaultErrorPages() {
+std::vector<std::pair<std::string, std::string> > getDefaultErrorPages(
+    const std::map<std::string, std::string> &m,
+    const std::string &serverRoot) {
     std::vector<std::pair<std::string, std::string> > defaultErrorPages;
 
-    std::string errorPagesDir = "./server_root/error_pages/";
+    std::string errorPagesDir = "./" + serverRoot + "/error_pages/";
 
     DIR *dir = opendir(errorPagesDir.c_str());
     if (!dir) {
@@ -85,6 +87,13 @@ std::vector<std::pair<std::string, std::string> > getDefaultErrorPages() {
             if (!isFileReadable(filePath)) {
                 throw std::runtime_error("no such file: " + filePath);
             }
+
+            std::map<std::string, std::string>::const_iterator it =
+                m.find(errorCode);
+            if (it != m.end()) {
+                continue;
+            }
+
             defaultErrorPages.push_back(std::make_pair(errorCode, filePath));
         }
     }

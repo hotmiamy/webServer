@@ -18,7 +18,7 @@ ReqParsing::ReqParsing(const ServerVec &server, Socket &client)
       _connection(),
       _contentLength(0),
       _maxBodySize(0),
-	  _hasBodyLimit(false),
+      _hasBodyLimit(false),
       _chunkBody(false),
       _firtLineParsed(false),
       _headerParsed(false),
@@ -292,5 +292,15 @@ bool ReqParsing::getHasBodyLimit() const { return (this->_hasBodyLimit); }
 bool ReqParsing::getIsParsed() const { return (this->_isParsed); }
 
 const Location &ReqParsing::getLocation() const { return (_location); }
+
+const ServerConfig &ReqParsing::getServer() const 
+{ 
+	for (size_t i = 0; i < _server.size(); i++)
+	{
+		if (_server[i].getSocketFD() == _clientSocket.getServerFD())
+			return (_server[i]);
+	}
+	return (_server[0]);
+}
 
 const std::map<std::string, std::string> &ReqParsing::getErrorPagePath() const { return (_errorPagePath); }
