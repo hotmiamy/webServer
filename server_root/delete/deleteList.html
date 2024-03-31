@@ -1,60 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Delete File</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete File</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1, h2 {
+            margin-top: 0;
+        }
+        p {
+            margin-bottom: 20px;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-<h2>Selecione um arquivo para excluir:</h2>
-<select id="fileSelect">
-</select>
-<button onclick="deleteFile()">Excluir</button>
+    <h1>Delete File</h1>
 
-<script>
-window.onload = function() {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/delete/delete.py', true);
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            var jsonResponse = xhr.responseText;
-            try {
-                var files = JSON.parse(jsonResponse);
-                var fileSelect = document.getElementById('fileSelect');
-                files.forEach(function(file) {
-                    var option = document.createElement('option');
-                    option.value = file;
-                    option.text = file;
-                    fileSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Erro ao analisar JSON:', error);
-                alert('Erro ao analisar a lista de arquivos.');
-            }
-        } else {
-            alert('Erro ao obter a lista de arquivos.');
+    <h2>Selecione um arquivo para excluir:</h2>
+    <select id="fileSelect"> </select>
+    <button onclick="deleteFile()">Excluir</button>
+
+    <script>
+        window.onload = function () {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/delete/delete.py", true);
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    var jsonResponse = xhr.responseText;
+                    try {
+                        var files = JSON.parse(jsonResponse);
+                        var fileSelect = document.getElementById("fileSelect");
+                        files.forEach(function (file) {
+                            var option = document.createElement("option");
+                            option.value = file;
+                            option.text = file;
+                            fileSelect.appendChild(option);
+                        });
+                    } catch (error) {
+                        console.error("Erro ao analisar JSON:", error);
+                        alert("Erro ao analisar a lista de arquivos.");
+                    }
+                } else {
+                    alert("Erro ao obter a lista de arquivos.");
+                }
+            };
+            xhr.send();
+        };
+
+        function deleteFile() {
+            var fileSelect = document.getElementById("fileSelect");
+            var filename = fileSelect.options[fileSelect.selectedIndex].value;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("DELETE", "/delete/files/?filename=" + encodeURIComponent(filename), true);
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    alert("Arquivo excluído com sucesso.");
+                    // Atualiza a lista de arquivos após a exclusão bem-sucedida (opcional)
+                    location.reload();
+                } else {
+                    alert("Erro ao excluir o arquivo.");
+                }
+            };
+            xhr.send();
         }
-    };
-    xhr.send();
-};
-
-function deleteFile() {
-    var fileSelect = document.getElementById('fileSelect');
-    var filename = fileSelect.options[fileSelect.selectedIndex].value;
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('DELETE', '/delete/files/?filename=' + encodeURIComponent(filename), true);
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            alert('Arquivo excluído com sucesso.');
-            // Atualiza a lista de arquivos após a exclusão bem-sucedida (opcional)
-            location.reload();
-        } else {
-            alert('Erro ao excluir o arquivo.');
-        }
-    };
-    xhr.send();
-}
-</script>
+    </script>
+    <p>Que tal testar o CGI agora? <a href="/cgi/cgi.html">Basta clicar aqui</a> e iremos para a página do CGI.</p>
 </body>
 </html>
