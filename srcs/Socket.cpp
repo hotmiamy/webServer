@@ -72,8 +72,8 @@ int Socket::accept(int serverFD) {
 }
 
 int Socket::read(std::string &request) {
-	char buff[4096] = {0};
-	int bytesread, totalbytesread = 0;
+    char buff[4096] = {0};
+    int bytesread, totalbytesread = 0;
 
     while ((bytesread = recv(this->_clientFd, buff, sizeof(buff), 0))) {
         if (bytesread >= 0) {
@@ -114,17 +114,16 @@ int Socket::read(std::string &request) {
 }
 
 int Socket::send(const std::string &response) {
-	long int bytesreturned = 0, totalbytes = 0;
-	std::cout << SEPARATOR << response.substr(0, response.find("\r\n\r\n")) << SEPARATOR;
-	while ((size_t)totalbytes < response.size())
-	{
-
-		bytesreturned = ::send(this->_clientFd, response.c_str(), response.size(), 0);
-		totalbytes += bytesreturned;
-		if (bytesreturned < 0)
-			break;
-	}
-	return (totalbytes);
+    long int bytesreturned = 0, totalbytes = 0;
+    std::cout << SEPARATOR << response.substr(0, response.find("\r\n\r\n"))
+              << SEPARATOR;
+    while ((size_t)totalbytes < response.size()) {
+        bytesreturned =
+            ::send(this->_clientFd, response.c_str(), response.size(), 0);
+        totalbytes += bytesreturned;
+        if (bytesreturned < 0) break;
+    }
+    return (totalbytes);
 }
 
 template <typename ExceptionType>

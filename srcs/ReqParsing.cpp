@@ -8,7 +8,7 @@ ReqParsing::ReqParsing(const ServerVec &server, Socket &client)
       _url(),
       _queryUrl(),
       _httpVersion(),
-	  _host(""),
+      _host(),
       _contentType(),
       _transferEncoding(),
       _body(),
@@ -24,11 +24,11 @@ ReqParsing::ReqParsing(const ServerVec &server, Socket &client)
       _headerParsed(false),
       _bodyParsed(false),
       _isParsed(false),
-	  cgi(false),
+      cgi(server[0].cgi),
       _location(),
       _server(server),
-	  _clientSocket(client),
-	  _errorPagePath(){}
+      _clientSocket(client),
+      _errorPagePath() {}
 
 void ReqParsing::parse(const std::string &reqRaw, int clientRes) {
     try {
@@ -72,13 +72,13 @@ void ReqParsing::parsFirtsLine(const std::string &firstline) {
                 break;
             case URL:
                 if (buff[0] == '/') {
-                    if (buff.find("?") != std::string::npos){
-                    	_queryUrl = buff.substr(buff.find("?") + 1);
-						_url = buff.substr(0, buff.find("?"));
-       					 _url += _queryUrl.substr(_queryUrl.find("=") + 1);
-  				  }else
-                    _url = buff;
-                state = HTTP;
+                    if (buff.find("?") != std::string::npos) {
+                        _queryUrl = buff.substr(buff.find("?") + 1);
+                        _url = buff.substr(0, buff.find("?"));
+                        _url += _queryUrl.substr(_queryUrl.find("=") + 1);
+                    } else
+                        _url = buff;
+                    state = HTTP;
                 }
                 break;
             case HTTP:
@@ -93,16 +93,15 @@ void ReqParsing::parsFirtsLine(const std::string &firstline) {
 }
 
 void ReqParsing::extractHeaderInfo(const std::string &rawReq) {
-    if (rawReq.find("\r\n\r\n") == std::string::npos){
+    if (rawReq.find("\r\n\r\n") == std::string::npos) {
         throw std::runtime_error("400");
-	}
-	if (ReqParsUtils::ExtractHeader(rawReq, "Host") != ""){
-		_host = ReqParsUtils::ExtractHeader(rawReq, "Host");
-		ReqParsUtils::trimHostname(_host);
-		extractServerInfo();
-	}
-	else
-		throw std::runtime_error("400");
+    }
+    if (ReqParsUtils::ExtractHeader(rawReq, "Host") != "") {
+        _host = ReqParsUtils::ExtractHeader(rawReq, "Host");
+        ReqParsUtils::trimHostname(_host);
+        extractServerInfo();
+    } else
+        throw std::runtime_error("400");
     if (_method == "POST") {
         if (ReqParsUtils::ExtractHeader(rawReq, "Transfer-Encoding") ==
             "chunked") {
@@ -152,8 +151,8 @@ void ReqParsing::parseBody(const std::string &reqRaw) {
         unparsedBody.erase(0, _contentLength);
         _bodyParsed = true;
     }
-	if (_body.empty() == true) throw std::runtime_error("204");
-	if (_body.size() > _maxBodySize) throw std::runtime_error("413");
+    if (_body.empty() == true) throw std::runtime_error("204");
+    if (_body.size() > _maxBodySize) throw std::runtime_error("413");
 }
 
 void ReqParsing::isMultiPart() {
@@ -173,7 +172,7 @@ ReqParsing::~ReqParsing(void) {}
 
 void ReqParsing::extractServerInfo() {
     std::string rootServer = _root + _url;
-	size_t inx = 0;
+    size_t inx = 0;
 
 	for (; inx < _server.size(); inx++) {
 		if (_server[inx].getSocketFD() == _clientSocket.getServerFD()) {
@@ -381,14 +380,14 @@ bool ReqParsing::getCgi() const { return (this->cgi); }
 
 const Location &ReqParsing::getLocation() const { return (_location); }
 
-const ServerConfig &ReqParsing::getServer() const 
-{ 
-	for (size_t i = 0; i < _server.size(); i++)
-	{
-		if (_server[i].getSocketFD() == _clientSocket.getServerFD())
-			return (_server[i]);
-	}
-	return (_server[0]);
+const ServerConfig &ReqParsing::getServer() const {
+    for (size_t i = 0; i < _server.size(); i++) {
+        if (_server[i].getSocketFD() == _clientSocket.getServerFD())
+            return (_server[i]);
+    }
+    return (_server[0]);
 }
 
-const std::map<std::string, std::string> &ReqParsing::getErrorPagePath() const { return (_errorPagePath); }
+const std::map<std::string, std::string> &ReqParsing::getErrorPagePath() const {
+    return (_errorPagePath);
+}
