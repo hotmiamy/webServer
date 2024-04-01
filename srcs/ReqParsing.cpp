@@ -238,16 +238,18 @@ void ReqParsing::extractServerInfo() {
 		else if (_url.find(".py") != std::string::npos){
 			if (checkCgiAllowed() == false)
 				throw std::runtime_error("403");
-			else
+			else {
 				this->cgi = true;
+			}
 		}
 	}
 	else{
 		if (_server[inx].getServerName() != _host && _host != "127.0.0.1" && _host != "localhost")
 			throw std::runtime_error("404");
 		if (ServerUtils::isDirectory(rootServer)) {
+			std::string tmp = _url.substr(0, _url.find("/", 1));
 			std::map<std::string, Location>::const_iterator it;
-			it = _server[inx].getLocations().find(_url);
+			it = _server[inx].getLocations().find(tmp);
 			if (it == _server[inx].getLocations().end())
 					throw std::runtime_error("404");
 				else{
@@ -263,7 +265,7 @@ void ReqParsing::extractServerInfo() {
 
 bool ReqParsing::checkCgiAllowed() {
 	std::string tmp;
-	if (_url.size() - 1 != '/') 
+	if (_url.size() - 1 != '/' && _url.find("/", 1) == std::string::npos) 
 		tmp = '/';
 	else
 		tmp = _url.substr(0, _url.find("/", 1));
@@ -276,29 +278,27 @@ bool ReqParsing::checkCgiAllowed() {
 		if (it == _server[i].getLocations().end())
 			continue;
 		else{
-			if (it->second.cgi == true)
+			if (it->second.cgi == true) {
+				_location = it->second;
 				return true;
-			else
-				return false;
+			}
 		}
 	}
 	if (i == _server.size()){
-			if (it == _server[i - 1].getLocations().end()){
-				for (size_t i = 0; i < _server.size(); i++) {
-					if (_server[i].cgi == true)
-						return true;
-				}
-				return false;
+			for (size_t i = 0; i < _server.size(); i++) {
+				if (_server[i].cgi == true)
+					return true;
 			}
+			return false;
 		}
 		else if (i < _server.size()) {
-			if (it == _server[i].getLocations().end()){
-				for (size_t i = 0; i < _server.size(); i++) {
-					if (_server[i].cgi == true)
-						return true;
+			for (size_t i = 0; i < _server.size(); i++) {
+				if (_server[i].cgi == true){
+					_location = it->second;
+					return true;
 				}
-				return false;
 			}
+			return false;
 	}
 	return false;
 }
