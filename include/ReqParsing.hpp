@@ -79,4 +79,5 @@ class ReqParsing {
     void extractHeaderInfo(const std::string &rawReq);
     void parseBody(const std::string &reqRaw);
     void isMultiPart();
+	bool checkCgiAllowed();
 };

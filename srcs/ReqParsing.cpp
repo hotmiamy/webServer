@@ -24,7 +24,7 @@ ReqParsing::ReqParsing(const ServerVec &server, Socket &client)
       _headerParsed(false),
       _bodyParsed(false),
       _isParsed(false),
-      cgi(server[0].cgi),
+      cgi(false),
       _location(),
       _server(server),
       _clientSocket(client),
