@@ -18,7 +18,7 @@ class ReqParsing {
     std::string _url;
     std::string _queryUrl;
     std::string _httpVersion;
-	std::string _host;
+    std::string _host;
     std::string _contentType;
     std::string _transferEncoding;
     std::string _body;
@@ -34,11 +34,11 @@ class ReqParsing {
     bool _headerParsed;
     bool _bodyParsed;
     bool _isParsed;
-	bool cgi;
+    bool cgi;
     Location _location;
     ServerVec _server;
-	Socket _clientSocket;
-	std::map<std::string, std::string> _errorPagePath;
+    Socket _clientSocket;
+    std::map<std::string, std::string> _errorPagePath;
 
    public:
     ReqParsing();
@@ -67,17 +67,16 @@ class ReqParsing {
     bool getChunkBody() const;
     bool getHasBodyLimit() const;
     bool getIsParsed() const;
-	bool getCgi() const;
+    bool getCgi() const;
     const Location &getLocation() const;
-	const ServerConfig &getServer() const;
-	const std::map<std::string, std::string> &getErrorPagePath() const;
+    const ServerConfig &getServer() const;
+    const std::map<std::string, std::string> &getErrorPagePath() const;
 
    private:
     void parsFirtsLine(const std::string &rawReq);
     void extractServerInfo();
-	int validateAllServerName();
+    int validateAllServerName();
     void extractHeaderInfo(const std::string &rawReq);
     void parseBody(const std::string &reqRaw);
     void isMultiPart();
-	bool checkCgiAllowed();
 };
