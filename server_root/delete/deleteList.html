@@ -64,8 +64,6 @@
                         console.error("Erro ao analisar JSON:", error);
                         alert("Erro ao analisar a lista de arquivos.");
                     }
-                } else {
-                    alert("Erro ao obter a lista de arquivos.");
                 }
             };
             xhr.send();
@@ -82,8 +80,6 @@
                     alert("Arquivo excluído com sucesso.");
                     // Atualiza a lista de arquivos após a exclusão bem-sucedida (opcional)
                     location.reload();
-                } else {
-                    alert("Erro ao excluir o arquivo.");
                 }
             };
             xhr.send();
