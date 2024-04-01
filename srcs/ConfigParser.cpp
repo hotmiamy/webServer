@@ -36,15 +36,23 @@ std::vector<ServerConfig> parse(std::ifstream &ifs) {
         it->setRoot(default_server_root);
     }
 
-    std::set<std::string> set;
+    std::set<std::string> ports, serverNames;
     for (ServerVec::const_iterator it = configs.begin(); it != configs.end();
          ++it) {
         std::string port = it->getPort();
-        if (set.count(port) > 0) {
+        if (ports.count(port) > 0) {
             throw std::runtime_error(
                 "there are 2 or more servers with the same port: " + port);
         }
-        set.insert(port);
+        ports.insert(port);
+
+        std::string serverName = it->getServerName();
+        if (serverNames.count(serverName) > 0) {
+            throw std::runtime_error(
+                "there are 2 or more servers with the same server_name: " +
+                serverName);
+        }
+        serverNames.insert(serverName);
     }
 
     return configs;
