@@ -59,11 +59,7 @@ void Response::_HandleGET() {
     std::stringstream responseHead, responseBody, fullResponse;
     std::string fileExtension = ServerUtils::getExtension(_serverRoot);
 
-    std::map<std::string, Location>::const_iterator it =
-        _request.getServer().getLocations().find(_request.getUrl());
-
-    Location l = it != _request.getServer().getLocations().end() ? it->second
-                                                                 : Location();
+    Location l = _request.getLocation();
 
     if (!l.empty() && l.redirectionSet()) {
         std::string code = l.redirection.first,
@@ -76,6 +72,7 @@ void Response::_HandleGET() {
 
     std::string filePath = _request.getRoot() + _request.getUrl();
     if (ServerUtils::isDirectory(filePath) && !l.empty()) {
+
         if (l.autoindex) {
             responseHead << ResponseUtils::StatusCodes("200")
                          << "Content-Format: "
@@ -92,17 +89,14 @@ void Response::_HandleGET() {
             }
         }
     } else {
+		
         if (_request.getUrl().find(".py") != std::string::npos) {
             std::string aux = _request.getUrl().substr(
                 0, _request.getUrl().find_last_of("/"));
 
-            std::map<std::string, Location>::const_iterator it =
-                _request.getServer().getLocations().find(aux);
-
-            if (!it->second.cgi || it == _request.getServer().getLocations().end()
-                ) {
-                throw std::runtime_error(setStatusCode("403"));
-            }
+			if (_request.getCgi() == false){
+				throw std::runtime_error(setStatusCode("403"));
+			}
 
             Cgi cgi = Cgi(_request, "GET");
             cgi.execute();
@@ -138,11 +132,7 @@ void Response::_HandlePOST() {
         std::string aux =
             _request.getUrl().substr(0, _request.getUrl().find_last_of("/"));
 
-        std::map<std::string, Location>::const_iterator it =
-            _request.getServer().getLocations().find(aux);
-
-        if (it == _request.getServer().getLocations().end() ||
-            !it->second.cgi) {
+        if (_request.getCgi() == false){
             throw std::runtime_error(setStatusCode("403"));
         }
 
@@ -178,10 +168,6 @@ void Response::_HandlePOST() {
 }
 
 void Response::_HandleDELETE() {
-    if (_request.getQueryUrl().empty() == false) {
-        _serverRoot +=
-            _request.getQueryUrl().substr(_request.getQueryUrl().find("=") + 1);
-    }
     if (ServerUtils::isDirectory(_serverRoot)) {
         throw std::runtime_error(setStatusCode("405"));
     }

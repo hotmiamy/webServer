@@ -24,6 +24,7 @@ ReqParsing::ReqParsing(const ServerVec &server, Socket &client)
       _headerParsed(false),
       _bodyParsed(false),
       _isParsed(false),
+	  cgi(false),
       _location(),
       _server(server),
 	  _clientSocket(client),
@@ -71,12 +72,13 @@ void ReqParsing::parsFirtsLine(const std::string &firstline) {
                 break;
             case URL:
                 if (buff[0] == '/') {
-                    if (buff.find("?") != std::string::npos) {
-                        _url = buff.substr(0, buff.find("?"));
-                        _queryUrl = buff.substr(buff.find("?") + 1);
-                    } else
-                        _url = buff;
-                    state = HTTP;
+                    if (buff.find("?") != std::string::npos){
+                    	_queryUrl = buff.substr(buff.find("?") + 1);
+						_url = buff.substr(0, buff.find("?"));
+       					 _url += _queryUrl.substr(_queryUrl.find("=") + 1);
+  				  }else
+                    _url = buff;
+                state = HTTP;
                 }
                 break;
             case HTTP:
@@ -180,6 +182,8 @@ void ReqParsing::extractServerInfo() {
 	}
 	if (_server[inx].getErrorPages().empty() == false)
 		_errorPagePath = _server[inx].getErrorPages();
+	else if (_server[0].getErrorPages().empty() == false)
+		_errorPagePath = _server[0].getErrorPages();
 	if(_server[inx].getClientMaxBodySize() != ""){
 		std::istringstream iss(_server[inx].getClientMaxBodySize());
 		iss >> _maxBodySize;
@@ -191,48 +195,130 @@ void ReqParsing::extractServerInfo() {
 	else if (_server[0].getErrorPages().empty() == false)
 		_errorPagePath = _server[0].getErrorPages();
 	if (inx == 0){
-		if (validateAllServerName() == false)
+		int hostInx = 0;
+		hostInx = validateAllServerName();
+		if (hostInx == -1)
 			throw std::runtime_error("404");
 		if (ServerUtils::isDirectory(rootServer)) {
-			std::map<std::string, Location>::const_iterator it;
-			it = _server[inx].getLocations().find(_url);
-			for (inx = 0; inx < _server.size(); inx++) {
-				std::string aux = _url.size() == 1 ? _url : _url.substr(0, _url.find_last_of('/'));
-				if (_server[inx].getLocations().find(aux) == _server[inx].getLocations().end())
-					continue;
-				else{
+			std::map<std::string, Location>::const_iterator locIt;
+			locIt = _server[hostInx].getLocations().find(_url);
+			if (locIt != _server[hostInx].getLocations().end()){
+				_location = locIt->second;
+			} else {
+				std::size_t inx = 0;
+				std::map<std::string, Location>::const_iterator it;
+				std::string aux;
+				if (_url.size() == 1 || _url[_url.size() - 1] == '/')
+					aux  = _url.size() == 1 ? _url : _url.substr(0, _url.size() - 1);
+				else
+					aux = _url;
+				for (; inx < _server.size(); inx++) {
 					it = _server[inx].getLocations().find(aux);
-					break;
+					if (_server[inx].getLocations().find(aux) == _server[inx].getLocations().end())
+						continue;
+					else{
+						break;
+					}
+				}
+				if (inx == _server.size()){
+					if (it == _server[inx - 1].getLocations().end())
+							throw std::runtime_error("404");
+				}
+				else if (inx < _server.size()) {
+					if (it == _server[inx].getLocations().end())
+							throw std::runtime_error("404");
+					else{
+						_location = it->second;
+						if (_location.cgi == true)
+							this->cgi = true;
+					}
 				}
 			}
-			if (it == _server[inx].getLocations().end())
-				throw std::runtime_error("404");
+		}
+		else if (_url.find(".py") != std::string::npos){
+			if (checkCgiAllowed() == false)
+				throw std::runtime_error("403");
 			else
-				_location = it->second;
+				this->cgi = true;
 		}
 	}
 	else{
-		if (_server[inx].getServerName() != _host && (_host != "127.0.0.1" || _host != "localhost"))
+		if (_server[inx].getServerName() != _host && _host != "127.0.0.1" && _host != "localhost")
 			throw std::runtime_error("404");
 		if (ServerUtils::isDirectory(rootServer)) {
 			std::map<std::string, Location>::const_iterator it;
 			it = _server[inx].getLocations().find(_url);
 			if (it == _server[inx].getLocations().end())
 					throw std::runtime_error("404");
-				else
+				else{
 					_location = it->second;
+					if (_location.cgi == true)
+						this->cgi = true;
+				}
 		}
+		else if (_server[inx].cgi == true)
+			cgi = true;
 	}
 }
 
-bool ReqParsing::validateAllServerName()
-{
-	for (size_t i = 0; i < _server.size(); i++)
+bool ReqParsing::checkCgiAllowed() {
+	std::string tmp;
+	if (_url.size() - 1 != '/') 
+		tmp = '/';
+	else
+		tmp = _url.substr(0, _url.find("/", 1));
+	std::map<std::string, Location>::const_iterator it;
+	size_t i = 0;
+
+	for (; i < _server.size(); i++)
 	{
-		if (_server[i].getServerName() == _host || _host == "127.0.0.1" || _host == "localhost")
-			return true;
+		it = _server[i].getLocations().find(tmp);
+		if (it == _server[i].getLocations().end())
+			continue;
+		else{
+			if (it->second.cgi == true)
+				return true;
+			else
+				return false;
+		}
+	}
+	if (i == _server.size()){
+			if (it == _server[i - 1].getLocations().end()){
+				for (size_t i = 0; i < _server.size(); i++) {
+					if (_server[i].cgi == true)
+						return true;
+				}
+				return false;
+			}
+		}
+		else if (i < _server.size()) {
+			if (it == _server[i].getLocations().end()){
+				for (size_t i = 0; i < _server.size(); i++) {
+					if (_server[i].cgi == true)
+						return true;
+				}
+				return false;
+			}
 	}
 	return false;
+}
+
+int ReqParsing::validateAllServerName()
+{
+	int inx = -1;
+
+	for (size_t i = 0; i < _server.size(); i++)
+	{
+		if (_server[i].getServerName() == _host){
+			inx = i;
+			continue;
+		}
+		else if (_host == "127.0.0.1" || _host == "localhost"){
+			inx = 0;
+			continue;
+		}
+	}
+	return inx;
 }
 
 void ReqParsing::setStatusCode(const std::string &statusCode) {
@@ -290,6 +376,8 @@ bool ReqParsing::getChunkBody() const { return (this->_chunkBody); }
 bool ReqParsing::getHasBodyLimit() const { return (this->_hasBodyLimit); }
 
 bool ReqParsing::getIsParsed() const { return (this->_isParsed); }
+
+bool ReqParsing::getCgi() const { return (this->cgi); }
 
 const Location &ReqParsing::getLocation() const { return (_location); }
 

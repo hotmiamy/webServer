@@ -16,6 +16,7 @@ ServerConfig::ServerConfig(const ServerConfig &other) { *this = other; }
 
 ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
     if (this != &other) {
+		cgi = other.cgi;
         _port = other._port;
         _root = other._root;
         _serverName = other._serverName;

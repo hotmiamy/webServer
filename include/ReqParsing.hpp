@@ -34,6 +34,7 @@ class ReqParsing {
     bool _headerParsed;
     bool _bodyParsed;
     bool _isParsed;
+	bool cgi;
     Location _location;
     ServerVec _server;
 	Socket _clientSocket;
@@ -66,6 +67,7 @@ class ReqParsing {
     bool getChunkBody() const;
     bool getHasBodyLimit() const;
     bool getIsParsed() const;
+	bool getCgi() const;
     const Location &getLocation() const;
 	const ServerConfig &getServer() const;
 	const std::map<std::string, std::string> &getErrorPagePath() const;
@@ -73,8 +75,9 @@ class ReqParsing {
    private:
     void parsFirtsLine(const std::string &rawReq);
     void extractServerInfo();
-	bool validateAllServerName();
+	int validateAllServerName();
     void extractHeaderInfo(const std::string &rawReq);
     void parseBody(const std::string &reqRaw);
     void isMultiPart();
+	bool checkCgiAllowed();
 };
