@@ -8,7 +8,7 @@ ReqParsing::ReqParsing(const ServerVec &server, Socket &client)
       _url(),
       _queryUrl(),
       _httpVersion(),
-	  _host(""),
+      _host(),
       _contentType(),
       _transferEncoding(),
       _body(),
@@ -24,11 +24,11 @@ ReqParsing::ReqParsing(const ServerVec &server, Socket &client)
       _headerParsed(false),
       _bodyParsed(false),
       _isParsed(false),
-	  cgi(false),
+      cgi(server[0].cgi),
       _location(),
       _server(server),
-	  _clientSocket(client),
-	  _errorPagePath(){}
+      _clientSocket(client),
+      _errorPagePath() {}
 
 void ReqParsing::parse(const std::string &reqRaw, int clientRes) {
     try {
@@ -72,13 +72,13 @@ void ReqParsing::parsFirtsLine(const std::string &firstline) {
                 break;
             case URL:
                 if (buff[0] == '/') {
-                    if (buff.find("?") != std::string::npos){
-                    	_queryUrl = buff.substr(buff.find("?") + 1);
-						_url = buff.substr(0, buff.find("?"));
-       					 _url += _queryUrl.substr(_queryUrl.find("=") + 1);
-  				  }else
-                    _url = buff;
-                state = HTTP;
+                    if (buff.find("?") != std::string::npos) {
+                        _queryUrl = buff.substr(buff.find("?") + 1);
+                        _url = buff.substr(0, buff.find("?"));
+                        _url += _queryUrl.substr(_queryUrl.find("=") + 1);
+                    } else
+                        _url = buff;
+                    state = HTTP;
                 }
                 break;
             case HTTP:
@@ -93,16 +93,15 @@ void ReqParsing::parsFirtsLine(const std::string &firstline) {
 }
 
 void ReqParsing::extractHeaderInfo(const std::string &rawReq) {
-    if (rawReq.find("\r\n\r\n") == std::string::npos){
+    if (rawReq.find("\r\n\r\n") == std::string::npos) {
         throw std::runtime_error("400");
-	}
-	if (ReqParsUtils::ExtractHeader(rawReq, "Host") != ""){
-		_host = ReqParsUtils::ExtractHeader(rawReq, "Host");
-		ReqParsUtils::trimHostname(_host);
-		extractServerInfo();
-	}
-	else
-		throw std::runtime_error("400");
+    }
+    if (ReqParsUtils::ExtractHeader(rawReq, "Host") != "") {
+        _host = ReqParsUtils::ExtractHeader(rawReq, "Host");
+        ReqParsUtils::trimHostname(_host);
+        extractServerInfo();
+    } else
+        throw std::runtime_error("400");
     if (_method == "POST") {
         if (ReqParsUtils::ExtractHeader(rawReq, "Transfer-Encoding") ==
             "chunked") {
@@ -152,8 +151,8 @@ void ReqParsing::parseBody(const std::string &reqRaw) {
         unparsedBody.erase(0, _contentLength);
         _bodyParsed = true;
     }
-	if (_body.empty() == true) throw std::runtime_error("204");
-	if (_body.size() > _maxBodySize) throw std::runtime_error("413");
+    if (_body.empty() == true) throw std::runtime_error("204");
+    if (_body.size() > _maxBodySize) throw std::runtime_error("413");
 }
 
 void ReqParsing::isMultiPart() {
@@ -173,152 +172,96 @@ ReqParsing::~ReqParsing(void) {}
 
 void ReqParsing::extractServerInfo() {
     std::string rootServer = _root + _url;
-	size_t inx = 0;
+    size_t inx = 0;
 
-	for (; inx < _server.size(); inx++) {
-		if (_server[inx].getSocketFD() == _clientSocket.getServerFD()) {
-			break;
-		}
-	}
-	if (_server[inx].getErrorPages().empty() == false)
-		_errorPagePath = _server[inx].getErrorPages();
-	else if (_server[0].getErrorPages().empty() == false)
-		_errorPagePath = _server[0].getErrorPages();
-	if(_server[inx].getClientMaxBodySize() != ""){
-		std::istringstream iss(_server[inx].getClientMaxBodySize());
-		iss >> _maxBodySize;
-	}
-	else if (_server[0].getClientMaxBodySize() != ""){
-		std::istringstream iss(_server[0].getClientMaxBodySize());
-		iss >> _maxBodySize;
-	}
-	else if (_server[0].getErrorPages().empty() == false)
-		_errorPagePath = _server[0].getErrorPages();
-	if (inx == 0){
-		int hostInx = 0;
-		hostInx = validateAllServerName();
-		if (hostInx == -1)
-			throw std::runtime_error("404");
-		if (ServerUtils::isDirectory(rootServer)) {
-			std::map<std::string, Location>::const_iterator locIt;
-			locIt = _server[hostInx].getLocations().find(_url);
-			if (locIt != _server[hostInx].getLocations().end()){
-				_location = locIt->second;
-			} else {
-				std::size_t inx = 0;
-				std::map<std::string, Location>::const_iterator it;
-				std::string aux;
-				if (_url.size() == 1 || _url[_url.size() - 1] == '/')
-					aux  = _url.size() == 1 ? _url : _url.substr(0, _url.size() - 1);
-				else
-					aux = _url;
-				for (; inx < _server.size(); inx++) {
-					it = _server[inx].getLocations().find(aux);
-					if (_server[inx].getLocations().find(aux) == _server[inx].getLocations().end())
-						continue;
-					else{
-						break;
-					}
-				}
-				if (inx == _server.size()){
-					if (it == _server[inx - 1].getLocations().end())
-							throw std::runtime_error("404");
-				}
-				else if (inx < _server.size()) {
-					if (it == _server[inx].getLocations().end())
-							throw std::runtime_error("404");
-					else{
-						_location = it->second;
-						if (_location.cgi == true)
-							this->cgi = true;
-					}
-				}
-			}
-		}
-		else if (_url.find(".py") != std::string::npos){
-			if (checkCgiAllowed() == false)
-				throw std::runtime_error("403");
-			else
-				this->cgi = true;
-		}
-	}
-	else{
-		if (_server[inx].getServerName() != _host && _host != "127.0.0.1" && _host != "localhost")
-			throw std::runtime_error("404");
-		if (ServerUtils::isDirectory(rootServer)) {
-			std::map<std::string, Location>::const_iterator it;
-			it = _server[inx].getLocations().find(_url);
-			if (it == _server[inx].getLocations().end())
-					throw std::runtime_error("404");
-				else{
-					_location = it->second;
-					if (_location.cgi == true)
-						this->cgi = true;
-				}
-		}
-		else if (_server[inx].cgi == true)
-			cgi = true;
-	}
+    for (; inx < _server.size(); inx++) {
+        if (_server[inx].getSocketFD() == _clientSocket.getServerFD()) {
+            break;
+        }
+    }
+    if (_server[inx].getErrorPages().empty() == false)
+        _errorPagePath = _server[inx].getErrorPages();
+    else if (_server[0].getErrorPages().empty() == false)
+        _errorPagePath = _server[0].getErrorPages();
+    if (_server[inx].getClientMaxBodySize() != "") {
+        std::istringstream iss(_server[inx].getClientMaxBodySize());
+        iss >> _maxBodySize;
+    } else if (_server[0].getClientMaxBodySize() != "") {
+        std::istringstream iss(_server[0].getClientMaxBodySize());
+        iss >> _maxBodySize;
+    } else if (_server[0].getErrorPages().empty() == false)
+        _errorPagePath = _server[0].getErrorPages();
+    if (inx == 0) {
+        int hostInx = 0;
+        hostInx = validateAllServerName();
+        if (hostInx == -1) throw std::runtime_error("404");
+        if (ServerUtils::isDirectory(rootServer)) {
+            std::map<std::string, Location>::const_iterator locIt;
+            locIt = _server[hostInx].getLocations().find(_url);
+            if (locIt != _server[hostInx].getLocations().end()) {
+                _location = locIt->second;
+            } else {
+                std::size_t inx = 0;
+                std::map<std::string, Location>::const_iterator it;
+                std::string aux;
+                if (_url.size() == 1 || _url[_url.size() - 1] == '/')
+                    aux = _url.size() == 1 ? _url
+                                           : _url.substr(0, _url.size() - 1);
+                else
+                    aux = _url;
+                for (; inx < _server.size(); inx++) {
+                    it = _server[inx].getLocations().find(aux);
+                    if (_server[inx].getLocations().find(aux) ==
+                        _server[inx].getLocations().end())
+                        continue;
+                    else {
+                        break;
+                    }
+                }
+                if (inx == _server.size()) {
+                    if (it == _server[inx - 1].getLocations().end())
+                        throw std::runtime_error("404");
+                } else if (inx < _server.size()) {
+                    if (it == _server[inx].getLocations().end())
+                        throw std::runtime_error("404");
+                    else {
+                        _location = it->second;
+                        if (_location.cgi == true) this->cgi = true;
+                    }
+                }
+            }
+        }
+    } else {
+        if (_server[inx].getServerName() != _host && _host != "127.0.0.1" &&
+            _host != "localhost")
+            throw std::runtime_error("404");
+        if (ServerUtils::isDirectory(rootServer)) {
+            std::map<std::string, Location>::const_iterator it;
+            it = _server[inx].getLocations().find(_url);
+            if (it == _server[inx].getLocations().end())
+                throw std::runtime_error("404");
+            else {
+                _location = it->second;
+                if (_location.cgi == true) this->cgi = true;
+            }
+        } else if (_server[inx].cgi == true)
+            cgi = true;
+    }
 }
 
-bool ReqParsing::checkCgiAllowed() {
-	std::string tmp;
-	if (_url.size() - 1 != '/') 
-		tmp = '/';
-	else
-		tmp = _url.substr(0, _url.find("/", 1));
-	std::map<std::string, Location>::const_iterator it;
-	size_t i = 0;
+int ReqParsing::validateAllServerName() {
+    int inx = -1;
 
-	for (; i < _server.size(); i++)
-	{
-		it = _server[i].getLocations().find(tmp);
-		if (it == _server[i].getLocations().end())
-			continue;
-		else{
-			if (it->second.cgi == true)
-				return true;
-			else
-				return false;
-		}
-	}
-	if (i == _server.size()){
-			if (it == _server[i - 1].getLocations().end()){
-				for (size_t i = 0; i < _server.size(); i++) {
-					if (_server[i].cgi == true)
-						return true;
-				}
-				return false;
-			}
-		}
-		else if (i < _server.size()) {
-			if (it == _server[i].getLocations().end()){
-				for (size_t i = 0; i < _server.size(); i++) {
-					if (_server[i].cgi == true)
-						return true;
-				}
-				return false;
-			}
-	}
-	return false;
-}
-
-int ReqParsing::validateAllServerName()
-{
-	int inx = -1;
-
-	for (size_t i = 0; i < _server.size(); i++)
-	{
-		if (_server[i].getServerName() == _host){
-			inx = i;
-			continue;
-		}
-		else if (_host == "127.0.0.1" || _host == "localhost"){
-			inx = 0;
-			continue;
-		}
-	}
-	return inx;
+    for (size_t i = 0; i < _server.size(); i++) {
+        if (_server[i].getServerName() == _host) {
+            inx = i;
+            continue;
+        } else if (_host == "127.0.0.1" || _host == "localhost") {
+            inx = 0;
+            continue;
+        }
+    }
+    return inx;
 }
 
 void ReqParsing::setStatusCode(const std::string &statusCode) {
@@ -381,14 +324,14 @@ bool ReqParsing::getCgi() const { return (this->cgi); }
 
 const Location &ReqParsing::getLocation() const { return (_location); }
 
-const ServerConfig &ReqParsing::getServer() const 
-{ 
-	for (size_t i = 0; i < _server.size(); i++)
-	{
-		if (_server[i].getSocketFD() == _clientSocket.getServerFD())
-			return (_server[i]);
-	}
-	return (_server[0]);
+const ServerConfig &ReqParsing::getServer() const {
+    for (size_t i = 0; i < _server.size(); i++) {
+        if (_server[i].getSocketFD() == _clientSocket.getServerFD())
+            return (_server[i]);
+    }
+    return (_server[0]);
 }
 
-const std::map<std::string, std::string> &ReqParsing::getErrorPagePath() const { return (_errorPagePath); }
+const std::map<std::string, std::string> &ReqParsing::getErrorPagePath() const {
+    return (_errorPagePath);
+}

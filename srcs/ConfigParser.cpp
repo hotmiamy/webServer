@@ -146,6 +146,15 @@ ServerConfig serverBlockToServerConfig(std::string &block) {
         ServerUtils::getDefaultErrorPages(cfg.getErrorPages(), cfg.getRoot()));
 
     if (cfg.good()) {
+        for (std::map<std::string, Location>::const_iterator it =
+                 cfg.getLocations().begin();
+             it != cfg.getLocations().end(); ++it) {
+            if (it->second.cgi) {
+                cfg.cgi = true;
+                break;
+            }
+        }
+
         return cfg;
     }
     throw std::runtime_error("bad 'server' block: " + block);
