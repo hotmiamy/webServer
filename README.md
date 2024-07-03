@@ -51,5 +51,5 @@ Indice
 	 'return' faz um redirecionamento caso o usuario entre na location especifica
 
 ## Testes 
- - Bem dado o contexto dos arquivos você pode brincar o quanto quiser, mudando os arquivos vendo paginas de erro (tem gifs bem engraçados juro) e fazer oque quiser, alem do proprio site testar algumas coisas basta ir seguindo as coisas do site divirtasse
+ - Bem dado o contexto dos arquivos você pode brincar o quanto quiser, mudando os arquivos vendo paginas de erro (tem gifs bem engraçados juro) e fazer oque quiser, alem do proprio site testar algumas coisas basta ir seguindo as coisas do site e divirtasse
  
