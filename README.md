@@ -1,7 +1,6 @@
 <h1 align="center"> 
 	WebServer 
 </h1>
-## Descrição do Projeto
 <p align="center">
 	O WebServer tem o intuito de servir e gerenciar chamadas HTTP, muito parecido com o funcionamento do Nginx
 </p>
@@ -14,11 +13,10 @@ Indice
    * [Como usar](#como-usar)
       * [Como interpretar os arquivo](#Como-interpretar-os-arquivo)
    * [Tests](#testes)
-   * [Tecnologias](#tecnologias)
 <!--te-->
 
 <h4 align="center"> 
-	✅ Finalizado ✅
+	Status: ✅ Finalizado ✅
 </h4>
 
 ## Sobre 
@@ -33,14 +31,21 @@ Indice
 	 - Este é o arquivo default.conf vamos examinalo e mostrarei como ele funciona 
 	 ![alt text](Screenshot_20240703_153725.png)
 	 Bem cada server é divido por '{}' e cada servidor serve a uma porta especifica simbolizada por 'listen' nesse exemplo 8080 ou 3007
+
 	 'server_name foo' simboliza nosso host o que digitamos na barra de endereço (como tudo está em loop back você nao sera capas de digitar foo e acabar no site a não ser que você mude um arquivo do linux que redirecionaria foo para o endereço 127.0.0.1)
+
 	 'root server_root' 'root' indica para meu servidor que a pasta root ou '/' do meu servidor é 'server_root'
+
 	 'client_max_body_size 200000000000' Indica o tamanho maximo o corpo da mensagem pode ter
 
 	 'location' locations são pastas dentro do meu root que também são dividas por '{}' pois dentro de cada location configuraçoes espeficicas podem ser dadas como:
+
 	 'index' que indica o arquivo que deve ser mandado caso o usuario entre em naquela 'location' como /cgi que dara oa rquivo cgi.html ou a apsta raiz '/' que data oarrquivo index.html
+
 	 'allowed_methods' indica os metodos permitidos naquela localizaçao especifica os metodos suportados são GET, POST e DELETE
-	 'cgi' indica que aquela location suporta a execução de algum tipo de CGI que é simbolizada pelo formatod o arquivo ex:'.py' e o comando que precisa ser dado par a executalo no servidor ex:'python3' 
+
+	 'cgi' indica que aquela location suporta a execução de algum tipo de CGI que é simbolizada pelo formatod o arquivo ex:'.py' e o comando que precisa ser dado par a executalo no servidor ex:'python3'
+
 	 'return' faz um redirecionamento caso o usuario entre na location especifica
 
 ## Testes 
