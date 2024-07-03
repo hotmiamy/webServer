@@ -30,7 +30,9 @@ Indice
 	## Como interpretar os arquivo
 	 - Este é o arquivo default.conf vamos examinalo e mostrarei como ele funciona 
 	 ![alt text](Screenshot_20240703_153725.png)
-	 Bem cada server é divido por '{}' e cada servidor serve a uma porta especifica simbolizada por 'listen' nesse exemplo 8080 ou 3007
+	 Bem cada server é divido por '{}' e cada servidor serve a uma porta especifica simbolizada por 
+	 
+	 'listen' nesse exemplo 8080 ou 3007
 
 	 'server_name foo' simboliza nosso host o que digitamos na barra de endereço (como tudo está em loop back você nao sera capas de digitar foo e acabar no site a não ser que você mude um arquivo do linux que redirecionaria foo para o endereço 127.0.0.1)
 
