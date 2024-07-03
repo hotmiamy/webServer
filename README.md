@@ -42,7 +42,7 @@ Indice
 
 	 'location' locations são pastas dentro do meu root que também são dividas por '{}' pois dentro de cada location configuraçoes espeficicas podem ser dadas como:
 
-	 'index' que indica o arquivo que deve ser mandado caso o usuario entre em naquela 'location' como /cgi que dara oa rquivo cgi.html ou a apsta raiz '/' que data oarrquivo index.html
+	 'index' que indica o arquivo que deve ser mandado caso o usuario entre em naquela 'location' como /cgi que dara o arquivo 'cgi.html' ou a pasta raiz '/' que data o arquivo 'index.html'
 
 	 'allowed_methods' indica os metodos permitidos naquela localizaçao especifica os metodos suportados são GET, POST e DELETE
 
